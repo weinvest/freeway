@@ -10,4 +10,5 @@ void ITask::Update(WorkflowID_t flow, Worker* worker, DEventNode* pNode)
     mWorker = worker;
     mNodePtr = pNode;
     mWaitingLockCount = pNode->GetPrecursors().size();
+    mLevel = 0;
 }

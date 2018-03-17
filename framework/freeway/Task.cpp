@@ -35,7 +35,7 @@ const std::string& Task::GetName( void )
 
 //只有Ready的task才可以加入Queue，因为只要加入了queue就会被立刻取出来，非init/ready状态的则被丢弃
 
-void Task::Suspend(TaskStatus reason) {
+void Task::Suspend(void) {
     mMainContext = mMainContext.resume();
 }
 

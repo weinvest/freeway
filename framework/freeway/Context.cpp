@@ -45,7 +45,7 @@ void SetCurrentTask(ITask* pTask)
 
 void SwitchOut( void )
 {
-    CurrentTask->Suspend(TaskStatus::SUSPEND_BY_READ);
+    CurrentTask->Suspend();
     CurrentTask = nullptr;
 }
 

@@ -22,7 +22,7 @@ public:
     void Stop() {mIsRunning = false;}
 private:
     int32_t SelectWorker(DEventNode* );
-    ITask* VisitNode (DEventNode* pNode);
+    ITask* VisitNode (DEventNode* pNode, int32_t level);
 
     static constexpr int32_t MAX_PENDING_NODES = 128;
     const int32_t mWorkerCount;

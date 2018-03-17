@@ -35,7 +35,7 @@ public:
 //    bool IsScheduleAble( void ) const;
 
     WorkflowID_t GetWorkflowID( void ) const { return mWorkflowId; }
-    void Suspend(TaskStatus reason ) override;
+    void Suspend(void) override;
 private:
     void RunNode( void );
 
