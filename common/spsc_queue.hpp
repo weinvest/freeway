@@ -61,14 +61,14 @@ struct spsc_queue
         return head;
     }
 
-    auto next(T* v)
+    auto next(T v)
     {
         assert(nullptr != v);
         auto n = v->next;
         return n;
     }
 
-    auto pop2(T* v)
+    auto pop2(T v)
     {
         head = v;
     }

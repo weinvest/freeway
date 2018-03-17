@@ -76,6 +76,8 @@ public:
         return ret;
     }
 
+    bool Empty() { return mStoreHolders.empty(); }
+
     void Pop2(Holder* pHolder)
     {
         pHolder->value = mNullValue;
@@ -97,6 +99,7 @@ public:
 
     Holder* Next(Holder* pHolder) { return mStoreHolders.next(pHolder); }
 
+    bool Empty(Holder* pHoler) { return nullptr == pHoler->next; }
     template<typename CallBack_t>
     void consume_all(CallBack_t cb)
     {

@@ -7,13 +7,14 @@
 #include "ITask.h"
 
 SharedMutex::SharedMutex(DEventNode *pOwner)
-:mOwner(pOwner){
+:mOwner(pOwner)
+{
 
 }
 
 bool SharedMutex::LockShared(ITask* pTask)
 {
-    mWaiters.push_back(WaiterType(pTask, false));
+    mWaiters.Push(WaiterType(pTask, false));
     if(mWaitingWriterWorkflowIds.empty())
     {
         return true;
@@ -24,8 +25,8 @@ bool SharedMutex::LockShared(ITask* pTask)
 
 bool SharedMutex::Lock(ITask* pTask)
 {
-    bool empty = mWaiters.empty();
-    mWaiters.push_back(WaiterType(pTask, true));
+    bool empty = mWaiters.Empty();
+    mWaiters.Push(WaiterType(pTask, true));
     mWaitingWriterWorkflowIds.push_back(pTask->GetWorkflowId());
     if(empty)
     {
@@ -38,8 +39,8 @@ bool SharedMutex::Lock(ITask* pTask)
 
 bool SharedMutex::HasLock4(ITask* pTask)
 {
-    assert(!mWaiters.empty());
-    return mWaiters.front().pTask == pTask;
+    assert(!mWaiters.Empty());
+    return mWaiters.First()->value.pTask == pTask;
 }
 
 bool SharedMutex::HasSharedLock4(ITask* pTask)
@@ -57,7 +58,7 @@ void SharedMutex::UnlockShared(ITask* pTask)
     if(2 == mReaders.fetch_sub(2))
     {
         //如果存在NextFlowTask，则Enqueue
-
+        mWaiters.Pop2(mLastLockObject);
         Wake();
     }
 }
@@ -66,7 +67,7 @@ void SharedMutex::Unlock(ITask* task)
 {
 
     {
-        mWaiters.pop_front();
+        mWaiters.Pop();
         mWaitingWriterWorkflowIds.pop_front();
         LOG_DEBUG("Mutex[%p] Worker-%d pop WRITETask-%s[%d]-%p", this, GetWorker()->GetId(),
                   task->GetName().c_str(), task->GetWorkflowId(), task);
@@ -77,21 +78,22 @@ void SharedMutex::Unlock(ITask* task)
 
 bool SharedMutex::Wake()
 {
-    if(mWaiters.empty())
+    if(mWaiters.Empty(mLastLockObject))
     {
         LOG_DEBUG("Worker-%d mWaiters[%p].empty(), nothing to wake", GetWorker()->GetId(), this);
         return false;
     }
 
-    while(!mWaiters.empty())
+    mLastLockObject = mWaiters.First();
+    while(!mWaiters.Empty(mLastLockObject))
     {
-        auto& firstWaiter = mWaiters.front();
+        mLastLockObject = mWaiters.Next(mLastLockObject);
+        auto& firstWaiter = mLastLockObject->value;
         if(firstWaiter.IsWriter)
         {
             if (0 == mReaders)
             {
                 Enqueue(GetWorkerId(), mOwner, firstWaiter.pTask);
-                mWaiters.pop_front();
 
                 return true;
             }
@@ -101,7 +103,6 @@ bool SharedMutex::Wake()
         {
             ++mReaders;
             Enqueue(GetWorkerId(), mOwner, firstWaiter.pTask);
-            mWaiters.pop_front();
         }
     }
 

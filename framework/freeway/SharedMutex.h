@@ -6,6 +6,7 @@
 #define ARAGOPROJECT_SHAREDMUTEX_H
 
 #include <boost/circular_buffer.hpp>
+#include <common/DSpscQueue.hpp>
 #include "DEventNode.h"
 
 class DEventNode;
@@ -15,12 +16,19 @@ class SharedMutex
     struct WaiterType
     {
         WaiterType(ITask* ptr, bool write):pTask(ptr), IsWriter(write) {}
+        WaiterType( void ): pTask(nullptr), IsWriter(false) {}
         ITask* pTask;
         bool IsWriter;
+
+        bool operator==(const WaiterType& o) const { return pTask == o.pTask && IsWriter == o.IsWriter; }
+        bool operator!=(const WaiterType& o) const { return !(*this == o); }
     };
 
 public:
-    using WaiterBufferType = boost::circular_buffer<WaiterType>;
+//    using WaiterBufferType = boost::circular_buffer<WaiterType>;
+//    using WaitingWriterType = boost::circular_buffer<WorkflowID_t >;
+
+    using WaiterBufferType = DSpscQueue<WaiterType>;
     using WaitingWriterType = boost::circular_buffer<WorkflowID_t >;
 
     SharedMutex(DEventNode* pOwner);
@@ -58,7 +66,8 @@ private:
     DEventNode* mOwner{nullptr};
     ITask* mWriter{nullptr};
     std::atomic<int> mReaders{0};
-    WaiterBufferType mWaiters{1024};
+    WaiterBufferType mWaiters;
+    WaiterBufferType::Holder* mLastLockObject{nullptr};
     WaitingWriterType mWaitingWriterWorkflowIds{1024};
 };
 
