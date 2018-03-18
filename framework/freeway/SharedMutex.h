@@ -66,6 +66,7 @@ private:
     DEventNode* mOwner{nullptr};
     ITask* mWriter{nullptr};
     std::atomic<int> mReaders{0};
+    std::atomic_flag mIsInWaking ATOMIC_FLAG_INIT;
     WaiterBufferType mWaiters;
     WaiterBufferType::Holder* mLastLockObject{nullptr};
     WaitingWriterType mWaitingWriterWorkflowIds{1024};

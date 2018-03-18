@@ -78,6 +78,8 @@ public:
 
     bool Empty() { return mStoreHolders.empty(); }
 
+    const T& Null() { return mNullValue; }
+
     void Pop2(Holder* pHolder)
     {
         pHolder->value = mNullValue;
@@ -103,11 +105,11 @@ public:
     template<typename CallBack_t>
     void consume_all(CallBack_t cb)
     {
-        auto Node = Pop();
-        while(Node != mNullValue)
+        auto node = Pop();
+        while(node != mNullValue)
         {
-            cb(Node);
-            Node = Pop();
+            cb(node);
+            node = Pop();
         }
     }
 private:

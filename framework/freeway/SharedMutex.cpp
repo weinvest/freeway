@@ -55,11 +55,13 @@ void SharedMutex::UnlockShared(ITask* pTask)
     LOG_DEBUG("Mutex[%p] Worker-%d releases READTask-%s[%d] mReaders' count(mReaders=%d) in UnlockShared",
               this, GetWorkerId(), GetCurrentTask()->GetName().c_str(), GetCurrentTask()->GetWorkflowId(), mReaders.load());
 
-    if(2 == mReaders.fetch_sub(2))
+    auto prevReadCnt = mReaders.fetch_sub(2);
+    if(((2 ==  prevReadCnt)||(1 == prevReadCnt)) && mIsInWaking.test_and_set())
     {
         //如果存在NextFlowTask，则Enqueue
         mWaiters.Pop2(mLastLockObject);
         Wake();
+        mIsInWaking.clear();
     }
 }
 
@@ -78,32 +80,32 @@ void SharedMutex::Unlock(ITask* task)
 
 bool SharedMutex::Wake()
 {
-    if(mWaiters.Empty(mLastLockObject))
+    if(mWaiters.Empty())
     {
         LOG_DEBUG("Worker-%d mWaiters[%p].empty(), nothing to wake", GetWorker()->GetId(), this);
         return false;
     }
 
-    mLastLockObject = mWaiters.First();
-    while(!mWaiters.Empty(mLastLockObject))
+    auto pCurHolder = mWaiters.First();
+    while(nullptr != pCurHolder)
     {
-        mLastLockObject = mWaiters.Next(mLastLockObject);
-        auto& firstWaiter = mLastLockObject->value;
-        if(firstWaiter.IsWriter)
-        {
-            if (0 == mReaders)
-            {
-                Enqueue(GetWorkerId(), mOwner, firstWaiter.pTask);
+        auto& firstWaiter = pCurHolder->value;
+        if(LIKELY(mWaiters.Null() != firstWaiter)) {
+            if (firstWaiter.IsWriter) {
+                if (0 == mReaders) {
+                    Enqueue(GetWorkerId(), mOwner, firstWaiter.pTask);
 
-                return true;
+                    return true;
+                }
+                break;
+            } else {
+                ++mReaders;
+                Enqueue(GetWorkerId(), mOwner, firstWaiter.pTask);
             }
-            break;
         }
-        else
-        {
-            ++mReaders;
-            Enqueue(GetWorkerId(), mOwner, firstWaiter.pTask);
-        }
+
+        mLastLockObject = pCurHolder;
+        pCurHolder = mWaiters.Next(pCurHolder);
     }
 
     return false;
