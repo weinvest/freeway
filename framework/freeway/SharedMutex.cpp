@@ -37,17 +37,25 @@ bool SharedMutex::Lock(ITask* pTask)
     return false;
 }
 
-bool SharedMutex::HasLock4(ITask* pTask)
+void SharedMutex::WaitLock4(ITask* pTask)
 {
     assert(!mWaiters.Empty());
-    return mWaiters.First()->value.pTask == pTask;
+    if(mWaiters.First()->value.pTask != pTask)
+    {
+        SwitchOut();
+    }
 }
 
-bool SharedMutex::HasSharedLock4(ITask* pTask)
+void SharedMutex::WaitSharedLock4(ITask* pTask)
 {
     auto hasLock = mWaitingWriterWorkflowIds.empty() || pTask->GetWorkflowId() < mWaitingWriterWorkflowIds.front();
-    ++mReaders;
-    return hasLock;
+    if(!hasLock)
+    {
+        ++mReaders;
+        pTask->SetWaited(mOwner);
+        SwitchOut();
+        pTask->SetWaited(nullptr);
+    }
 }
 
 void SharedMutex::UnlockShared(ITask* pTask)

@@ -7,7 +7,7 @@
 #include <exception>
 #include <boost/exception/all.hpp>
 #include "SharedMutex.h"
-
+#include "Context.h"
 DEventNode::DEventNode()
 :mMutex(new SharedMutex(this)){
 
@@ -23,15 +23,12 @@ SharedMutex& DEventNode::GetMutex()
 {
     return *mMutex;
 }
-bool DEventNode::HasSharedLock4(ITask* pTask) const
-{
-    return mMutex->HasSharedLock4(pTask);
-}
 
 int32_t DEventNode::Process(WorkflowID_t workflowId) noexcept
 {
     try
     {
+        mMutex->WaitLock4(GetCurrentTask());
         return DoProcess(workflowId);
     }
     catch(const boost::exception& ex)

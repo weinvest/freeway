@@ -15,7 +15,6 @@ class DEventNode
 public:
     DEventNode();
 
-    void Signal();
 //    void ShowMutexInfo() {printf("%s's ShareMutex[%p]\n", mName.c_str(), &mMutex);}
 
     const dvector<DEventNode*>& GetSuccessors( void ) const { return mSuccessors; }
@@ -27,8 +26,6 @@ public:
     void Connect(DEventNode* pSuccessor);
 
     SharedMutex& GetMutex();
-
-    bool HasSharedLock4(ITask* pTask) const;
 
     const std::string& GetName() {return mName;}
     void SetName(const std::string& name) {mName = name;}

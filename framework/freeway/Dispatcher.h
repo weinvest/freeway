@@ -8,7 +8,6 @@
 #include <array>
 #include "common/DSpscQueue.hpp"
 #include "ITask.h"
-#include "RemotePtr.h"
 class DEventNode;
 class Dispatcher
 {

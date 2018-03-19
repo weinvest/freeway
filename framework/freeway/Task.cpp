@@ -55,10 +55,7 @@ void Task::RunNode( void )
 {
     while(true) {
         LOG_INFO("Enter coroutine Task for %s[%d] RunNode", GetName().c_str(), mWorkflowId);
-        if (!mNodePtr->GetMutex().HasLock4(this)) {
-            SwitchOut();
-        }
-//run here when wakeup by Unlock/UnlockShared
+
         mNodePtr->Process(mWorkflowId);
 
         for (auto precursor : mNodePtr->GetPrecursors()) {

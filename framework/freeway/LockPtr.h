@@ -25,23 +25,18 @@ public:
     const T*operator->() const
     {
         auto pThisTask = GetCurrentTask();
-        if(!mNode->HasSharedLock4(pThisTask))
-        {
-            pThisTask->SetWaited(mNode);
-            SwitchOut();
-            pThisTask->SetWaited(nullptr);
-        }
-
         if(pThisTask != mTask) //同一节点必须保证上一个Workflow与下一个Workflow使用的Task不同
         {
+            mNode->WaitSharedLock4(pThisTask);
             mTask = pThisTask;
             pThisTask->DecreaseWaitingLockCount();
         }
         return mNode;
     }
 
+    T* get() { return mNode; }
 
-
+    const T* get() const { return mNode; }
 private:
     T* mNode;
     ITask* mTask;
