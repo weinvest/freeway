@@ -31,21 +31,25 @@ public:
     void SetName(const std::string& name) {mName = name;}
 
     bool HasScheduled(WorkflowID_t workflowId);
-    int32_t Process(WorkflowID_t workflowId) noexcept ;
+    int32_t Process(ITask* pTask, WorkflowID_t workflowId) noexcept ;
 
     void SetDispatchedID(WorkflowID_t workflowId) {mLastDispatchedflowId = workflowId;}
 
     WorkflowID_t GetDispatchedID() const {return mLastDispatchedflowId;}
 
+    void RaiseSelf( void );
 protected:
     dvector<DEventNode*> mSuccessors;
     dvector<DEventNode*> mPrecursors;
-    
+    void Raise(DEventNode* precursor, int32_t reason);
 private:
     virtual int32_t DoProcess(WorkflowID_t workflowId) = 0;
+    virtual bool OnRaised(DEventNode* precursor, int32_t reason);
+
     WorkflowID_t mLastDispatchedflowId{0};
     SharedMutex* mMutex;
     std::string mName;
+    bool mIsAcceptTrigger{false};
 };
 
 class DummyNode : public DEventNode

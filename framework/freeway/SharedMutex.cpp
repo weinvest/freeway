@@ -28,13 +28,8 @@ bool SharedMutex::Lock(ITask* pTask)
     bool empty = mWaiters.Empty();
     mWaiters.Push(WaiterType(pTask, true));
     mWaitingWriterWorkflowIds.push_back(pTask->GetWorkflowId());
-    if(empty)
-    {
-        mWriter = pTask;
-        return true;
-    }
 
-    return false;
+    return empty;
 }
 
 void SharedMutex::WaitLock4(ITask* pTask)
@@ -51,7 +46,6 @@ void SharedMutex::WaitSharedLock4(ITask* pTask)
     auto hasLock = mWaitingWriterWorkflowIds.empty() || pTask->GetWorkflowId() < mWaitingWriterWorkflowIds.front();
     if(!hasLock)
     {
-        ++mReaders;
         pTask->SetWaited(mOwner);
         SwitchOut();
         pTask->SetWaited(nullptr);
@@ -63,8 +57,8 @@ void SharedMutex::UnlockShared(ITask* pTask)
     LOG_DEBUG("Mutex[%p] Worker-%d releases READTask-%s[%d] mReaders' count(mReaders=%d) in UnlockShared",
               this, GetWorkerId(), GetCurrentTask()->GetName().c_str(), GetCurrentTask()->GetWorkflowId(), mReaders.load());
 
-    auto prevReadCnt = mReaders.fetch_sub(2);
-    if(((2 ==  prevReadCnt)||(1 == prevReadCnt)) && mIsInWaking.test_and_set())
+    auto prevReadCnt = mReaders.fetch_sub(1);
+    if(((1 ==  prevReadCnt)||(0 == prevReadCnt)) && mIsInWaking.test_and_set())
     {
         //如果存在NextFlowTask，则Enqueue
         mWaiters.Pop2(mLastLockObject);

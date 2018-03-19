@@ -56,16 +56,7 @@ void Task::RunNode( void )
     while(true) {
         LOG_INFO("Enter coroutine Task for %s[%d] RunNode", GetName().c_str(), mWorkflowId);
 
-        mNodePtr->Process(mWorkflowId);
-
-        for (auto precursor : mNodePtr->GetPrecursors()) {
-            LOG_INFO("Coroutine Task for %s[%d] RunNode is over, Unlockshared(%s) on Worker-%d", GetName().c_str(),
-                     mWorkflowId, precursor->GetName().c_str(), mWorkerId);
-            precursor->GetMutex().UnlockShared(this);
-        }
-
-        LOG_INFO("Coroutine Task for %s[%d] RunNode is over, Unlocking...", GetName().c_str(), mWorkflowId);
-        mNodePtr->GetMutex().Unlock(this);
+        mNodePtr->Process(this, mWorkflowId);
 
         SwitchOut();
     }
