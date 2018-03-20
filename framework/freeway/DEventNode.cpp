@@ -41,12 +41,12 @@ int32_t DEventNode::Process(ITask* pTask, WorkflowID_t workflowId) noexcept
         catch (...) {
             LOG_ERROR(mLog, GetName() << " exception at DoProcess.");
         }
+    }
 
-        for (auto precursor : GetPrecursors()) {
-            LOG_INFO(mLog, "Coroutine Task for %s[%d] RunNode is over, Unlockshared(%s) on Worker-%d", GetName(),
-                     mWorkflowId, precursor->GetName(), mWorkerId);
-            precursor->GetMutex().UnlockShared(pTask);
-        }
+    for (auto precursor : GetPrecursors()) {
+        LOG_INFO(mLog, "Coroutine Task for %s[%d] RunNode is over, Unlockshared(%s) on Worker-%d", GetName(),
+                 mWorkflowId, precursor->GetName(), mWorkerId);
+        precursor->GetMutex().UnlockShared(pTask);
     }
 
     for(auto successor : GetSuccessors()){
