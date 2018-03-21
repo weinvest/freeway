@@ -7,6 +7,7 @@
 #include <array>
 #include <queue>
 #include <memory>
+#include <condition_variable>
 
 #include "common/DSpscQueue.hpp"
 #include <framework/freeway/Task.h>
@@ -18,9 +19,11 @@ public:
     ~Worker( void );
     bool Initialize( void );
 
-    void Run( void );
     void Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask);
 
+    void WaitStart( void );
+    void Start( void );
+    void Run( void );
     void Stop( void );
 
     WorkerID_t GetId( void ) const { return mId; }
@@ -53,5 +56,7 @@ private:
     TaskPool *mTaskPool;
     int32_t mNextTaskPos{0};
 
+    std::mutex  mRuningMutex;
+    std::condition_variable mRuningCond;
     bool mIsRuning;
 };

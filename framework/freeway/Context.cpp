@@ -72,6 +72,8 @@ std::unordered_map<ThreadType, std::pair<int, int>> ThreadIndex;
 [WorkCount+1, WorkCount+Misc+1]     Such As FeedSource/Market/Timer...
 */
 static std::atomic<ThreadId> NEXT_MISC_THREAD_ID{-1};
+thread_local ThreadId THIS_THREAD_ID = 0;
+
 Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
 {
 
@@ -93,9 +95,24 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
     for(int32_t workerId = ThreadIndex[ThreadType::WORKER].first; workerId < ThreadIndex[ThreadType::WORKER].second; ++workerId)
     {
         AllWorkers[workerId].reset(new Worker(workerId, workerCount));
+        WorkerThreads[workerId] = std::make_unique<std::thread>(std::thread([workerId]()
+                                                                           {
+                                                                               char ThreadName[16];
+
+                                                                               snprintf(ThreadName, sizeof(ThreadName), "Worker-%d", workerId);
+//                                                                               pthread_setname_np(pthread_self(), ThreadName);
+                                                                               ThisWorker = AllWorkers[workerId].get();
+                                                                               THIS_THREAD_ID = workerId;
+                                                                               Bind2Cpu(workerId);
+
+                                                                               ThisWorker->Initialize();
+                                                                               ThisWorker->WaitStart();
+                                                                               ThisWorker->Run();
+                                                                               ThisWorker = nullptr;
+                                                                           }));
     }
 
-//All of the threads can PUSH node to Dispater's PendingNodesQueue
+    //All of the threads can PUSH node to Dispater's PendingNodesQueue
     GlobalDispatcher.reset(new Dispatcher(workerCount, miscThreadsNum));
     return GlobalDispatcher.get();
 }
@@ -126,7 +143,6 @@ WorkerId Context::GetWorkerId( void )
 }
 
 
-thread_local ThreadId THIS_THREAD_ID = 0;
 bool Context::Start( void )
 {
     if(nullptr == GlobalDispatcher)
@@ -134,27 +150,12 @@ bool Context::Start( void )
         return false;
     }
 
-    const int32_t cpuid_main = 0; 
-    int32_t idxWork = ThreadIndex[ThreadType::WORKER].first; //WorkerID starts from 1
-    while(nullptr != AllWorkers[idxWork])
+    for(int32_t workerId = ThreadIndex[ThreadType::WORKER].first; workerId < ThreadIndex[ThreadType::WORKER].second; ++workerId)
     {
-        WorkerThreads[idxWork] = std::make_unique<std::thread>(std::thread([idxWork]()
-                                                       {
-                                                            char ThreadName[16];
-                                                            
-                                                            snprintf(ThreadName, sizeof(ThreadName), "Worker-%d", idxWork);
-//                                                            pthread_setname_np(pthread_self(), ThreadName);
-                                                            ThisWorker = AllWorkers[idxWork].get();
-                                                            THIS_THREAD_ID = idxWork;
-                                                            Bind2Cpu(idxWork);
-
-                                                            ThisWorker->Initialize();
-                                                            ThisWorker->Run();
-                                                            ThisWorker = nullptr;
-                                                       }));
-        ++idxWork;
+        AllWorkers[workerId]->Start();
     }
 
+    const int32_t cpuid_main = 0;
     Bind2Cpu(cpuid_main);
     GlobalDispatcher->Run();
     return true;

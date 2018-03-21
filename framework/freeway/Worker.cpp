@@ -24,7 +24,7 @@ Worker::Worker(WorkerId id, int32_t workerCount)
         :mId(id)
         ,mWorkerCount(workerCount)
         ,mQueueCount(workerCount+1)
-        ,mIsRuning(true)
+        ,mIsRuning(false)
 {
 }
 
@@ -49,10 +49,21 @@ bool Worker::Initialize( void )
 Task* Worker::AllocateTaskFromPool(WorkflowID_t flow, Worker* pWorker, DEventNode* pNode)
 {
     auto pTask = &(mTaskPool->at((mNextTaskPos++) % TASK_POOL_SIZE));
+    std::cout << "allocate task:" << pTask << "\n";
     pTask->Update(flow, pWorker, pNode);
     return pTask;
 }
 
+void Worker::WaitStart( void ) {
+    std::unique_lock<std::mutex> lock(mRuningMutex);
+    mRuningCond.wait(lock, [this]() { return mIsRuning; });
+}
+
+void Worker::Start( void )
+{
+    mIsRuning = true;
+    mRuningCond.notify_all();
+}
 //Called by other threads
 void Worker::Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask)
 {
@@ -61,14 +72,15 @@ void Worker::Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask)
     pTaskQueue.Push({pWho, pTask});
 }
 
+
 void Worker::Run( void )
 {
     auto push2ReadyQueue = [this](const TaskPair& taskPair)
     {
-         if(taskPair.task->GetWaited() == taskPair.waited)
-         {
-             mReadyTasks.push(taskPair.task);
-         }
+        if(taskPair.task->GetWaited() == taskPair.waited)
+        {
+            mReadyTasks.push(taskPair.task);
+        }
     };
 
     while (mIsRuning)

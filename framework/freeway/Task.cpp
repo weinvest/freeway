@@ -9,6 +9,20 @@
 #include "Context.h"
 using namespace boost::context;
 
+#include <iostream>
+Task::Task()
+{
+    mTaskContext =  ctx::callcc( [this](ctx::continuation && from)
+                                 {
+                                     mMainContext = from.resume();
+//                                     std::cout << "task begin runnode\n";
+                                     RunNode();
+//                                     std::cout << "task after runnode\n";
+                                     return std::move(mMainContext);  //此时Task必须有效
+                                 });
+//    std::cout << "Task construct:" << this <<"\n";
+}
+
 int32_t Task::GetWorkerId() const {return mWorker->GetId();}
 
 void Task::Update(WorkflowID_t flow, Worker* worker, DEventNode* pNode)
@@ -21,16 +35,6 @@ void Task::Update(WorkflowID_t flow, Worker* worker, DEventNode* pNode)
     mLevel = 0;
 }
 
-
-Task::Task()
-{
-    mTaskContext =  ctx::callcc( [this](ctx::continuation && from)->ctx::continuation&&
-        {
-            mMainContext = from.resume();
-            RunNode();
-            return std::move(mMainContext);  //此时Task必须有效
-        });
-}
 
 /*
 //Node 本身是不是需要运行 --jiazi
@@ -46,13 +50,15 @@ const std::string& Task::GetName( void )
 
 //只有Ready的task才可以加入Queue，因为只要加入了queue就会被立刻取出来，非init/ready状态的则被丢弃
 
-void Task::Suspend(void) {
+void Task::Suspend(void)
+{
     mMainContext = mMainContext.resume();
 }
 
 void Task::Resume( void )
 {
 //Entry for Worker's ReadyTask(After Enqueued by Dispatcher or Wakeup by other worker)
+    std::cout << "Task resume:" << this << "\n";
     if(mTaskContext) {
         mTaskContext = mTaskContext.resume();
     }
