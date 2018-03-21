@@ -34,11 +34,11 @@ bool Bind2Cpu(int32_t idxCPU)
 }
 
 std::unique_ptr<Dispatcher> GlobalDispatcher = nullptr;
-thread_local ITask* CurrentTask = nullptr;
+thread_local Task* CurrentTask = nullptr;
 thread_local Worker* ThisWorker = nullptr;
 
 
-void Context::SetCurrentTask(ITask* pTask)
+void Context::SetCurrentTask(Task* pTask)
 {
     CurrentTask = pTask;
 }
@@ -49,12 +49,12 @@ void Context::SwitchOut( void )
     CurrentTask = nullptr;
 }
 
-ITask* Context::GetCurrentTask( void )
+Task* Context::GetCurrentTask( void )
 {
     return CurrentTask;
 }
 
-void Context::Enqueue(int32_t from, void* pWho, ITask* pTask)
+void Context::Enqueue(int32_t from, void* pWho, Task* pTask)
 {
     pTask->GetWorker()->Enqueue(from, pWho, pTask);
 }

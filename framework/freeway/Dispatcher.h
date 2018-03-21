@@ -7,7 +7,7 @@
 
 #include <array>
 #include "common/DSpscQueue.hpp"
-#include "ITask.h"
+#include "Task.h"
 class DEventNode;
 class Dispatcher
 {
@@ -21,7 +21,7 @@ public:
     void Stop() {mIsRunning = false;}
 private:
     int32_t SelectWorker(DEventNode* );
-    ITask* VisitNode (DEventNode* pNode, int32_t level);
+    Task* VisitNode (DEventNode* pNode, int32_t level);
 
     static constexpr int32_t MAX_PENDING_NODES = 128;
     const int32_t mWorkerCount;
@@ -31,7 +31,7 @@ private:
     using PendingNodeQueue = DSpscQueue<DEventNode*>;
     PendingNodeQueue* mPendingNodes;
 
-    std::vector<ITask*> mPendingTask;
+    std::vector<Task*> mPendingTask;
     bool mIsRunning;
 };
 

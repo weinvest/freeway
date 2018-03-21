@@ -36,6 +36,7 @@ Worker::~Worker( void )
 
 bool Worker::Initialize( void )
 {
+    mPendingTasks = new PendingTaskQueue[mQueueCount];
     for(int i=0; i<mQueueCount; i++) {
         mPendingTasks[i].Init(1024, TaskPair{0, nullptr});
     }
@@ -45,15 +46,15 @@ bool Worker::Initialize( void )
     return true;
 }
 
-ITask* Worker::AllocateTaskFromPool(WorkflowID_t flow, Worker* pWorker, DEventNode* pNode)
+Task* Worker::AllocateTaskFromPool(WorkflowID_t flow, Worker* pWorker, DEventNode* pNode)
 {
-    auto pTask = &(*mTaskPool)[(mNextTaskPos++) % TASK_POOL_SIZE];
+    auto pTask = &(mTaskPool->at((mNextTaskPos++) % TASK_POOL_SIZE));
     pTask->Update(flow, pWorker, pNode);
     return pTask;
 }
 
 //Called by other threads
-void Worker::Enqueue(WorkerID_t fromWorker, void* pWho, ITask* pTask)
+void Worker::Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask)
 {
     LOG_WARN("Task[%p]-%s is enqueued to worker-%d by %d, flow=%d", pTask, pTask->GetName().c_str(), mId, fromWorker, pTask->GetWorkflowId());
     auto& pTaskQueue = mPendingTasks[fromWorker];
@@ -80,7 +81,7 @@ void Worker::Run( void )
 
         while(!mReadyTasks.empty())
         {
-            ITask* pTask = mReadyTasks.top();
+            Task* pTask = mReadyTasks.top();
             mReadyTasks.pop();
         //    printf("=================Worker[%d] get %s\n", mId, pTask->GetName().c_str());
             try

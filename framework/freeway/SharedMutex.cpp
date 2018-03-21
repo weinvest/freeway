@@ -4,7 +4,7 @@
 
 #include "SharedMutex.h"
 #include "Context.h"
-#include "ITask.h"
+#include "Task.h"
 
 SharedMutex::SharedMutex(DEventNode *pOwner)
 :mOwner(pOwner)
@@ -12,7 +12,7 @@ SharedMutex::SharedMutex(DEventNode *pOwner)
     mWaiters.Init(128, WaiterType());
 }
 
-bool SharedMutex::LockShared(ITask* pTask)
+bool SharedMutex::LockShared(Task* pTask)
 {
     mWaiters.Push(WaiterType(pTask, false));
     if(mWaitingWriterWorkflowIds.empty())
@@ -23,7 +23,7 @@ bool SharedMutex::LockShared(ITask* pTask)
     return false;
 }
 
-bool SharedMutex::Lock(ITask* pTask)
+bool SharedMutex::Lock(Task* pTask)
 {
     bool empty = mWaiters.Empty();
     mWaiters.Push(WaiterType(pTask, true));
@@ -32,7 +32,7 @@ bool SharedMutex::Lock(ITask* pTask)
     return empty;
 }
 
-void SharedMutex::WaitLock4(ITask* pTask)
+void SharedMutex::WaitLock4(Task* pTask)
 {
     assert(!mWaiters.Empty());
     if(mWaiters.First()->value.pTask != pTask)
@@ -41,7 +41,7 @@ void SharedMutex::WaitLock4(ITask* pTask)
     }
 }
 
-void SharedMutex::WaitSharedLock4(ITask* pTask)
+void SharedMutex::WaitSharedLock4(Task* pTask)
 {
     auto hasLock = mWaitingWriterWorkflowIds.empty() || pTask->GetWorkflowId() < mWaitingWriterWorkflowIds.front();
     if(!hasLock)
@@ -52,7 +52,7 @@ void SharedMutex::WaitSharedLock4(ITask* pTask)
     }
 }
 
-void SharedMutex::UnlockShared(ITask* pTask)
+void SharedMutex::UnlockShared(Task* pTask)
 {
     LOG_DEBUG("Mutex[%p] Worker-%d releases READTask-%s[%d] mReaders' count(mReaders=%d) in UnlockShared",
               this, GetWorkerId(), GetCurrentTask()->GetName().c_str(), GetCurrentTask()->GetWorkflowId(), mReaders.load());
@@ -67,7 +67,7 @@ void SharedMutex::UnlockShared(ITask* pTask)
     }
 }
 
-void SharedMutex::Unlock(ITask* task)
+void SharedMutex::Unlock(Task* task)
 {
 
     {

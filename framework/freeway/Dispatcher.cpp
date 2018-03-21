@@ -19,7 +19,7 @@ Dispatcher::Dispatcher(int32_t workerCount, int32_t miscThread)
           mQueueNum(workerCount + miscThread + 1)  //[0...mQueueNum)
         , mPendingNodes(new PendingNodeQueue[mQueueNum]), mIsRunning(true) {
     for (int i = 0; i < mQueueNum; i++) {
-        mPendingNodes[i].Init(capacity, new DummyNode());
+        mPendingNodes[i].Init(capacity, nullptr);
     }
 
     mPendingTask.reserve(128);
@@ -45,7 +45,7 @@ WorkerID_t Dispatcher::SelectWorker(DEventNode *pNode) {
     return ++Loop;
 }
 
-ITask *Dispatcher::VisitNode(DEventNode *pNode, int32_t level) {
+Task *Dispatcher::VisitNode(DEventNode *pNode, int32_t level) {
     static int DispatchIndex = ThreadIndex[ThreadType::DISPATCHER].first;
     if (isFirstNode) {
         isFirstNode = false;
@@ -62,7 +62,7 @@ ITask *Dispatcher::VisitNode(DEventNode *pNode, int32_t level) {
         auto idxWorker = SelectWorker(pNode);
 
         auto pTargetWorker = Context::GetWorker(idxWorker);
-        ITask *pTask = pTargetWorker->AllocateTaskFromPool(workflowId, pTargetWorker, pNode);
+        Task *pTask = pTargetWorker->AllocateTaskFromPool(workflowId, pTargetWorker, pNode);
         pTask->SetLevel(level);
         mPendingTask.push_back(pTask);
 

@@ -8,7 +8,7 @@
 const int32_t NoRaiseSuccessor = -1;
 
 using WorkflowID_t = uint64_t;
-class ITask;
+class Task;
 class SharedMutex;
 class DEventNode
 {
@@ -31,7 +31,7 @@ public:
     void SetName(const std::string& name) {mName = name;}
 
     bool HasScheduled(WorkflowID_t workflowId);
-    int32_t Process(ITask* pTask, WorkflowID_t workflowId) noexcept ;
+    int32_t Process(Task* pTask, WorkflowID_t workflowId) noexcept ;
 
     void SetDispatchedID(WorkflowID_t workflowId) {mLastDispatchedflowId = workflowId;}
 
@@ -53,13 +53,13 @@ private:
     bool mIsAcceptTrigger{false};
 };
 
-class DummyNode : public DEventNode
-{
-public:
-    int32_t DoProcess(WorkflowID_t workflowId)
-    {
-//        std::cout<<"DummyNode is used to init spsc_queue\n";
-        return 0;
-    }
-};
+//class DummyNode : public DEventNode
+//{
+//public:
+//    int32_t DoProcess(WorkflowID_t workflowId)
+//    {
+////        std::cout<<"DummyNode is used to init spsc_queue\n";
+//        return 0;
+//    }
+//};
 #endif //ARAGOPROJECT_DEVENTNODE_H

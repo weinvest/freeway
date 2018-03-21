@@ -25,7 +25,7 @@ SharedMutex& DEventNode::GetMutex()
     return *mMutex;
 }
 
-int32_t DEventNode::Process(ITask* pTask, WorkflowID_t workflowId) noexcept
+int32_t DEventNode::Process(Task* pTask, WorkflowID_t workflowId) noexcept
 {
     int32_t result = NoRaiseSuccessor;
     if(mIsAcceptTrigger) {

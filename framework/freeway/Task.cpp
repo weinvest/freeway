@@ -9,7 +9,18 @@
 #include "Context.h"
 using namespace boost::context;
 
-int32_t ITask::GetWorkerId() const {return mWorker->GetId();}
+int32_t Task::GetWorkerId() const {return mWorker->GetId();}
+
+void Task::Update(WorkflowID_t flow, Worker* worker, DEventNode* pNode)
+{
+    mWorkflowId = flow;
+    mWorker = worker;
+    mWaited = nullptr;
+    mNodePtr = pNode;
+    mWaitingLockCount = pNode->GetPrecursors().size();
+    mLevel = 0;
+}
+
 
 Task::Task()
 {

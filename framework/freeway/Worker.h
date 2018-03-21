@@ -19,19 +19,19 @@ public:
     bool Initialize( void );
 
     void Run( void );
-    void Enqueue(WorkerID_t fromWorker, void* pWho, ITask* pTask);
+    void Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask);
 
     void Stop( void );
 
     WorkerID_t GetId( void ) const { return mId; }
     int32_t GetWorkerCount( void ) const { return mWorkerCount; }
 
-    ITask* AllocateTaskFromPool(WorkflowID_t flow, Worker* pWorker, DEventNode* pNode);
+    Task* AllocateTaskFromPool(WorkflowID_t flow, Worker* pWorker, DEventNode* pNode);
 
     struct TaskPair
     {
         void* waited{nullptr};
-        ITask* task{nullptr};
+        Task* task{nullptr};
 
         friend bool operator == (const TaskPair& lhs, const TaskPair& rhs);
         friend bool operator != (const TaskPair& lhs, const TaskPair& rhs);
@@ -46,7 +46,7 @@ private:
     using PendingTaskQueue = DSpscQueue<TaskPair>;
     PendingTaskQueue* mPendingTasks;
 
-    std::priority_queue<ITask*, std::vector<ITask*>, TaskCompare> mReadyTasks;
+    std::priority_queue<Task*, std::vector<Task*>, TaskCompare> mReadyTasks;
 
     static const int32_t TASK_POOL_SIZE = 4096;
     using TaskPool = std::array<Task, TASK_POOL_SIZE>;

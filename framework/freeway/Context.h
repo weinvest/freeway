@@ -8,7 +8,7 @@
 #include <functional>
 #include <thread>
 class Worker;
-class ITask;
+class Task;
 class Task;
 class Dispatcher;
 class SmallObjectAllocatorImpl;
@@ -28,17 +28,17 @@ public:
 
     static SmallObjectAllocatorImpl *GetAllocator(int32_t idx);
 
-    static void SetCurrentTask(ITask *pTask);
+    static void SetCurrentTask(Task *pTask);
 
     static void SwitchOut(void);
 
-    static ITask *GetCurrentTask(void);
+    static Task *GetCurrentTask(void);
 
     static Dispatcher *Init(int32_t workerCount, int32_t miscThreadsNum);
 
     static Dispatcher *GetDispatcher(void);
 
-    static void Enqueue(int32_t from, void *pWho, ITask *pTask);
+    static void Enqueue(int32_t from, void *pWho, Task *pTask);
 
     static Worker *GetWorker(void);
 

@@ -39,7 +39,7 @@ public:
     const T* get() const { return mNode; }
 private:
     T* mNode;
-    ITask* mTask;
+    Task* mTask;
 };
 
 

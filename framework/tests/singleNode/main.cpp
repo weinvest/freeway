@@ -20,6 +20,7 @@ protected:
             sum += i;
         }
 
+        std::cout << workflowId << ":" << sum << "\n";
         return sum;
     }
 
@@ -29,12 +30,14 @@ private:
 
 BOOST_AUTO_TEST_CASE(first_test)
 {
-    auto pDispatcher = Context::Init(3, 1);
+    auto pDispatcher = Context::Init(2, 1);
 
     auto pSingleNode = SingleNode(3000);
     std::thread t = std::move(Context::StartMiscThread([&pSingleNode]
                   {
                       pSingleNode.RaiseSelf();
+
+                      std::this_thread::sleep_for(std::chrono::milliseconds(50));
                   }));
     Context::Start();
 
