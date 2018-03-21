@@ -58,6 +58,6 @@ void Task::RunNode( void )
 
         mNodePtr->Process(this, mWorkflowId);
 
-        SwitchOut();
+        Context::SwitchOut();
     }
 }

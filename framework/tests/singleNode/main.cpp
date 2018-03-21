@@ -29,13 +29,13 @@ private:
 
 BOOST_AUTO_TEST_CASE(first_test)
 {
-    auto pDispatcher = Init(3, 0);
+    auto pDispatcher = Context::Init(3, 1);
 
     auto pSingleNode = SingleNode(3000);
-    std::thread t([&pSingleNode]
+    std::thread t = std::move(Context::StartMiscThread([&pSingleNode]
                   {
                       pSingleNode.RaiseSelf();
-                  });
-    Start();
+                  }));
+    Context::Start();
 
 }

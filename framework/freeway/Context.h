@@ -6,32 +6,12 @@
 #define ARAGOPROJECT_CONTEXT_H
 #include <memory>
 #include <functional>
+#include <thread>
 class Worker;
 class ITask;
 class Task;
 class Dispatcher;
 class SmallObjectAllocatorImpl;
-
-SmallObjectAllocatorImpl* GetAllocator( void );
-SmallObjectAllocatorImpl* GetAllocator(int32_t idx);
-
-void SetCurrentTask(ITask* pTask);
-void SwitchOut( void );
-
-ITask* GetCurrentTask( void );
-
-Dispatcher* Init(int32_t workerCount, int32_t miscThreadsNum);
-Dispatcher* GetDispatcher( void );
-
-void Enqueue(int32_t from, void* pWho, ITask* pTask);
-Worker* GetWorker( void );
-Worker* GetWorker(int32_t idx);
-using WorkerId = int32_t;
-WorkerId GetWorkerId( void );
-
-bool Start( void );
-void Stop( void );
-
 
 enum class ThreadType
 {
@@ -39,6 +19,42 @@ enum class ThreadType
     WORKER,
     MISC
 };
+
+using WorkerId = int32_t;
+using ThreadId = int32_t;
+class Context {
+public:
+    static SmallObjectAllocatorImpl *GetAllocator(void);
+
+    static SmallObjectAllocatorImpl *GetAllocator(int32_t idx);
+
+    static void SetCurrentTask(ITask *pTask);
+
+    static void SwitchOut(void);
+
+    static ITask *GetCurrentTask(void);
+
+    static Dispatcher *Init(int32_t workerCount, int32_t miscThreadsNum);
+
+    static Dispatcher *GetDispatcher(void);
+
+    static void Enqueue(int32_t from, void *pWho, ITask *pTask);
+
+    static Worker *GetWorker(void);
+
+    static Worker *GetWorker(int32_t idx);
+
+    static WorkerId GetWorkerId(void);
+
+    static bool Start(void);
+
+    static void Stop(void);
+
+    static std::thread StartMiscThread(std::function<void()> f);
+
+    static ThreadId GetThreadId( void );
+};
+
 namespace std
 {
     template<> 

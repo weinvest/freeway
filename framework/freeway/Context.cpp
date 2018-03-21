@@ -38,23 +38,23 @@ thread_local ITask* CurrentTask = nullptr;
 thread_local Worker* ThisWorker = nullptr;
 
 
-void SetCurrentTask(ITask* pTask)
+void Context::SetCurrentTask(ITask* pTask)
 {
     CurrentTask = pTask;
 }
 
-void SwitchOut( void )
+void Context::SwitchOut( void )
 {
     CurrentTask->Suspend();
     CurrentTask = nullptr;
 }
 
-ITask* GetCurrentTask( void )
+ITask* Context::GetCurrentTask( void )
 {
     return CurrentTask;
 }
 
-void Enqueue(int32_t from, void* pWho, ITask* pTask)
+void Context::Enqueue(int32_t from, void* pWho, ITask* pTask)
 {
     pTask->GetWorker()->Enqueue(from, pWho, pTask);
 }
@@ -71,7 +71,8 @@ std::unordered_map<ThreadType, std::pair<int, int>> ThreadIndex;
 [1-workCount]                       Worker Thread
 [WorkCount+1, WorkCount+Misc+1]     Such As FeedSource/Market/Timer...
 */
-Dispatcher* Init(int32_t workerCount, int32_t miscThreadsNum)
+static std::atomic<ThreadId> NEXT_MISC_THREAD_ID{-1};
+Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
 {
 
     int32_t maxWorkerCount = std::min(std::thread::hardware_concurrency(), static_cast<unsigned int>(AllWorkers.size()));
@@ -83,7 +84,7 @@ Dispatcher* Init(int32_t workerCount, int32_t miscThreadsNum)
     ThreadIndex.emplace(ThreadType::DISPATCHER, std::make_pair(0,1));
     ThreadIndex.emplace(ThreadType::WORKER, std::make_pair(1,workerCount+1));
     ThreadIndex.emplace(ThreadType::MISC, std::make_pair(workerCount+1,workerCount+miscThreadsNum+1));
-
+    NEXT_MISC_THREAD_ID = workerCount+1;
 //QueueID           0          1.....WorkerCount      WorkerCount+1 ... +MiscThread+1
 //Thread        Dispatcher        AllWorkers        FeedSource/Market/Timer
 
@@ -99,22 +100,22 @@ Dispatcher* Init(int32_t workerCount, int32_t miscThreadsNum)
     return GlobalDispatcher.get();
 }
 
-Dispatcher* GetDispatcher( void )
+Dispatcher* Context::GetDispatcher( void )
 {
     return GlobalDispatcher.get();
 }
 
-Worker* GetWorker( void )
+Worker* Context::GetWorker( void )
 {
     return ThisWorker;
 }
 
-Worker* GetWorker(int32_t idx)
+Worker* Context::GetWorker(int32_t idx)
 {
     return AllWorkers[idx].get();
 }
 
-WorkerId GetWorkerId( void )
+WorkerId Context::GetWorkerId( void )
 {
     if(nullptr == ThisWorker)
     {
@@ -124,7 +125,9 @@ WorkerId GetWorkerId( void )
     return ThisWorker->GetId();
 }
 
-bool Start( void )
+
+thread_local ThreadId THIS_THREAD_ID = 0;
+bool Context::Start( void )
 {
     if(nullptr == GlobalDispatcher)
     {
@@ -142,7 +145,7 @@ bool Start( void )
                                                             snprintf(ThreadName, sizeof(ThreadName), "Worker-%d", idxWork);
 //                                                            pthread_setname_np(pthread_self(), ThreadName);
                                                             ThisWorker = AllWorkers[idxWork].get();
-
+                                                            THIS_THREAD_ID = idxWork;
                                                             Bind2Cpu(idxWork);
 
                                                             ThisWorker->Initialize();
@@ -157,7 +160,7 @@ bool Start( void )
     return true;
 }
 
-void Stop( void )
+void Context::Stop( void )
 {
     int32_t idxWork =  ThreadIndex[ThreadType::WORKER].first;
     while(nullptr != AllWorkers[idxWork])
@@ -167,4 +170,14 @@ void Stop( void )
         WorkerThreads[idxWork].reset(nullptr);
         ++idxWork;
     }
+}
+
+std::thread Context::StartMiscThread(std::function<void()> f)
+{
+    return std::move(std::thread([f](){ THIS_THREAD_ID = NEXT_MISC_THREAD_ID.fetch_add(1); f(); }));
+}
+
+ThreadId Context::GetThreadId( void )
+{
+    return THIS_THREAD_ID;
 }

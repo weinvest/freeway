@@ -8,6 +8,7 @@
 #include <boost/exception/all.hpp>
 #include "SharedMutex.h"
 #include "Context.h"
+#include "Dispatcher.h"
 DEventNode::DEventNode()
 :mMutex(new SharedMutex(this)){
 
@@ -88,7 +89,12 @@ bool DEventNode::OnRaised(DEventNode* precursor, int32_t reason)
 
 void DEventNode::RaiseSelf( void )
 {
+    RaiseSelf(Context::GetThreadId());
+}
 
+void DEventNode::RaiseSelf(int32_t fromThread)
+{
+    Context::GetDispatcher()->Enqueue(fromThread, this);
 }
 
 /*too late!!!*/

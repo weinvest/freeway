@@ -73,7 +73,7 @@ struct spsc_queue
         head = v;
     }
 
-    bool empty() { return nullptr == head->next; }
+    bool empty() { return nullptr == head || nullptr == head->next; }
 
     void push(T v)
     {

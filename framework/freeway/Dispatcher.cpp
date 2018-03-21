@@ -61,7 +61,7 @@ ITask *Dispatcher::VisitNode(DEventNode *pNode, int32_t level) {
         //4. visit children
         auto idxWorker = SelectWorker(pNode);
 
-        auto pTargetWorker = GetWorker(idxWorker);
+        auto pTargetWorker = Context::GetWorker(idxWorker);
         ITask *pTask = pTargetWorker->AllocateTaskFromPool(workflowId, pTargetWorker, pNode);
         pTask->SetLevel(level);
         mPendingTask.push_back(pTask);
@@ -71,7 +71,7 @@ ITask *Dispatcher::VisitNode(DEventNode *pNode, int32_t level) {
             pPrecessor->GetMutex().LockShared(pTask);
         }
         pNode->GetMutex().Lock(pTask);
-        ::Enqueue(DispatchIndex, nullptr, pTask);
+        Context::Enqueue(DispatchIndex, nullptr, pTask);
 
         auto &successors = pNode->GetSuccessors();
         for (auto pSuccessor : successors) {

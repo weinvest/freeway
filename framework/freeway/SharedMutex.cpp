@@ -9,7 +9,7 @@
 SharedMutex::SharedMutex(DEventNode *pOwner)
 :mOwner(pOwner)
 {
-
+    mWaiters.Init(128, WaiterType());
 }
 
 bool SharedMutex::LockShared(ITask* pTask)
@@ -37,7 +37,7 @@ void SharedMutex::WaitLock4(ITask* pTask)
     assert(!mWaiters.Empty());
     if(mWaiters.First()->value.pTask != pTask)
     {
-        SwitchOut();
+        Context::SwitchOut();
     }
 }
 
@@ -47,7 +47,7 @@ void SharedMutex::WaitSharedLock4(ITask* pTask)
     if(!hasLock)
     {
         pTask->SetWaited(mOwner);
-        SwitchOut();
+        Context::SwitchOut();
         pTask->SetWaited(nullptr);
     }
 }
@@ -95,14 +95,14 @@ bool SharedMutex::Wake()
         if(LIKELY(mWaiters.Null() != firstWaiter)) {
             if (firstWaiter.IsWriter) {
                 if (0 == mReaders) {
-                    Enqueue(GetWorkerId(), mOwner, firstWaiter.pTask);
+                    Context::Enqueue(Context::GetWorkerId(), mOwner, firstWaiter.pTask);
 
                     return true;
                 }
                 break;
             } else {
                 ++mReaders;
-                Enqueue(GetWorkerId(), mOwner, firstWaiter.pTask);
+                Context::Enqueue(Context::GetWorkerId(), mOwner, firstWaiter.pTask);
             }
         }
 

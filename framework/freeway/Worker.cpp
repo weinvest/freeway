@@ -85,7 +85,7 @@ void Worker::Run( void )
         //    printf("=================Worker[%d] get %s\n", mId, pTask->GetName().c_str());
             try
             {
-                SetCurrentTask(pTask);
+                Context::SetCurrentTask(pTask);
                 pTask->Resume();
             }
             catch(const boost::exception& ex)

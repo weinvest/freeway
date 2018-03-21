@@ -38,6 +38,7 @@ public:
     WorkflowID_t GetDispatchedID() const {return mLastDispatchedflowId;}
 
     void RaiseSelf( void );
+    void RaiseSelf(int32_t fromThread);
 protected:
     dvector<DEventNode*> mSuccessors;
     dvector<DEventNode*> mPrecursors;
