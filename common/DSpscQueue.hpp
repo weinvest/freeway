@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include "common/spsc_queue.hpp"
-
+#include "common/Types.h"
 template <typename T>
 class DSpscQueue
 {
@@ -41,6 +41,13 @@ public:
 
     bool Push(T value)
     {
+        if(UNLIKELY(mFirstPush))
+        {
+            mFirstPush = false;
+            mStoreHolders.head->value = value;
+            return true;
+        }
+
         Holder* pLastFreeHolder = nullptr;
         Holder* pHolder = mFreeHolders.pop(&pLastFreeHolder);
 //     assert(nullptr != pHolder);
@@ -117,5 +124,6 @@ private:
     spsc_queue<Holder*> mFreeHolders;
     Holder* mPool;
     T mNullValue;
+    bool mFirstPush{true};
 };
 #endif //ARAGOPROJECT_DSPSCQUEUE_HPP_H
