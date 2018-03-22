@@ -22,4 +22,6 @@ IF(win32)
     ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB BOOST_ASIO_DISABLE_STD_ATOMIC)
 ENDIF()
 
+add_subdirectory(utils)
+add_subdirectory(clock)
 add_subdirectory(framework)

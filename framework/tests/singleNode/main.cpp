@@ -1,9 +1,9 @@
 #define BOOST_TEST_MODULE SINGLE_NODE_TEST
+#include <thread>
 #include <boost/test/included/unit_test.hpp>
-
 #include "framework/freeway/DEventNode.h"
 #include "framework/freeway/Context.h"
-#include <thread>
+#include "clock/Clock.h"
 class SingleNode: public DEventNode
 {
 public:
@@ -12,9 +12,12 @@ public:
     {}
 
     int32_t GetRunCount() const { return mRunCount; }
+    void SetRaiseTime(DateTime t) { mRaiseTime = t; }
+    TimeSpan GetTotalUsedTime() const { return mUsedTime; }
 protected:
     int32_t DoProcess(WorkflowID_t workflowId) override
     {
+        mUsedTime += (Clock::Instance().Now() - mRaiseTime);
         BOOST_CHECK_GT(workflowId, GetLastWorkflowId());
         int32_t i = 0, sum = 0;
         for(; i < mLoopCnt; ++i)
@@ -30,6 +33,8 @@ protected:
 private:
     int32_t mLoopCnt;
     int32_t mRunCount{0};
+    DateTime mRaiseTime;
+    TimeSpan mUsedTime;
 };
 
 BOOST_AUTO_TEST_CASE(first_test)
@@ -43,8 +48,9 @@ BOOST_AUTO_TEST_CASE(first_test)
                       while(runCnt < 100)
                       {
                           ++runCnt;
+                          singleNode.SetRaiseTime(Clock::Instance().Now());
                           singleNode.RaiseSelf();
-                          std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                          std::this_thread::sleep_for(std::chrono::microseconds(100));
                       }
 
                       Context::Stop();
@@ -55,4 +61,9 @@ BOOST_AUTO_TEST_CASE(first_test)
     {
         t.join();
     }
+
+    auto meanTime = singleNode.GetTotalUsedTime() / singleNode.GetRunCount();
+    std::cout << "======================================================\n";
+    std::cout << "Mean frame used time:" << meanTime.total_microseconds() << "\n";
+    std::cout << "======================================================\n";
 }
