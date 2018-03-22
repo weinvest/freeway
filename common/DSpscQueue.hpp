@@ -41,12 +41,12 @@ public:
 
     bool Push(T value)
     {
-        if(UNLIKELY(mFirstPush))
-        {
-            mFirstPush = false;
-            mStoreHolders.head->value = value;
-            return true;
-        }
+//        if(UNLIKELY(mFirstPush))
+//        {
+//            mFirstPush = false;
+//            mStoreHolders.head->value = value;
+//            return true;
+//        }
 
         Holder* pLastFreeHolder = nullptr;
         Holder* pHolder = mFreeHolders.pop(&pLastFreeHolder);
@@ -80,10 +80,15 @@ public:
 
         ret = pHolder->value;
         mFreeHolders.push(pHolder);
+
+        if(ret == mNullValue)
+        {
+            return Pop();
+        }
         return ret;
     }
 
-    bool Empty() { return mStoreHolders.empty(); }
+    bool Empty() { return mNullValue == mStoreHolders.head->value && mStoreHolders.empty(); }
 
     const T& Null() { return mNullValue; }
 
@@ -104,11 +109,11 @@ public:
         }
     }
 
-    Holder* First( void ) { return mStoreHolders.first(); }
+    Holder* First( void ) { auto pHolder = mStoreHolders.head; return mNullValue == pHolder->value ? pHolder->next : pHolder; }
 
     Holder* Next(Holder* pHolder) { return mStoreHolders.next(pHolder); }
 
-    bool Empty(Holder* pHoler) { return nullptr == pHoler->next; }
+    bool Empty(Holder* pHoler) { return mNullValue == pHoler->next; }
     template<typename CallBack_t>
     void consume_all(CallBack_t cb)
     {
@@ -124,6 +129,6 @@ private:
     spsc_queue<Holder*> mFreeHolders;
     Holder* mPool;
     T mNullValue;
-    bool mFirstPush{true};
+//    bool mFirstPush{true};
 };
 #endif //ARAGOPROJECT_DSPSCQUEUE_HPP_H

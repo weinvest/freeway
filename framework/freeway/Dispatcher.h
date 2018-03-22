@@ -14,11 +14,11 @@ class Dispatcher
 public:
     Dispatcher(int32_t workerCount, int32_t miscThreads);
     ~Dispatcher();
-
+    bool IsRunning( void ) const { return mIsRunning; }
     bool Enqueue(int32_t fromID, DEventNode* );
 
     void Run( void );
-    void Stop() {mIsRunning = false;}
+    void Stop();
 private:
     int32_t SelectWorker(DEventNode* );
     Task* VisitNode (DEventNode* pNode, int32_t level);

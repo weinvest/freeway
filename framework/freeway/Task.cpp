@@ -58,7 +58,7 @@ void Task::Suspend(void)
 void Task::Resume( void )
 {
 //Entry for Worker's ReadyTask(After Enqueued by Dispatcher or Wakeup by other worker)
-    std::cout << "Task resume:" << this << "\n";
+//    std::cout << "Task resume:" << this << "\n";
     if(mTaskContext) {
         mTaskContext = mTaskContext.resume();
     }

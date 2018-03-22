@@ -22,7 +22,7 @@ Dispatcher::Dispatcher(int32_t workerCount, int32_t miscThread)
         mPendingNodes[i].Init(capacity, nullptr);
     }
 
-    mPendingTask.reserve(128);
+    mPendingTask.reserve(MAX_PENDING_NODES);
 }
 
 bool Dispatcher::Enqueue(int32_t fromID, DEventNode *pNode) {
@@ -88,18 +88,32 @@ Task *Dispatcher::VisitNode(DEventNode *pNode, int32_t level) {
 #include <stdio.h>
 
 void Dispatcher::Run(void) {
-//    pthread_setname_np(pthread_self(), "Dispatcher");
-
-    while (mIsRunning) {
+#ifdef RUN_UNTIL_NOMORE_TASK
+    bool bye = true;
+    while (mIsRunning || !bye) {
+        bye = true;
+#else
+    while(mIsRunning){
+#endif
         static int DispatchIndex = ThreadIndex[ThreadType::DISPATCHER].first;
         //Does dispatcher dispatch the task to itself???
         mPendingTask.clear();
         for (WorkerId fromWorker = DispatchIndex; fromWorker < mQueueNum; ++fromWorker) {
             auto &pNodeQueue = mPendingNodes[fromWorker];
             // printf("Dispatcher consumes Queue-%d\n", fromWorker);
-            pNodeQueue.consume_all(std::bind(&Dispatcher::VisitNode, this, std::placeholders::_1, 0));
+            pNodeQueue.consume_all([this](DEventNode* pNode) {
+#ifdef RUN_UNTIL_NOMORE_TASK
+                bye = false;
+#endif
+                VisitNode(pNode, 0);
+            });
         }
 
         isFirstNode = true;
     }
+}
+
+void Dispatcher::Stop(void)
+{
+    mIsRunning = false;
 }

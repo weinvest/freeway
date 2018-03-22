@@ -37,6 +37,8 @@ public:
 
     WorkflowID_t GetDispatchedID() const {return mLastDispatchedflowId;}
 
+    WorkflowID_t GetLastWorkflowId() const { return mLastWorkflowId; }
+
     void RaiseSelf( void );
     void RaiseSelf(int32_t fromThread);
 protected:
@@ -48,6 +50,7 @@ private:
     virtual bool OnRaised(DEventNode* precursor, int32_t reason);
 
     WorkflowID_t mLastDispatchedflowId{0};
+    WorkflowID_t mLastWorkflowId{0};
     SharedMutex* mMutex;
     std::string mName;
     bool mIsAcceptTrigger{false};

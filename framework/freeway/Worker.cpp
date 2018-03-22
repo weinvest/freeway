@@ -6,10 +6,9 @@
 #include "Context.h"
 #include <exception>
 #include <boost/exception/all.hpp>
-
 #include <iostream>
-
 #include <framework/freeway/Task.h>
+#include "Dispatcher.h"
 bool operator == (const Worker::TaskPair& lhs, const Worker::TaskPair& rhs)
 {
     return lhs.waited == rhs.waited && lhs.task == rhs.task;
@@ -20,11 +19,12 @@ bool operator != (const Worker::TaskPair& lhs, const Worker::TaskPair& rhs)
     return !(lhs == rhs);
 }
 
-Worker::Worker(WorkerId id, int32_t workerCount)
+Worker::Worker(Dispatcher* pDispatcher, WorkerId id, int32_t workerCount)
         :mId(id)
         ,mWorkerCount(workerCount)
         ,mQueueCount(workerCount+1)
         ,mIsRuning(false)
+        ,mDispatcher(pDispatcher)
 {
 }
 
@@ -49,7 +49,7 @@ bool Worker::Initialize( void )
 Task* Worker::AllocateTaskFromPool(WorkflowID_t flow, Worker* pWorker, DEventNode* pNode)
 {
     auto pTask = &(mTaskPool->at((mNextTaskPos++) % TASK_POOL_SIZE));
-    std::cout << "allocate task:" << pTask << "\n";
+//    std::cout << "allocate task:" << pTask << "\n";
     pTask->Update(flow, pWorker, pNode);
     return pTask;
 }
@@ -82,9 +82,13 @@ void Worker::Run( void )
             mReadyTasks.push(taskPair.task);
         }
     };
-
-    while (mIsRuning)
-    {
+#ifdef RUN_UNTIL_NOMORE_TASK
+    bool bye = true;
+    while (mIsRuning || mDispatcher->IsRunning() || !bye){
+        bye = true;
+#else
+    while(mIsRuning){
+#endif
         for(WorkerId fromWorker = 0; fromWorker < mQueueCount; ++fromWorker)
         {
             auto& pTaskQueue = mPendingTasks[fromWorker];
@@ -93,6 +97,9 @@ void Worker::Run( void )
 
         while(!mReadyTasks.empty())
         {
+#ifdef RUN_UNTIL_NOMORE_TASK
+            bye = false;
+#endif
             Task* pTask = mReadyTasks.top();
             mReadyTasks.pop();
         //    printf("=================Worker[%d] get %s\n", mId, pTask->GetName().c_str());

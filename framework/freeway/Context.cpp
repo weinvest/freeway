@@ -92,9 +92,14 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
 
     std::fill(AllWorkers.begin(), AllWorkers.end(), nullptr);
     std::fill(WorkerThreads.begin(), WorkerThreads.end(), nullptr);
+
+    GlobalDispatcher.reset(new Dispatcher(workerCount, miscThreadsNum));
+
     for(int32_t workerId = ThreadIndex[ThreadType::WORKER].first; workerId < ThreadIndex[ThreadType::WORKER].second; ++workerId)
     {
-        AllWorkers[workerId].reset(new Worker(workerId, workerCount));
+        AllWorkers[workerId].reset(new Worker(GlobalDispatcher.get(), workerId, workerCount));
+        AllWorkers[workerId]->Initialize();
+
         WorkerThreads[workerId] = std::make_unique<std::thread>(std::thread([workerId]()
                                                                            {
                                                                                char ThreadName[16];
@@ -105,7 +110,6 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
                                                                                THIS_THREAD_ID = workerId;
                                                                                Bind2Cpu(workerId);
 
-                                                                               ThisWorker->Initialize();
                                                                                ThisWorker->WaitStart();
                                                                                ThisWorker->Run();
                                                                                ThisWorker = nullptr;
@@ -113,7 +117,6 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
     }
 
     //All of the threads can PUSH node to Dispater's PendingNodesQueue
-    GlobalDispatcher.reset(new Dispatcher(workerCount, miscThreadsNum));
     return GlobalDispatcher.get();
 }
 
@@ -157,12 +160,14 @@ bool Context::Start( void )
 
     const int32_t cpuid_main = 0;
     Bind2Cpu(cpuid_main);
+    //    pthread_setname_np(pthread_self(), "Dispatcher");
     GlobalDispatcher->Run();
     return true;
 }
 
 void Context::Stop( void )
 {
+    GlobalDispatcher->Stop();
     int32_t idxWork =  ThreadIndex[ThreadType::WORKER].first;
     while(nullptr != AllWorkers[idxWork])
     {

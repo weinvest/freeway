@@ -12,10 +12,11 @@
 #include "common/DSpscQueue.hpp"
 #include <framework/freeway/Task.h>
 
+class Dispatcher;
 class Worker
 {
 public:
-    Worker(WorkerID_t id, int32_t workerCount);
+    Worker(Dispatcher* pDispatcher, WorkerID_t id, int32_t workerCount);
     ~Worker( void );
     bool Initialize( void );
 
@@ -59,4 +60,5 @@ private:
     std::mutex  mRuningMutex;
     std::condition_variable mRuningCond;
     bool mIsRuning;
+    Dispatcher* mDispatcher{nullptr};
 };

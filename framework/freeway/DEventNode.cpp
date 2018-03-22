@@ -42,6 +42,8 @@ int32_t DEventNode::Process(Task* pTask, WorkflowID_t workflowId) noexcept
         catch (...) {
             LOG_ERROR(mLog, GetName() << " exception at DoProcess.");
         }
+
+        mLastWorkflowId = workflowId;
     }
 
     for (auto precursor : GetPrecursors()) {
