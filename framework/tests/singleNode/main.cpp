@@ -44,8 +44,9 @@ BOOST_AUTO_TEST_CASE(first_test)
     auto singleNode = SingleNode(3000);
     std::thread t = std::move(Context::StartMiscThread([&singleNode]
                   {
+WaitStart();
                       int32_t runCnt = 0;
-                      while(runCnt < 100)
+while(runCnt < 100)
                       {
                           ++runCnt;
                           singleNode.SetRaiseTime(Clock::Instance().Now());

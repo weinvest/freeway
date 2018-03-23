@@ -168,6 +168,12 @@ bool Context::Start( void )
     return true;
 }
 
+void Context::WaitStart( void )
+{
+    while(!GlobalDispatcher->IsRunning())
+    {}
+}
+
 void Context::Stop( void )
 {
     GlobalDispatcher->Stop();
