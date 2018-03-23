@@ -26,5 +26,5 @@ void TaskList::Push(Task* pTask)
 
 bool TaskList::Empty( void ) const
 {
-    return nullptr != mHead;
+    return nullptr == mHead;
 }
