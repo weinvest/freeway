@@ -47,6 +47,8 @@ public:
     bool LockShared(Task* pTask);
 
     void WaitSharedLock4(Task* pTask);
+
+    bool TrySharedLock4(Task* pTask);
 //后继节点结束后,释放掉本身对应的mReaders(无论是否调用过LockShared)计数
 //除非Task不存在，自然不会Unlock，后继节点也不应该UnlockShared
     void UnlockShared(Task* pTask);
@@ -55,6 +57,8 @@ public:
     bool Lock(Task* task);
 
     void WaitLock4(Task* pTask);
+
+    bool TryLock4(Task* pTask);
 
     //当前节点DoProcess结束就可以调用Unlock(即使Unlock后，Task[Nextflow] 依然会被mReaders阻止)
     void Unlock(Task* task);

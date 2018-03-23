@@ -72,6 +72,10 @@ void Worker::Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask)
     pTaskQueue.Push({pWho, pTask});
 }
 
+void Worker::Push2WaittingList(Task* pTask)
+{
+    mWaittingTasks.Push(pTask);
+}
 
 void Worker::Run( void )
 {
@@ -79,6 +83,7 @@ void Worker::Run( void )
     {
         if(taskPair.task->GetWaited() == taskPair.waited)
         {
+            taskPair.task->SetWaited(nullptr);
             mReadyTasks.push(taskPair.task);
         }
     };
@@ -94,6 +99,8 @@ void Worker::Run( void )
             auto& pTaskQueue = mPendingTasks[fromWorker];
             pTaskQueue.consume_all(push2ReadyQueue);
         }
+
+        CheckLostLamb();
 
         while(!mReadyTasks.empty())
         {
@@ -122,6 +129,35 @@ void Worker::Run( void )
             }
         }
     }
+}
+
+void Worker::CheckLostLamb( void )  {
+    TaskList waittingTasks = std::move(mWaittingTasks);
+    while(!waittingTasks.Empty())
+        {
+            auto pTask = waittingTasks.Pop();
+            if(pTask->IsWaitting())
+            {
+                bool gotLock = false;
+                if(pTask->IsWaittingLock())
+                {
+                    gotLock = pTask->TryLock();
+                } else
+                {
+                    gotLock = pTask->TrySharedLock();
+                }
+
+                if(gotLock)
+                {
+                    pTask->SetWaited(nullptr);
+                    mReadyTasks.push(pTask);
+                }
+                else
+                {
+                    mWaittingTasks.Push(pTask);
+                }
+            }
+        }
 }
 
 void Worker::Stop( void )

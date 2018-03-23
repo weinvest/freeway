@@ -43,6 +43,9 @@ public:
 
     void SetWaited(void* pWaited) { mWaited = pWaited; }
 
+    bool IsWaitting( void ) const { return nullptr != mWaited; }
+    bool IsWaittingLock( void ) const { return mWaited == mNodePtr; }
+
     void DecreaseWaitingLockCount( void ) { --mWaitingLockCount; }
 
 
@@ -53,6 +56,9 @@ public:
     WorkflowID_t GetWorkflowID( void ) const { return mWorkflowId; }
     void Suspend(void);
 
+    bool TryLock( void );
+    bool TrySharedLock( void );
+
 private:
     Task& operator =(const Task&) = delete;
     void RunNode( void );
@@ -60,7 +66,9 @@ private:
     Worker* mWorker{nullptr};
     DEventNode* mNodePtr {nullptr};
 
+    friend class TaskList;
     void* mWaited{nullptr};
+    Task* mNext{nullptr};
 
     WorkflowID_t mWorkflowId{0};
     int32_t mWaitingLockCount;

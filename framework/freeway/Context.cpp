@@ -46,6 +46,7 @@ void Context::SetCurrentTask(Task* pTask)
 void Context::SwitchOut( void )
 {
     CurrentTask->Suspend();
+    ThisWorker->Push2WaittingList(CurrentTask);
     CurrentTask = nullptr;
 }
 

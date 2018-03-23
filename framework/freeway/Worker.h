@@ -11,7 +11,7 @@
 
 #include "common/DSpscQueue.hpp"
 #include <framework/freeway/Task.h>
-
+#include <framework/freeway/TaskList.h>
 class Dispatcher;
 class Worker
 {
@@ -21,6 +21,8 @@ public:
     bool Initialize( void );
 
     void Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask);
+
+    void Push2WaittingList(Task* pTask);
 
     void WaitStart( void );
     void Start( void );
@@ -41,11 +43,12 @@ public:
         friend bool operator != (const TaskPair& lhs, const TaskPair& rhs);
     };
 private:
+    void CheckLostLamb(void);
+
+
     const WorkerID_t mId;
     const int32_t mWorkerCount;
     const int32_t mQueueCount;
-
-
 
     using PendingTaskQueue = DSpscQueue<TaskPair>;
     PendingTaskQueue* mPendingTasks;
@@ -56,9 +59,11 @@ private:
     using TaskPool = std::array<Task, TASK_POOL_SIZE>;
     TaskPool *mTaskPool;
     int32_t mNextTaskPos{0};
+    TaskList mWaittingTasks;
 
     std::mutex  mRuningMutex;
     std::condition_variable mRuningCond;
     bool mIsRuning;
     Dispatcher* mDispatcher{nullptr};
+
 };

@@ -41,6 +41,12 @@ void SharedMutex::WaitLock4(Task* pTask)
     }
 }
 
+bool SharedMutex::TryLock4(Task* pTask)
+{
+    auto pFirst = mWaiters.First();
+    return nullptr == pFirst || pFirst->value.pTask == pTask;
+}
+
 void SharedMutex::WaitSharedLock4(Task* pTask)
 {
     auto hasLock = mWaitingWriterWorkflowIds.empty() || pTask->GetWorkflowId() < mWaitingWriterWorkflowIds.front();
@@ -48,8 +54,13 @@ void SharedMutex::WaitSharedLock4(Task* pTask)
     {
         pTask->SetWaited(mOwner);
         Context::SwitchOut();
-        pTask->SetWaited(nullptr);
     }
+}
+
+bool SharedMutex::TrySharedLock4(Task* pTask)
+{
+    auto hasLock = mWaitingWriterWorkflowIds.empty() || pTask->GetWorkflowId() < mWaitingWriterWorkflowIds.front();
+    return hasLock;
 }
 
 void SharedMutex::UnlockShared(Task* pTask)

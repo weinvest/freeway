@@ -29,7 +29,7 @@ void Task::Update(WorkflowID_t flow, Worker* worker, DEventNode* pNode)
 {
     mWorkflowId = flow;
     mWorker = worker;
-    mWaited = nullptr;
+    mWaited = pNode;
     mNodePtr = pNode;
     mWaitingLockCount = pNode->GetPrecursors().size();
     mLevel = 0;
@@ -77,4 +77,14 @@ void Task::RunNode( void )
 
         Context::SwitchOut();
     }
+}
+
+bool Task::TryLock( void )
+{
+    return mNodePtr->GetMutex().TryLock4(this);
+}
+
+bool Task::TrySharedLock( void )
+{
+    return mNodePtr->GetMutex().TrySharedLock4(this);
 }
