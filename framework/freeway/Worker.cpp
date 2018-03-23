@@ -42,7 +42,7 @@ bool Worker::Initialize( void )
     }
 
     mTaskPool = new TaskPool();
-
+    mInitialized = true;
     return true;
 }
 

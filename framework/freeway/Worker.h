@@ -29,6 +29,7 @@ public:
     void Run( void );
     void Stop( void );
 
+    bool IsInitialized( void ) const { return mInitialized; }
     WorkerID_t GetId( void ) const { return mId; }
     int32_t GetWorkerCount( void ) const { return mWorkerCount; }
 
@@ -64,6 +65,7 @@ private:
     std::mutex  mRuningMutex;
     std::condition_variable mRuningCond;
     bool mIsRuning;
+    bool mInitialized{false};
     Dispatcher* mDispatcher{nullptr};
 
 };

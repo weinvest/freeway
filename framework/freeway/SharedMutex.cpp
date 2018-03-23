@@ -59,7 +59,8 @@ void SharedMutex::WaitSharedLock4(Task* pTask)
 
 bool SharedMutex::TrySharedLock4(Task* pTask)
 {
-    auto hasLock = mWaitingWriterWorkflowIds.empty() || pTask->GetWorkflowId() < mWaitingWriterWorkflowIds.front();
+    auto itBeg = mWaitingWriterWorkflowIds.begin();
+    auto hasLock = itBeg == mWaitingWriterWorkflowIds.end() || pTask->GetWorkflowId() < (*itBeg);
     return hasLock;
 }
 

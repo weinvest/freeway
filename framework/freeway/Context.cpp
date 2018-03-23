@@ -99,7 +99,6 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
     for(int32_t workerId = ThreadIndex[ThreadType::WORKER].first; workerId < ThreadIndex[ThreadType::WORKER].second; ++workerId)
     {
         AllWorkers[workerId].reset(new Worker(GlobalDispatcher.get(), workerId, workerCount));
-        AllWorkers[workerId]->Initialize();
 
         WorkerThreads[workerId] = std::make_unique<std::thread>(std::thread([workerId]()
                                                                            {
@@ -110,6 +109,7 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
                                                                                ThisWorker = AllWorkers[workerId].get();
                                                                                THIS_THREAD_ID = workerId;
                                                                                Bind2Cpu(workerId);
+                                                                               ThisWorker->Initialize();
 
                                                                                ThisWorker->WaitStart();
                                                                                ThisWorker->Run();
@@ -156,7 +156,9 @@ bool Context::Start( void )
 
     for(int32_t workerId = ThreadIndex[ThreadType::WORKER].first; workerId < ThreadIndex[ThreadType::WORKER].second; ++workerId)
     {
-        AllWorkers[workerId]->Start();
+        auto& pTask = AllWorkers[workerId];
+        while(!pTask->IsInitialized());
+        pTask->Start();
     }
 
     const int32_t cpuid_main = 0;
