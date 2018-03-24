@@ -47,14 +47,14 @@ BOOST_AUTO_TEST_CASE(first_test)
                   {
                       Context::WaitStart();
 
-                      const int32_t MAX_RUN_COUNT = 100;
+                      const int32_t MAX_RUN_COUNT = 12;
                       int32_t runCnt = 0;
                       while(runCnt < MAX_RUN_COUNT)
                       {
                           ++runCnt;
                           singleNode.SetRaiseTime(Clock::Instance().Now());
                           singleNode.RaiseSelf();
-                          std::this_thread::sleep_for(std::chrono::microseconds(500));
+                          std::this_thread::sleep_for(std::chrono::microseconds(5));
                       }
 
                       Context::Stop();

@@ -138,31 +138,30 @@ void Worker::Run( void )
 
 void Worker::CheckLostLamb( void )  {
     TaskList waittingTasks = std::move(mWaittingTasks);
-    while(!waittingTasks.Empty())
+    while(!waittingTasks.Empty()) {
+        auto pTask = waittingTasks.Pop();
+        if(pTask->IsWaitting())
         {
-            auto pTask = waittingTasks.Pop();
-            if(pTask->IsWaitting())
+            bool gotLock = false;
+            if(pTask->IsWaittingLock())
             {
-                bool gotLock = false;
-                if(pTask->IsWaittingLock())
-                {
-                    gotLock = pTask->TryLock();
-                } else
-                {
-                    gotLock = pTask->TrySharedLock();
-                }
+                gotLock = pTask->TryLock();
+            } else
+            {
+                gotLock = pTask->TrySharedLock();
+            }
 
-                if(gotLock)
-                {
-                    pTask->SetWaited(nullptr);
-                    mReadyTasks.push(pTask);
-                }
-                else
-                {
-                    mWaittingTasks.Push(pTask);
-                }
+            if(gotLock)
+            {
+                pTask->SetWaited(nullptr);
+                mReadyTasks.push(pTask);
+            }
+            else
+            {
+                mWaittingTasks.Push(pTask);
             }
         }
+    }
 }
 
 void Worker::Stop( void )
