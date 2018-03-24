@@ -95,17 +95,21 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
     std::fill(WorkerThreads.begin(), WorkerThreads.end(), nullptr);
 
     GlobalDispatcher.reset(new Dispatcher(workerCount, miscThreadsNum));
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, 8388608);
 
     for(int32_t workerId = ThreadIndex[ThreadType::WORKER].first; workerId < ThreadIndex[ThreadType::WORKER].second; ++workerId)
     {
         AllWorkers[workerId].reset(new Worker(GlobalDispatcher.get(), workerId, workerCount));
-
+//        AllWorkers[workerId]->Initialize();
         WorkerThreads[workerId] = std::make_unique<std::thread>(std::thread([workerId]()
                                                                            {
+
                                                                                char ThreadName[16];
 
                                                                                snprintf(ThreadName, sizeof(ThreadName), "Worker-%d", workerId);
-//                                                                               pthread_setname_np(pthread_self(), ThreadName);
+                                                                               pthread_setname_np(ThreadName);
                                                                                ThisWorker = AllWorkers[workerId].get();
                                                                                THIS_THREAD_ID = workerId;
                                                                                Bind2Cpu(workerId);
@@ -114,9 +118,10 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
                                                                                ThisWorker->WaitStart();
                                                                                ThisWorker->Run();
                                                                                ThisWorker = nullptr;
+                                                                               printf("worker's stack size:%zu\n", pthread_get_stacksize_np(pthread_self()));
                                                                            }));
     }
-
+    printf("dispatcher's stack size:%zu\n", pthread_get_stacksize_np(pthread_self()));
     //All of the threads can PUSH node to Dispater's PendingNodesQueue
     return GlobalDispatcher.get();
 }
@@ -163,7 +168,7 @@ bool Context::Start( void )
 
     const int32_t cpuid_main = 0;
     Bind2Cpu(cpuid_main);
-    //    pthread_setname_np(pthread_self(), "Dispatcher");
+    pthread_setname_np("Dispatcher");
     GlobalDispatcher->Run();
     return true;
 }

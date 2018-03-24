@@ -47,7 +47,7 @@ public:
     static WorkerId GetWorkerId(void);
 
     static bool Start(void);
-    static void WaitStart( void )
+    static void WaitStart( void );
 
     static void Stop(void);
 

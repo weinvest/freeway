@@ -25,11 +25,9 @@ Task::Task()
 
 int32_t Task::GetWorkerId() const {return mWorker->GetId();}
 
-void Task::Update(WorkflowID_t flow, Worker* worker, DEventNode* pNode)
+void Task::Update(WorkflowID_t flow, DEventNode* pNode)
 {
     mWorkflowId = flow;
-    mWorker = worker;
-    mWaited = pNode;
     mNodePtr = pNode;
     mWaitingLockCount = pNode->GetPrecursors().size();
     mLevel = 0;
@@ -71,10 +69,10 @@ void Task::Resume( void )
 void Task::RunNode( void )
 {
     while(true) {
-        LOG_INFO("Enter coroutine Task for %s[%d] RunNode", GetName().c_str(), mWorkflowId);
+        LOG_INFO("Enter coroutine Task for %s[%d] RunNode", GetName(), mWorkflowId);
 
         mNodePtr->Process(this, mWorkflowId);
-
+        mWaited = Context::GetDispatcher();
         Context::SwitchOut();
     }
 }

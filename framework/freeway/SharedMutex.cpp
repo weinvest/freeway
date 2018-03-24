@@ -37,6 +37,7 @@ void SharedMutex::WaitLock4(Task* pTask)
     assert(!mWaiters.Empty());
     if(mWaiters.First()->value.pTask != pTask)
     {
+        pTask->SetWaited(mOwner);
         Context::SwitchOut();
     }
 }

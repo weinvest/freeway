@@ -42,6 +42,12 @@ bool Worker::Initialize( void )
     }
 
     mTaskPool = new TaskPool();
+    for(int iTask = 0; iTask < mTaskPool->size(); ++iTask)
+    {
+        auto& task = mTaskPool->at(iTask);
+        task.SetWaited(mDispatcher);
+        task.SetWorker(this);
+    }
     mInitialized = true;
     return true;
 }
@@ -50,7 +56,7 @@ Task* Worker::AllocateTaskFromPool(WorkflowID_t flow, Worker* pWorker, DEventNod
 {
     auto pTask = &(mTaskPool->at((mNextTaskPos++) % TASK_POOL_SIZE));
 //    std::cout << "allocate task:" << pTask << "\n";
-    pTask->Update(flow, pWorker, pNode);
+    pTask->Update(flow, pNode);
     return pTask;
 }
 

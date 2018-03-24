@@ -71,7 +71,7 @@ Task *Dispatcher::VisitNode(DEventNode *pNode, int32_t level) {
             pPrecessor->GetMutex().LockShared(pTask);
         }
         pNode->GetMutex().Lock(pTask);
-        Context::Enqueue(DispatchIndex, pNode, pTask);
+        Context::Enqueue(DispatchIndex, this, pTask);
 
         auto &successors = pNode->GetSuccessors();
         for (auto pSuccessor : successors) {

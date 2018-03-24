@@ -28,13 +28,14 @@ public:
     int32_t GetWorkflowId() const { return mWorkflowId; }
     int32_t GetWorkerId() const;
     Worker* GetWorker() const { return mWorker; }
+    void SetWorker(Worker* pWorkder) { mWorker = pWorkder; }
     DEventNode* GetNode() { return mNodePtr; }
 
     int32_t GetLevel() const { return mLevel; }
 
     void SetLevel(int32_t level) { mLevel = level; }
 
-    void Update(WorkflowID_t flow, Worker* worker, DEventNode* pNode);
+    void Update(WorkflowID_t flow, DEventNode* pNode);
 
     int32_t GetWaitingLockCount( void ) const { return mWaitingLockCount; }
 
@@ -63,22 +64,19 @@ private:
     Task& operator =(const Task&) = delete;
     void RunNode( void );
 
-    Worker* mWorker{nullptr};
     DEventNode* mNodePtr {nullptr};
+    WorkflowID_t mWorkflowId{0};
+    int32_t mWaitingLockCount{0};
+    int32_t mLevel{0};
 
     friend class TaskList;
+
+    alignas(64)Worker* mWorker{nullptr};
     void* mWaited{nullptr};
     Task* mNext{nullptr};
 
-    WorkflowID_t mWorkflowId{0};
-    int32_t mWaitingLockCount;
-    int32_t mLevel{0};
-
     ctx::continuation mMainContext;
     ctx::continuation mTaskContext;
-    bool mLockAcquired{false};
- //   std::atomic_int mWaitingLockCount;
- //   bool mAccepted;
 };
 
 struct TaskCompare
