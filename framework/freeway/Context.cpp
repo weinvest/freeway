@@ -35,7 +35,11 @@ bool Bind2Cpu(int32_t idxCPU)
 
 void SetThreadName(const std::string& name)
 {
+#if __APPLE__
     pthread_setname_np(name.c_str());
+#else
+    pthread_setname_np(pthread_self(), name.c_str());
+#endif
 }
 
 std::unique_ptr<Dispatcher> GlobalDispatcher = nullptr;
