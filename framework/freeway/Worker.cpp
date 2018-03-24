@@ -45,7 +45,6 @@ bool Worker::Initialize( void )
     for(int iTask = 0; iTask < mTaskPool->size(); ++iTask)
     {
         auto& task = mTaskPool->at(iTask);
-        task.SetWaited(mDispatcher);
         task.SetWorker(this);
     }
     mInitialized = true;

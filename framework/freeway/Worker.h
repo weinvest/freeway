@@ -32,7 +32,7 @@ public:
     bool IsInitialized( void ) const { return mInitialized; }
     WorkerID_t GetId( void ) const { return mId; }
     int32_t GetWorkerCount( void ) const { return mWorkerCount; }
-
+    Dispatcher* GetDispatcher( void ) { return mDispatcher; }
     Task* AllocateTaskFromPool(WorkflowID_t flow, Worker* pWorker, DEventNode* pNode);
 
     struct TaskPair

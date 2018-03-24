@@ -72,7 +72,6 @@ void Task::RunNode( void )
         LOG_INFO("Enter coroutine Task for %s[%d] RunNode", GetName(), mWorkflowId);
 
         mNodePtr->Process(this, mWorkflowId);
-        mWaited = Context::GetDispatcher();
         Context::SwitchOut();
     }
 }

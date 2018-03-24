@@ -71,7 +71,7 @@ private:
 
     friend class TaskList;
 
-    alignas(64)Worker* mWorker{nullptr};
+    Worker* mWorker{nullptr};
     void* mWaited{nullptr};
     Task* mNext{nullptr};
 
