@@ -1,4 +1,4 @@
 #!/bin/bash
-./build.sh
+make install
 mv lib/lib* ./
 bin/singleNode
