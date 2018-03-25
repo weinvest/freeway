@@ -8,6 +8,7 @@
 #include <boost/exception/all.hpp>
 #include <iostream>
 #include <framework/freeway/Task.h>
+#include <clock/Clock.h>
 #include "Dispatcher.h"
 bool operator == (const Worker::TaskPair& lhs, const Worker::TaskPair& rhs)
 {
@@ -26,6 +27,12 @@ Worker::Worker(Dispatcher* pDispatcher, WorkerId id, int32_t workerCount)
         ,mIsRuning(false)
         ,mDispatcher(pDispatcher)
 {
+    mPendingTasks = new PendingTaskQueue[mQueueCount];
+    for(int i=0; i<mQueueCount; i++) {
+        mPendingTasks[i].Init(1024, TaskPair{0, nullptr});
+    }
+
+    mTaskPool = new TaskPool();
 }
 
 Worker::~Worker( void )
@@ -36,16 +43,12 @@ Worker::~Worker( void )
 
 bool Worker::Initialize( void )
 {
-    mPendingTasks = new PendingTaskQueue[mQueueCount];
-    for(int i=0; i<mQueueCount; i++) {
-        mPendingTasks[i].Init(1024, TaskPair{0, nullptr});
-    }
 
-    mTaskPool = new TaskPool();
     for(int iTask = 0; iTask < mTaskPool->size(); ++iTask)
     {
         auto& task = mTaskPool->at(iTask);
         task.SetWorker(this);
+        task.Resume();
     }
     mInitialized = true;
     return true;
@@ -97,7 +100,7 @@ void Worker::Run( void )
     while (mIsRuning || mDispatcher->IsRunning() || !bye){
         bye = true;
 #else
-    while(mIsRuning){
+    while(LIKELY(mIsRuning)){
 #endif
         for(WorkerId fromWorker = 0; fromWorker < mQueueCount; ++fromWorker)
         {
@@ -134,6 +137,8 @@ void Worker::Run( void )
             }
         }
     }
+
+    std::cout << "worker-" << mId << "stoped@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
 }
 
 void Worker::CheckLostLamb( void )  {

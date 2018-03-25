@@ -111,9 +111,16 @@ void Dispatcher::Run(void) {
 
         isFirstNode = true;
     }
+
+    mStopFinished = true;
 }
 
 void Dispatcher::Stop(void)
 {
     mIsRunning = false;
+}
+
+void Dispatcher::Join( void )
+{
+    while(!mStopFinished);
 }

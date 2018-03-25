@@ -76,7 +76,7 @@ public:
             //sleep(1);
 
             GetDispatcher()->Enqueue(mID, mNode);
-            usleep(100);
+            usleep(50);
         }
     auto meanTime = mNode->GetTotalUsedTime() / mNode->GetRunCount();
     std::cout << "======================================================\n";

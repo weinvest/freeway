@@ -18,6 +18,7 @@ public:
     bool Enqueue(int32_t fromID, DEventNode* );
 
     void Run( void );
+    void Join( void );
     void Stop();
 private:
     int32_t SelectWorker(DEventNode* );
@@ -33,6 +34,7 @@ private:
 
     std::vector<Task*> mPendingTask;
     bool mIsRunning;
+    bool mStopFinished{false};
 };
 
 

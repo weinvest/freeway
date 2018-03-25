@@ -54,7 +54,11 @@ void Context::SetCurrentTask(Task* pTask)
 
 void Context::SwitchOut( void )
 {
+#if 0 //def DEBUG
+    CurrentTask->Suspend4Lock();
+#else
     CurrentTask->Suspend();
+#endif
     ThisWorker->Push2WaittingList(CurrentTask);
     CurrentTask = nullptr;
 }
@@ -111,7 +115,7 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
     for(int32_t workerId = ThreadIndex[ThreadType::WORKER].first; workerId < ThreadIndex[ThreadType::WORKER].second; ++workerId)
     {
         AllWorkers[workerId].reset(new Worker(GlobalDispatcher.get(), workerId, workerCount));
-        AllWorkers[workerId]->Initialize();
+//        AllWorkers[workerId]->Initialize();
         WorkerThreads[workerId] = std::make_unique<std::thread>(std::thread([workerId]()
                                                                            {
 
@@ -119,7 +123,7 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
                                                                                ThisWorker = AllWorkers[workerId].get();
                                                                                THIS_THREAD_ID = workerId;
                                                                                Bind2Cpu(workerId);
-//                                                                               ThisWorker->Initialize();
+                                                                               ThisWorker->Initialize();
 
                                                                                ThisWorker->WaitStart();
                                                                                ThisWorker->Run();
@@ -188,6 +192,7 @@ void Context::WaitStart( void )
 void Context::Stop( void )
 {
     GlobalDispatcher->Stop();
+    GlobalDispatcher->Join();
     int32_t idxWork =  ThreadIndex[ThreadType::WORKER].first;
     while(nullptr != AllWorkers[idxWork])
     {

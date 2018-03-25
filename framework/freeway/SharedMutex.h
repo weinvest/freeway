@@ -68,7 +68,7 @@ private:
     bool Wake();
 
     DEventNode* mOwner{nullptr};
-    Task* mWriter{nullptr};
+
     std::atomic<int> mReaders{0};
     std::atomic_flag mIsInWaking ATOMIC_FLAG_INIT;
     WaiterBufferType mWaiters;

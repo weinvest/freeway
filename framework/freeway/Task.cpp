@@ -15,6 +15,7 @@ Task::Task()
     mTaskContext =  ctx::callcc( [this](ctx::continuation && from)
                                  {
                                      mMainContext = from.resume();
+                                     Suspend();
 //                                     std::cout << "task begin runnode\n";
                                      RunNode();
 //                                     std::cout << "task after runnode\n";
@@ -23,6 +24,10 @@ Task::Task()
 //    std::cout << "Task construct:" << this <<"\n";
 }
 
+Task::~Task() {
+    mNodePtr = nullptr;
+//    std::cout << this << " dctor @" << mWorkflowId << "\n";
+}
 int32_t Task::GetWorkerId() const {return mWorker->GetId();}
 
 void Task::Update(WorkflowID_t flow, DEventNode* pNode)
@@ -53,10 +58,29 @@ void Task::Suspend(void)
     mMainContext = mMainContext.resume();
 }
 
+#ifdef DEBUG
+#include "clock/Clock.h"
+
+void Task::Suspend4Lock( void )
+{
+    mLastSuspendWkflowId = mWorkflowId;
+    mLastSuspendWaitLock = true;
+    pthread_getname_np(pthread_self(), mLastSuspendThreadName, sizeof(mLastSuspendThreadName));
+    mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
+    mMainContext = mMainContext.resume();
+}
+
+#endif
+
 void Task::Resume( void )
 {
 //Entry for Worker's ReadyTask(After Enqueued by Dispatcher or Wakeup by other worker)
 //    std::cout << "Task resume:" << this << "\n";
+#if 0 //def DEBUG
+    mLastResumeWkflowId = mWorkflowId;
+    pthread_getname_np(pthread_self(), mLastResumeThreadName, sizeof(mLastResumeThreadName));
+    mLastResumeTime = Clock::Instance().TimeOfDay().total_microseconds();
+#endif
     if(mTaskContext) {
         mTaskContext = mTaskContext.resume();
     }
@@ -68,11 +92,21 @@ void Task::Resume( void )
 
 void Task::RunNode( void )
 {
+    int32_t runCnt = 0;
     while(true) {
         LOG_INFO("Enter coroutine Task for %s[%d] RunNode", GetName(), mWorkflowId);
-
+//        char name[32];
+//        pthread_getname_np(pthread_self(), name, sizeof(name));
+//        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
+        ++runCnt;
         mNodePtr->Process(this, mWorkflowId);
-        Context::SwitchOut();
+        mNodePtr = nullptr;
+#if 0 //def DEBUG
+        mLastSuspendWaitLock = false;
+        mLastSuspendWkflowId = mWorkflowId;
+        mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
+#endif
+        Suspend();
     }
 }
 

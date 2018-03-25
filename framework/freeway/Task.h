@@ -24,6 +24,7 @@ public:
 
     Task(Task&& other) = delete;
     Task(const Task&) = delete;
+    ~Task();
 
     int32_t GetWorkflowId() const { return mWorkflowId; }
     int32_t GetWorkerId() const;
@@ -59,7 +60,9 @@ public:
 
     bool TryLock( void );
     bool TrySharedLock( void );
-
+#ifdef DEBUG
+    void Suspend4Lock( void );
+#endif
 private:
     Task& operator =(const Task&) = delete;
     void RunNode( void );
@@ -77,6 +80,16 @@ private:
 
     ctx::continuation mMainContext;
     ctx::continuation mTaskContext;
+
+#ifdef DEBUG
+    int32_t mLastResumeWkflowId{-1};
+    char mLastResumeThreadName[32];
+    int64_t mLastResumeTime{0};
+    int32_t mLastSuspendWkflowId{-1};
+    bool mLastSuspendWaitLock{false};
+    int64_t mLastSuspendTime{0};
+    char mLastSuspendThreadName[32];
+#endif
 };
 
 struct TaskCompare
