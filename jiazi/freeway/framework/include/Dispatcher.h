@@ -35,6 +35,7 @@ private:
     std::vector<ITask*> mPendingTask;
     bool mIsRunning;
 };
+void SetThreadName(const std::string& name);
 
 
 #endif //ARAGOPROJECT_DISPATCHER_H

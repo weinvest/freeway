@@ -95,11 +95,19 @@ ITask* Dispatcher::VisitNode (DEventNode* pNode)
     return pNode->GetDispatchedTask();
 };
 
+void SetThreadName(const std::string& name)
+{
+    #if __APPLE__
+        pthread_setname_np(name.c_str());
+    #else
+        pthread_setname_np(pthread_self(), name.c_str());
+    #endif
+}
 
 #include <stdio.h>
 void Dispatcher::Run( void )
 {
-    pthread_setname_np("Dispatcher");
+    SetThreadName("Dispatcher");
     
     while (mIsRunning)
     {
