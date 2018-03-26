@@ -52,25 +52,9 @@ void Context::SetCurrentTask(Task* pTask)
     CurrentTask = pTask;
 }
 
-void Context::SwitchOut( void )
-{
-#if 0 //def DEBUG
-    CurrentTask->Suspend4Lock();
-#else
-    CurrentTask->Suspend();
-#endif
-    ThisWorker->Push2WaittingList(CurrentTask);
-    CurrentTask = nullptr;
-}
-
 Task* Context::GetCurrentTask( void )
 {
     return CurrentTask;
-}
-
-void Context::Enqueue(int32_t from, void* pWho, Task* pTask)
-{
-    pTask->GetWorker()->Enqueue(from, pWho, pTask);
 }
 
 std::array<std::unique_ptr<Worker>, MAX_WORKERS> AllWorkers;
@@ -203,9 +187,16 @@ void Context::Stop( void )
     }
 }
 
-std::thread Context::StartMiscThread(std::function<void()> f)
+void Context::InitMiscThread(const std::string& name)
 {
-    return std::move(std::thread([f](){ THIS_THREAD_ID = NEXT_MISC_THREAD_ID.fetch_add(1); f(); }));
+    THIS_THREAD_ID = NEXT_MISC_THREAD_ID.fetch_add(1);
+    if(name.empty())
+    {
+        SetThreadName("Misc-"+std::to_string(THIS_THREAD_ID));
+    } else{
+        SetThreadName(name);
+    }
+
 }
 
 ThreadId Context::GetThreadId( void )

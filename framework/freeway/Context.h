@@ -6,7 +6,6 @@
 #define ARAGOPROJECT_CONTEXT_H
 #include <memory>
 #include <functional>
-#include <thread>
 class Worker;
 class Task;
 class Task;
@@ -30,15 +29,11 @@ public:
 
     static void SetCurrentTask(Task *pTask);
 
-    static void SwitchOut(void);
-
     static Task *GetCurrentTask(void);
 
     static Dispatcher *Init(int32_t workerCount, int32_t miscThreadsNum);
 
     static Dispatcher *GetDispatcher(void);
-
-    static void Enqueue(int32_t from, void *pWho, Task *pTask);
 
     static Worker *GetWorker(void);
 
@@ -51,7 +46,7 @@ public:
 
     static void Stop(void);
 
-    static std::thread StartMiscThread(std::function<void()> f);
+    static void InitMiscThread(const std::string& name);
 
     static ThreadId GetThreadId( void );
 };

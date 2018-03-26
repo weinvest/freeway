@@ -2,7 +2,7 @@
 // Created by shgli on 17-9-27.
 //
 
-#include <framework/freeway/Worker.h>
+#include "Worker.h"
 #include "Task.h"
 #include "SharedMutex.h"
 #include "DEventNode.h"
@@ -55,6 +55,7 @@ const std::string& Task::GetName( void )
 
 void Task::Suspend(void)
 {
+    mWorker->Push2WaittingList(this);
     mMainContext = mMainContext.resume();
 }
 
@@ -67,7 +68,7 @@ void Task::Suspend4Lock( void )
     mLastSuspendWaitLock = true;
     pthread_getname_np(pthread_self(), mLastSuspendThreadName, sizeof(mLastSuspendThreadName));
     mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
-    mMainContext = mMainContext.resume();
+    Suspend();
 }
 
 #endif
@@ -100,13 +101,12 @@ void Task::RunNode( void )
 //        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
         ++runCnt;
         mNodePtr->Process(this, mWorkflowId);
-        mNodePtr = nullptr;
 #if 0 //def DEBUG
         mLastSuspendWaitLock = false;
         mLastSuspendWkflowId = mWorkflowId;
         mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
 #endif
-        Suspend();
+        mMainContext = mMainContext.resume();
     }
 }
 
@@ -118,4 +118,9 @@ bool Task::TryLock( void )
 bool Task::TrySharedLock( void )
 {
     return mNodePtr->GetMutex().TrySharedLock4(this);
+}
+
+void Task::Enqueue(int32_t from, void *pWhy)
+{
+    mWorker->Enqueue(from, pWhy, this);
 }

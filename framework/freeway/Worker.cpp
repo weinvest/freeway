@@ -122,6 +122,7 @@ void Worker::Run( void )
             {
                 Context::SetCurrentTask(pTask);
                 pTask->Resume();
+                Context::SetCurrentTask(nullptr);
             }
             catch(const boost::exception& ex)
             {

@@ -28,8 +28,9 @@ public:
         if(pThisTask != mTask) //同一节点必须保证上一个Workflow与下一个Workflow使用的Task不同
         {
             mNode->WaitSharedLock4(pThisTask);
+            DecreaseWaitingLockCount();
+
             mTask = pThisTask;
-            pThisTask->DecreaseWaitingLockCount();
         }
         return mNode;
     }

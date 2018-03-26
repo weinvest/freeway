@@ -38,7 +38,7 @@ void SharedMutex::WaitLock4(Task* pTask)
     if(mWaiters.First()->value.pTask != pTask)
     {
         pTask->SetWaited(mOwner);
-        Context::SwitchOut();
+        pTask->Suspend();
     }
 }
 
@@ -54,7 +54,7 @@ void SharedMutex::WaitSharedLock4(Task* pTask)
     if(!hasLock)
     {
         pTask->SetWaited(mOwner);
-        Context::SwitchOut();
+        pTask->Suspend();
     }
 }
 
@@ -71,9 +71,10 @@ void SharedMutex::UnlockShared(Task* pTask)
               this, GetWorkerId(), GetCurrentTask()->GetName().c_str(), GetCurrentTask()->GetWorkflowId(), mReaders.load());
 
     auto prevReadCnt = mReaders.fetch_sub(1);
-    if(((1 ==  prevReadCnt)||(0 == prevReadCnt)) && mIsInWaking.test_and_set())
+    if((prevReadCnt < 2) && mIsInWaking.test_and_set())
     {
-        //如果存在NextFlowTask，则Enqueue
+        //prevReadCnt == 1, 可能没有其他reader了
+        //prevReadCnt <= 0, 说明漏Wake了
         mWaiters.Pop2(mLastLockObject);
         Wake();
         mIsInWaking.clear();
@@ -82,15 +83,12 @@ void SharedMutex::UnlockShared(Task* pTask)
 
 void SharedMutex::Unlock(Task* task)
 {
+    mWaiters.Pop();
+    mWaitingWriterWorkflowIds.pop_front();
+    LOG_DEBUG("Mutex[%p] Worker-%d pop WRITETask-%s[%d]-%p", this, GetWorker()->GetId(),
+              task->GetName().c_str(), task->GetWorkflowId(), task);
 
-    {
-        mWaiters.Pop();
-        mWaitingWriterWorkflowIds.pop_front();
-        LOG_DEBUG("Mutex[%p] Worker-%d pop WRITETask-%s[%d]-%p", this, GetWorker()->GetId(),
-                  task->GetName().c_str(), task->GetWorkflowId(), task);
-
-        Wake();
-    }
+    Wake();
 }
 
 bool SharedMutex::Wake()
@@ -108,14 +106,13 @@ bool SharedMutex::Wake()
         if(LIKELY(mWaiters.Null() != firstWaiter)) {
             if (firstWaiter.IsWriter) {
                 if (0 == mReaders) {
-                    Context::Enqueue(Context::GetWorkerId(), mOwner, firstWaiter.pTask);
-
+                    firstWaiter.pTask->Enqueue(Context::GetWorkerId(), mOwner);
                     return true;
                 }
                 break;
             } else {
                 ++mReaders;
-                Context::Enqueue(Context::GetWorkerId(), mOwner, firstWaiter.pTask);
+                firstWaiter.pTask->Enqueue(Context::GetWorkerId(), mOwner);
             }
         }
 

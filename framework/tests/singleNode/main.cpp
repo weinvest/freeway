@@ -45,8 +45,9 @@ BOOST_AUTO_TEST_CASE(first_test)
     auto singleNode = SingleNode(3000);
     singleNode.SetName("SingleNode");
 //    std::cout << (&singleNode) << "\n";
-    std::thread t = std::move(Context::StartMiscThread([&singleNode]
+    std::thread t([&singleNode]
                   {
+                      Context::InitMiscThread("SingleNode");
                       Context::WaitStart();
 
                       const int32_t MAX_RUN_COUNT = 8193;
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(first_test)
                       Context::Stop();
                       BOOST_CHECK_GE(singleNode.GetRunCount(), 0);
                       BOOST_CHECK_LE(singleNode.GetRunCount(), runCnt);
-                  }));
+                  });
     Context::Start();
     if(t.joinable())
     {

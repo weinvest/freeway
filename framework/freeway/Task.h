@@ -63,6 +63,8 @@ public:
 #ifdef DEBUG
     void Suspend4Lock( void );
 #endif
+
+    void Enqueue(int32_t from, void *pWhy);
 private:
     Task& operator =(const Task&) = delete;
     void RunNode( void );
