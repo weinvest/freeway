@@ -48,7 +48,6 @@ bool Worker::Initialize( void )
     {
         auto& task = mTaskPool->at(iTask);
         task.SetWorker(this);
-        task.Resume();
     }
     mInitialized = true;
     return true;

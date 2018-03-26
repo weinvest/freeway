@@ -15,7 +15,6 @@ Task::Task()
     mTaskContext =  ctx::callcc( [this](ctx::continuation && from)
                                  {
                                      mMainContext = from.resume();
-                                     Suspend();
 //                                     std::cout << "task begin runnode\n";
                                      RunNode();
 //                                     std::cout << "task after runnode\n";
