@@ -9,40 +9,30 @@
 #include <boost/test/test_tools.hpp>
 #include <clock/Clock.h>
 #include "framework/freeway/DEventNode.h"
-
+#include "WorkflowChecker.h"
 
 class MultiNode: public DEventNode
 {
 public:
-    MultiNode(int32_t loopCnt)
-            :mLoopCnt(loopCnt)
+    MultiNode(WorkflowChecker& familyTree, int32_t id, int32_t loopCnt)
+            :mFamilyTree(familyTree)
+            ,mId(id)
+            ,mLoopCnt(loopCnt)
     {}
+
+    int32_t GetId() const { return mId; }
 
     int32_t GetRunCount() const { return mRunCount; }
     void SetRaiseTime(DateTime t) { mRaiseTime = t; }
     TimeSpan GetTotalUsedTime() const { return mUsedTime; }
+
+    void AddPrecessor(MultiNode* pParent);
 protected:
-    int32_t DoProcess(WorkflowID_t workflowId) override
-    {
-//        std::cout << Context::GetWorkerId() << "\n";
-        mUsedTime += (Clock::Instance().Now() - mRaiseTime);
-        BOOST_CHECK_GT(workflowId, GetLastWorkflowId());
-        int32_t i = 0, sum = 0;
-        for(; i < mLoopCnt; ++i)
-        {
-            sum += i;
-        }
+    int32_t DoProcess(WorkflowID_t workflowId) override;
 
-        ++mRunCount;
-//        std::cout << "workflowId:" << workflowId << ":, sum:" << sum << ",run:" << mRunCount << "\n";
-        return sum;
-    }
+    WorkflowChecker& mFamilyTree;
 
-private:
-    int32_t mLoopCnt;
-    int32_t mRunCount{0};
-    DateTime mRaiseTime;
-    TimeSpan mUsedTime;
+    int32_t mId;
 };
 
 

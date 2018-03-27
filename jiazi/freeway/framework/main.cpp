@@ -80,7 +80,7 @@ public:
         }
     auto meanTime = mNode->GetTotalUsedTime() / mNode->GetRunCount();
     std::cout << "======================================================\n";
-    std::cout << "Mean frame used time:" << meanTime.total_microseconds() << "\n";
+    std::cout << "Run " << mNode->GetRunCount() << " times, Mean frame used time:" << meanTime.total_microseconds() << "\n";
     std::cout << "======================================================\n";
     }
 private:

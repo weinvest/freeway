@@ -29,7 +29,7 @@ Worker::Worker(Dispatcher* pDispatcher, WorkerId id, int32_t workerCount)
 {
     mPendingTasks = new PendingTaskQueue[mQueueCount];
     for(int i=0; i<mQueueCount; i++) {
-        mPendingTasks[i].Init(1024, TaskPair{0, nullptr});
+        mPendingTasks[i].Init(8192, TaskPair{0, nullptr});
     }
 
     mTaskPool = new TaskPool();
@@ -47,6 +47,7 @@ bool Worker::Initialize( void )
     for(int iTask = 0; iTask < mTaskPool->size(); ++iTask)
     {
         auto& task = mTaskPool->at(iTask);
+        task.SetId(iTask);
         task.SetWorker(this);
     }
     mInitialized = true;
@@ -94,9 +95,11 @@ void Worker::Run( void )
             mReadyTasks.push(taskPair.task);
         }
     };
+
+    int32_t nLoop = 0;
 #ifdef RUN_UNTIL_NOMORE_TASK
     bool bye = true;
-    while (mIsRuning || mDispatcher->IsRunning() || !bye){
+    while (LIKELY(mIsRuning || mDispatcher->IsRunning() || !mWaittingTasks.Empty())){
         bye = true;
 #else
     while(LIKELY(mIsRuning)){
@@ -107,7 +110,11 @@ void Worker::Run( void )
             pTaskQueue.consume_all(push2ReadyQueue);
         }
 
-        CheckLostLamb();
+        ++nLoop;
+        if(UNLIKELY(0 == (nLoop % 100)))
+        {
+            CheckLostLamb();
+        }
 
         while(!mReadyTasks.empty())
         {
@@ -158,6 +165,9 @@ void Worker::CheckLostLamb( void )  {
 
             if(gotLock)
             {
+#ifdef DEBUG
+//                std::cout << "WorkflowId:" << pTask->GetWorkflowID() << ",Worker:" << mId << " got lock\n";
+#endif
                 pTask->SetWaited(nullptr);
                 mReadyTasks.push(pTask);
             }

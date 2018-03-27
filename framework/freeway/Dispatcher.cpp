@@ -12,7 +12,6 @@ const int32_t capacity = 1024 * 1024;
 
 extern std::unordered_map<ThreadType, std::pair<int, int>> ThreadIndex;
 static WorkflowID_t workflowId = 0;
-static bool isFirstNode = true;
 
 Dispatcher::Dispatcher(int32_t workerCount, int32_t miscThread)
         : mWorkerCount(workerCount), mMiscThreadCount(miscThread),
@@ -45,12 +44,8 @@ WorkerID_t Dispatcher::SelectWorker(DEventNode *pNode) {
     return ++Loop;
 }
 
-Task *Dispatcher::VisitNode(DEventNode *pNode, int32_t level) {
+Task *Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId) {
     static int DispatchIndex = ThreadIndex[ThreadType::DISPATCHER].first;
-    if (isFirstNode) {
-        isFirstNode = false;
-        ++workflowId;
-    }
 
     //一个节点有多个前驱节点时，只能通过一个前驱节点被Dispatch。
     if (!pNode->HasScheduled(workflowId)) {
@@ -75,7 +70,7 @@ Task *Dispatcher::VisitNode(DEventNode *pNode, int32_t level) {
 
         auto &successors = pNode->GetSuccessors();
         for (auto pSuccessor : successors) {
-            VisitNode(pSuccessor, level + 1);
+            VisitNode(pSuccessor, level + 1, workflowId);
         }
 
         return pTask;
@@ -88,28 +83,32 @@ Task *Dispatcher::VisitNode(DEventNode *pNode, int32_t level) {
 #include <stdio.h>
 
 void Dispatcher::Run(void) {
+    int32_t workflowId = 0;
 #ifdef RUN_UNTIL_NOMORE_TASK
     bool bye = true;
-    while (mIsRunning || !bye) {
+    while (LIKELY(mIsRunning || !bye)) {
         bye = true;
 #else
     while(mIsRunning){
 #endif
         static int DispatchIndex = ThreadIndex[ThreadType::DISPATCHER].first;
         //Does dispatcher dispatch the task to itself???
+        int32_t nWorkflowDelta = 0;
         mPendingTask.clear();
         for (WorkerId fromWorker = DispatchIndex; fromWorker < mQueueNum; ++fromWorker) {
             auto &pNodeQueue = mPendingNodes[fromWorker];
             // printf("Dispatcher consumes Queue-%d\n", fromWorker);
-            pNodeQueue.consume_all([this](DEventNode* pNode) {
 #ifdef RUN_UNTIL_NOMORE_TASK
+            pNodeQueue.consume_all([this,&bye,&nWorkflowDelta, workflowId](DEventNode* pNode) {
                 bye = false;
+#else
+            pNodeQueue.consume_all([this,&nWorkflowDelta, workflowId](DEventNode* pNode) {
 #endif
-                VisitNode(pNode, 0);
+                nWorkflowDelta = 1;
+                VisitNode(pNode, 0, workflowId);
             });
         }
-
-        isFirstNode = true;
+        workflowId += nWorkflowDelta;
     }
 
     mStopFinished = true;

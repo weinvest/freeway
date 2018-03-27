@@ -92,10 +92,6 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
     std::fill(WorkerThreads.begin(), WorkerThreads.end(), nullptr);
 
     GlobalDispatcher.reset(new Dispatcher(workerCount, miscThreadsNum));
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setstacksize(&attr, 8388608);
-
     for(int32_t workerId = ThreadIndex[ThreadType::WORKER].first; workerId < ThreadIndex[ThreadType::WORKER].second; ++workerId)
     {
         AllWorkers[workerId].reset(new Worker(GlobalDispatcher.get(), workerId, workerCount));
@@ -182,7 +178,7 @@ void Context::Stop( void )
     {
         AllWorkers[idxWork]->Stop();
         WorkerThreads[idxWork]->join();
-        WorkerThreads[idxWork].reset(nullptr);
+//        WorkerThreads[idxWork].reset(nullptr);
         ++idxWork;
     }
 }

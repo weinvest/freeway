@@ -16,7 +16,9 @@ Task::Task()
                                  {
                                      mMainContext = from.resume();
 //                                     std::cout << "task begin runnode\n";
-                                     RunNode();
+                                     if(LIKELY(nullptr != mNodePtr)) {
+                                         RunNode();
+                                     }
 //                                     std::cout << "task after runnode\n";
                                      return std::move(mMainContext);  //此时Task必须有效
                                  });
@@ -76,7 +78,7 @@ void Task::Resume( void )
 {
 //Entry for Worker's ReadyTask(After Enqueued by Dispatcher or Wakeup by other worker)
 //    std::cout << "Task resume:" << this << "\n";
-#if 0 //def DEBUG
+#ifdef DEBUG
     mLastResumeWkflowId = mWorkflowId;
     pthread_getname_np(pthread_self(), mLastResumeThreadName, sizeof(mLastResumeThreadName));
     mLastResumeTime = Clock::Instance().TimeOfDay().total_microseconds();
@@ -100,7 +102,7 @@ void Task::RunNode( void )
 //        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
         ++runCnt;
         mNodePtr->Process(this, mWorkflowId);
-#if 0 //def DEBUG
+#ifdef DEBUG
         mLastSuspendWaitLock = false;
         mLastSuspendWkflowId = mWorkflowId;
         mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();

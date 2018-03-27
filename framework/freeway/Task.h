@@ -60,6 +60,7 @@ public:
 
     bool TryLock( void );
     bool TrySharedLock( void );
+    void SetId(int32_t id) { mId = id; }
 #ifdef DEBUG
     void Suspend4Lock( void );
 #endif
@@ -73,6 +74,7 @@ private:
     WorkflowID_t mWorkflowId{0};
     int32_t mWaitingLockCount{0};
     int32_t mLevel{0};
+    int32_t mId{-1};
 
     friend class TaskList;
 
@@ -98,8 +100,10 @@ struct TaskCompare
 {
     bool operator() (Task* pTask1, Task* pTask2)
     {
-        return pTask1->GetWorkflowId() < pTask2->GetWorkflowId() || pTask1->GetLevel() < pTask2->GetLevel()
-               || pTask1->GetWaitingLockCount() < pTask2->GetWaitingLockCount();
+//        return pTask1->GetWorkflowId() < pTask2->GetWorkflowId() || pTask1->GetLevel() < pTask2->GetLevel()
+//               || pTask1->GetWaitingLockCount() < pTask2->GetWaitingLockCount();
+                return pTask1->GetWorkflowId() > pTask2->GetWorkflowId() || pTask1->GetLevel() > pTask2->GetLevel()
+               || pTask1->GetWaitingLockCount() > pTask2->GetWaitingLockCount();
     }
 };
 

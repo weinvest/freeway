@@ -5,13 +5,12 @@ SET(BUILD_SHARED_LIBS ON)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Werror=uninitialized -Werror=return-type")
 
 
-SET(TARGET singleNode)
+SET(TARGET testCommon)
 PROJECT(${TARGET})
 INCLUDE(CollectSrcs)
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 
@@ -24,12 +23,12 @@ ENDIF()
 SET(${TARGET}_SUBDIRS )
 
 GET_SRCS(${TARGET}_SRCLISTS ${TARGET}_SUBDIRS)
-ADD_EXECUTABLE(${TARGET} ${${TARGET}_SRCLISTS})
+ADD_LIBRARY(${TARGET} ${${TARGET}_SRCLISTS})
 
 set_target_properties(${TARGET} PROPERTIES VERSION $ENV{BUILD_VERSION} SOVERSION $ENV{BUILD_VERSION})
 #set_target_properties(${TARGET} PROPERTIES COTIRE_PREFIX_HEADER_IGNORE_PATH "boost/preprocessor")
 #cotire(${TARGET})
-TARGET_LINK_LIBRARIES(${TARGET} freeway testCommon clock log4cplus tbb boost_context boost_system profiler pthread)
+TARGET_LINK_LIBRARIES(${TARGET} freeway clock log4cplus tbb boost_context boost_system profiler pthread)
 if(win32)
     LINK_DIRECTORIES(C:\Windows\System32)
     TARGET_LINK_LIBRARIES(${TARGET} gdi32 user32 ws2_32)

@@ -22,7 +22,7 @@ public:
     void Stop();
 private:
     int32_t SelectWorker(DEventNode* );
-    Task* VisitNode (DEventNode* pNode, int32_t level);
+    Task* VisitNode (DEventNode* pNode, int32_t level, int32_t workflowId);
 
     static constexpr int32_t MAX_PENDING_NODES = 128;
     const int32_t mWorkerCount;

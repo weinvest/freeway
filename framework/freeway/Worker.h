@@ -56,7 +56,7 @@ private:
 
     std::priority_queue<Task*, std::vector<Task*>, TaskCompare> mReadyTasks;
 
-    static const int32_t TASK_POOL_SIZE = 4096;
+    static const int32_t TASK_POOL_SIZE = 8192;
     using TaskPool = std::array<Task, TASK_POOL_SIZE>;
     TaskPool *mTaskPool;
     int32_t mNextTaskPos{0};

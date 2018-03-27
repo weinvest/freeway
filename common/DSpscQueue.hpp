@@ -88,7 +88,7 @@ public:
         return ret;
     }
 
-    bool Empty() const { return mNullValue == mStoreHolders.head->value && mStoreHolders.empty(); }
+    bool Empty() const { return mNullValue == mStoreHolders.head->value && nullptr == mStoreHolders.head->next; }
 
     const T& Null() const { return mNullValue; }
 
@@ -109,7 +109,14 @@ public:
         }
     }
 
-    Holder* First( void ) const { auto pHolder = mStoreHolders.head; return mNullValue == pHolder->value ? pHolder->next : pHolder; }
+    Holder* First( void ) const {
+        auto pHolder = mStoreHolders.head;
+        if(mNullValue == pHolder->value)
+        {
+            return pHolder->next;
+        }
+        return pHolder;
+    }
 
     Holder* Next(Holder* pHolder) const { return mStoreHolders.next(pHolder); }
 

@@ -9,7 +9,7 @@
 SharedMutex::SharedMutex(DEventNode *pOwner)
 :mOwner(pOwner)
 {
-    mWaiters.Init(128, WaiterType());
+    mWaiters.Init(8192, WaiterType());
 }
 
 bool SharedMutex::LockShared(Task* pTask)
@@ -45,7 +45,7 @@ void SharedMutex::WaitLock4(Task* pTask)
 bool SharedMutex::TryLock4(Task* pTask)
 {
     auto pFirst = mWaiters.First();
-    return nullptr == pFirst || pFirst->value.pTask == pTask;
+    return nullptr != pFirst && pFirst->value.pTask == pTask;
 }
 
 void SharedMutex::WaitSharedLock4(Task* pTask)

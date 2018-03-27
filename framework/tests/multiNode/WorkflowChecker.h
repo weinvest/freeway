@@ -46,6 +46,7 @@ public:
         memset(mRunNodes, 0, sizeof(int32_t)*mNodeCount);
     }
 
+    NodeFamilyTree& GetFamilyTree() { return mFamilyTree }
 
     void SetObservedValue(int32_t who, int32_t prev, int32_t value)
     {
@@ -70,4 +71,10 @@ private:
 };;
 
 
+class WorkflowCheckerPool
+{
+private:
+    WorkflowChecker* mCheckers;
+    std::unordered_map<int32_t, WorkflowChecker
+};
 #endif //FREEWAY_WORKFLOWCHECKER_H

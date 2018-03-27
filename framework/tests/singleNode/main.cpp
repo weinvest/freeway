@@ -4,21 +4,27 @@
 #include "framework/freeway/DEventNode.h"
 #include "framework/freeway/Context.h"
 #include "clock/Clock.h"
+#include "testCommon/Delay.h"
 class SingleNode: public DEventNode
 {
 public:
-    SingleNode(int32_t loopCnt)
-            :mLoopCnt(loopCnt)
+    SingleNode(Delay& delay, int32_t loopCnt)
+            :mDelay(delay)
+            ,mLoopCnt(loopCnt)
     {}
 
     int32_t GetRunCount() const { return mRunCount; }
-    void SetRaiseTime(DateTime t) { mRaiseTime = t; }
-    TimeSpan GetTotalUsedTime() const { return mUsedTime; }
+    void SetRaiseTime(DateTime t) { mDelay.setRaisedTime(t); }
 protected:
     int32_t DoProcess(WorkflowID_t workflowId) override
     {
 //        std::cout << Context::GetWorkerId() << "\n";
-        mUsedTime += (Clock::Instance().Now() - mRaiseTime);
+        if(workflowId < GetLastWorkflowId())
+        {
+            int32_t i = 0;
+            ++i;
+        }
+        mDelay.setRunTime(Clock::Instance().Now());
         BOOST_CHECK_GT(workflowId, GetLastWorkflowId());
         int32_t i = 0, sum = 0;
         for(; i < mLoopCnt; ++i)
@@ -27,22 +33,25 @@ protected:
         }
 
         ++mRunCount;
+#ifdef DEBUG
         std::cout << "workflowId:" << workflowId << ",Workder:" << Context::GetWorkerId() << ", sum:" << sum << ",run:" << mRunCount << "\n";
+#endif
         return sum;
     }
 
 private:
+    Delay& mDelay;
     int32_t mLoopCnt;
     int32_t mRunCount{0};
-    DateTime mRaiseTime;
-    TimeSpan mUsedTime;
 };
+
+
 
 BOOST_AUTO_TEST_CASE(first_test)
 {
-    auto pDispatcher = Context::Init(2, 1);
-
-    auto singleNode = SingleNode(3000);
+    auto pDispatcher = Context::Init(3, 1);
+    Delay delay(8192);
+    auto singleNode = SingleNode(delay, 3000);
     singleNode.SetName("SingleNode");
 //    std::cout << (&singleNode) << "\n";
     std::thread t([&singleNode]
@@ -50,14 +59,14 @@ BOOST_AUTO_TEST_CASE(first_test)
                       Context::InitMiscThread("SingleNode");
                       Context::WaitStart();
 
-                      const int32_t MAX_RUN_COUNT = 8193;
+                      const int32_t MAX_RUN_COUNT = 1000;
                       int32_t runCnt = 0;
                       while(runCnt < MAX_RUN_COUNT)
                       {
                           ++runCnt;
                           singleNode.SetRaiseTime(Clock::Instance().Now());
                           singleNode.RaiseSelf();
-                          std::this_thread::sleep_for(std::chrono::microseconds(100));
+                          std::this_thread::sleep_for(std::chrono::microseconds(50));
                       }
 
                       std::this_thread::sleep_for(std::chrono::microseconds(500));
@@ -71,8 +80,7 @@ BOOST_AUTO_TEST_CASE(first_test)
         t.join();
     }
 
-    auto meanTime = singleNode.GetTotalUsedTime() / singleNode.GetRunCount();
     std::cout << "======================================================\n";
-    std::cout << "Run " << singleNode.GetRunCount() << " times, Mean frame used time:" << meanTime.total_microseconds() << "\n";
+    std::cout << "Run " << singleNode.GetRunCount() << " times, Mean frame used time:" << delay.meanTime().total_microseconds() << "\n";
     std::cout << "======================================================\n";
 }
