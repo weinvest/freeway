@@ -88,15 +88,15 @@ public:
         return ret;
     }
 
-    bool Empty() { return mNullValue == mStoreHolders.head->value && mStoreHolders.empty(); }
+    bool Empty() const { return mNullValue == mStoreHolders.head->value && mStoreHolders.empty(); }
 
-    const T& Null() { return mNullValue; }
+    const T& Null() const { return mNullValue; }
 
     void Pop2(Holder* pHolder)
     {
         pHolder->value = mNullValue;
-
-        auto pPop = mStoreHolders.pop();
+        Holder* pLastHolder = nullptr;
+        auto pPop = mStoreHolders.pop(&pLastHolder);
         while(nullptr != pPop && pPop != pHolder)
         {
             mFreeHolders.push(pPop);
@@ -109,11 +109,10 @@ public:
         }
     }
 
-    Holder* First( void ) { auto pHolder = mStoreHolders.head; return mNullValue == pHolder->value ? pHolder->next : pHolder; }
+    Holder* First( void ) const { auto pHolder = mStoreHolders.head; return mNullValue == pHolder->value ? pHolder->next : pHolder; }
 
-    Holder* Next(Holder* pHolder) { return mStoreHolders.next(pHolder); }
+    Holder* Next(Holder* pHolder) const { return mStoreHolders.next(pHolder); }
 
-    bool Empty(Holder* pHoler) { return mNullValue == pHoler->next; }
     template<typename CallBack_t>
     void consume_all(CallBack_t cb)
     {

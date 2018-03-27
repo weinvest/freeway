@@ -27,7 +27,7 @@ protected:
         }
 
         ++mRunCount;
-//        std::cout << "workflowId:" << workflowId << ":, sum:" << sum << ",run:" << mRunCount << "\n";
+        std::cout << "workflowId:" << workflowId << ",Workder:" << Context::GetWorkerId() << ", sum:" << sum << ",run:" << mRunCount << "\n";
         return sum;
     }
 
@@ -73,6 +73,6 @@ BOOST_AUTO_TEST_CASE(first_test)
 
     auto meanTime = singleNode.GetTotalUsedTime() / singleNode.GetRunCount();
     std::cout << "======================================================\n";
-    std::cout << "Mean frame used time:" << meanTime.total_microseconds() << "\n";
+    std::cout << "Run " << singleNode.GetRunCount() << " times, Mean frame used time:" << meanTime.total_microseconds() << "\n";
     std::cout << "======================================================\n";
 }

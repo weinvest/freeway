@@ -138,7 +138,7 @@ void Worker::Run( void )
         }
     }
 
-    std::cout << "worker-" << mId << "stoped@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
+    std::cout << "worker-" << mId << " stoped@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
 }
 
 void Worker::CheckLostLamb( void )  {

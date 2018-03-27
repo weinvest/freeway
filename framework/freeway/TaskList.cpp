@@ -20,7 +20,7 @@ Task* TaskList::Pop( void )
 
 void TaskList::Push(Task* pTask)
 {
-    pTask->mNext = pTask;
+    pTask->mNext = mHead;
     mHead = pTask;
 }
 

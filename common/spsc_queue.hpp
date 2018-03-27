@@ -31,8 +31,9 @@ struct spsc_queue
         auto n = v->next;
         if(nullptr == n)
         {
-            if(last != nullptr)
+            if(last != nullptr){
                 *last = v;
+            }
             return n;
         }
 
@@ -56,12 +57,12 @@ struct spsc_queue
         return v;
     }
 
-    auto first()
+    auto first() const
     {
         return head;
     }
 
-    auto next(T v)
+    auto next(T v) const
     {
         assert(nullptr != v);
         auto n = v->next;
@@ -73,7 +74,7 @@ struct spsc_queue
         head = v;
     }
 
-    bool empty() { return nullptr == head || nullptr == head->next; }
+    bool empty() const { return nullptr == head || nullptr == head->next; }
 
     void push(T v)
     {
