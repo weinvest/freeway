@@ -71,6 +71,10 @@ public:
             ,mMaxWorkflow(maxWorkflow)
     {
         memset(mIsWorkflowRun, 0, maxWorkflow * sizeof(bool));
+        for(auto iWorkflow = 0; iWorkflow < maxWorkflow; ++iWorkflow)
+        {
+            mCheckers[iWorkflow].Initialize(&mFamilyTree);
+        }
     }
 
     WorkflowChecker* GetChecker(int32_t workflowId);

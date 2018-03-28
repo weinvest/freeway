@@ -82,6 +82,7 @@ public:
     std::cout << "======================================================\n";
     std::cout << "Run " << mNode->GetRunCount() << " times, Mean frame used time:" << meanTime.total_microseconds() << "\n";
     std::cout << "======================================================\n";
+        ::Stop();
     }
 private:
     A1* mNode;
@@ -141,28 +142,28 @@ int main()
     std::thread Thread2(std::bind(&Produce::Run, &producer2));
 
 
-std::thread Stopper = std::thread(
-                        [&producer2]() {
-                            SetThreadName("Stopper");
-                            sleep(3600*24);
-                            auto cb = std::vector<std::function<void()>>{std::bind(&Dispatcher::Stop, GetDispatcher())};
-/*
-                            for(auto& worker:AllWorkers)
-                            {
-                                if(worker)
-                                    cb.push_back(std::bind(&Worker::Stop, worker.get()));
-                            }
-*/
-                            cb.push_back(std::bind(&Produce::Stop, &producer2));
-                            cb.push_back(Stop);
-                            StopAllThreads(cb);
-                        }
-                      );
+//std::thread Stopper = std::thread(
+//                        [&producer2]() {
+//                            SetThreadName("Stopper");
+//                            sleep(3600*24);
+//                            auto cb = std::vector<std::function<void()>>{std::bind(&Dispatcher::Stop, GetDispatcher())};
+///*
+//                            for(auto& worker:AllWorkers)
+//                            {
+//                                if(worker)
+//                                    cb.push_back(std::bind(&Worker::Stop, worker.get()));
+//                            }
+//*/
+//                            cb.push_back(std::bind(&Produce::Stop, &producer2));
+//                            cb.push_back(Stop);
+//                            StopAllThreads(cb);
+//                        }
+//                      );
     //Threads run()
     std::cout<<Start()<<std::endl;
 
  //   Thread1.join();
     Thread2.join();
-    Stopper.join();
+    //Stopper.join();
    
 }

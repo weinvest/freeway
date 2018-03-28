@@ -25,7 +25,7 @@ protected:
             ++i;
         }
         mDelay.setRunTime(Clock::Instance().Now());
-        BOOST_CHECK_GT(workflowId, GetLastWorkflowId());
+        BOOST_REQUIRE_GT(workflowId, GetLastWorkflowId());
         int32_t i = 0, sum = 0;
         for(; i < mLoopCnt; ++i)
         {
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(first_test)
                       Context::InitMiscThread("SingleNode");
                       Context::WaitStart();
 
-                      const int32_t MAX_RUN_COUNT = 1000;
+                      const int32_t MAX_RUN_COUNT = 8192;
                       int32_t runCnt = 0;
                       while(runCnt < MAX_RUN_COUNT)
                       {
@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(first_test)
 
                       std::this_thread::sleep_for(std::chrono::microseconds(500));
                       Context::Stop();
-                      BOOST_CHECK_GE(singleNode.GetRunCount(), 0);
-                      BOOST_CHECK_LE(singleNode.GetRunCount(), runCnt);
+                      BOOST_REQUIRE_GE(singleNode.GetRunCount(), 0);
+                      BOOST_REQUIRE_LE(singleNode.GetRunCount(), runCnt);
                   });
     Context::Start();
     if(t.joinable())

@@ -8,6 +8,23 @@
 #include <stdint.h>
 #include "common/spsc_queue.hpp"
 #include "common/Types.h"
+
+template <typename T>
+struct NullTraits
+{
+    static bool IsNull(const T& o) { return o.IsNull(); }
+    static void Reset(T& o) { o.Reset(); }
+    static T Null( void ) { return T::Null(); }
+};
+
+template<typename T>
+struct NullTraits<T*>
+{
+    static bool IsNull(T* v) { return nullptr == v; }
+    static void Reset(T*& v) {  v = nullptr; }
+    static T* Null( void ) { return nullptr; }
+};
+
 template <typename T>
 class DSpscQueue
 {
@@ -22,17 +39,16 @@ public:
     DSpscQueue(const DSpscQueue&) = delete;
 
     //Init must be called before Push/Pop
-    void Init(int32_t capacity, T nullValue)
+    void Init(int32_t capacity)
     {
         mPool = new Holder[capacity];
-        mNullValue = nullValue;
-        mPool[0].value = mNullValue;
+        NullTraits<T>::Reset(mPool[0].value);
 
         mFreeHolders.init(&mPool[0]);
 
         for(auto iFreeHolder = 1; iFreeHolder < capacity; ++iFreeHolder)
         {
-            mPool[iFreeHolder].value = mNullValue;
+            NullTraits<T>::Reset(mPool[iFreeHolder].value);
             mFreeHolders.push(&mPool[iFreeHolder]);
         }
 
@@ -64,15 +80,15 @@ public:
 
     T Pop( void )
     {
-        T ret = mNullValue;
+        T ret = NullTraits<T>::Null();
         Holder* pLastHolder = nullptr;
         Holder* pHolder = mStoreHolders.pop(&pLastHolder);
         if(nullptr == pHolder)
         {
-            if(mNullValue != pLastHolder->value)
+            if(!NullTraits<T>::IsNull(pLastHolder->value))
             {
                 ret = pLastHolder->value;
-                pLastHolder->value = mNullValue;
+                NullTraits<T>::Reset(pLastHolder->value);
             }
 
             return ret;
@@ -81,20 +97,18 @@ public:
         ret = pHolder->value;
         mFreeHolders.push(pHolder);
 
-        if(ret == mNullValue)
+        if(NullTraits<T>::IsNull(ret))
         {
             return Pop();
         }
         return ret;
     }
 
-    bool Empty() const { return mNullValue == mStoreHolders.head->value && nullptr == mStoreHolders.head->next; }
-
-    const T& Null() const { return mNullValue; }
+    bool Empty() const { return NullTraits<T>::IsNull(mStoreHolders.head->value) && nullptr == mStoreHolders.head->next; }
 
     void Pop2(Holder* pHolder)
     {
-        pHolder->value = mNullValue;
+        NullTraits<T>::Reset(pHolder->value);
         Holder* pLastHolder = nullptr;
         auto pPop = mStoreHolders.pop(&pLastHolder);
         while(nullptr != pPop && pPop != pHolder)
@@ -111,7 +125,7 @@ public:
 
     Holder* First( void ) const {
         auto pHolder = mStoreHolders.head;
-        if(mNullValue == pHolder->value)
+        if(NullTraits<T>::IsNull(pHolder->value))
         {
             return pHolder->next;
         }
@@ -124,7 +138,7 @@ public:
     void consume_all(CallBack_t cb)
     {
         auto node = Pop();
-        while(node != mNullValue)
+        while(!NullTraits<T>::IsNull(node))
         {
             cb(node);
             node = Pop();
@@ -134,7 +148,5 @@ private:
     spsc_queue<Holder*> mStoreHolders;
     spsc_queue<Holder*> mFreeHolders;
     Holder* mPool;
-    T mNullValue;
-//    bool mFirstPush{true};
 };
 #endif //ARAGOPROJECT_DSPSCQUEUE_HPP_H

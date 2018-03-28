@@ -33,15 +33,20 @@ public:
     WorkerID_t GetId( void ) const { return mId; }
     int32_t GetWorkerCount( void ) const { return mWorkerCount; }
     Dispatcher* GetDispatcher( void ) { return mDispatcher; }
-    Task* AllocateTaskFromPool(WorkflowID_t flow, Worker* pWorker, DEventNode* pNode);
+    Task* AllocateTaskFromPool(WorkflowID_t flow, DEventNode* pNode);
 
-    struct TaskPair
+    struct alignas(8) TaskPair
     {
         void* waited{nullptr};
         Task* task{nullptr};
 
+        inline bool IsNull( void ) const { return nullptr == task; }
+        inline void Reset( void ) { waited = nullptr; task = nullptr; }
+        static inline TaskPair Null( void ) { return TaskPair(); }
+
         friend bool operator == (const TaskPair& lhs, const TaskPair& rhs);
         friend bool operator != (const TaskPair& lhs, const TaskPair& rhs);
+
     };
 private:
     void CheckLostLamb(void);

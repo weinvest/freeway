@@ -49,7 +49,7 @@ bool WorkflowChecker::CanRunBefore(int32_t prev, int32_t succ)
 void WorkflowChecker::Check( void )
 {
     int32_t runNodeCnt = mIdxRunNode.load();
-    //check run orders
+    //check run orders:
     auto prevIdxRun = 0;
     for(auto idxRun = 1; idxRun < runNodeCnt; ++idxRun)
     {
@@ -57,7 +57,7 @@ void WorkflowChecker::Check( void )
         prevIdxRun = idxRun;
     }
 
-    //check observed values
+    //check observed values:同一节点的后继在一个workflow中看到的值应该相等
     for(auto idxRun = 0; idxRun < runNodeCnt; ++idxRun)
     {
         auto runNodeId = mRunNodes[idxRun];

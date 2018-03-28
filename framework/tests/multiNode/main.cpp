@@ -6,7 +6,7 @@
 #include "clock/Clock.h"
 #include "MultiNode.h"
 
-MultiNode* CreateNode(std::vector<MultiNode*> allNodes, WorkflowCheckerPool& pool, const std::string& nodeName)
+MultiNode* CreateNode(std::vector<MultiNode*>& allNodes, WorkflowCheckerPool& pool, const std::string& nodeName)
 {
     static int32_t id = 0;
     static std::default_random_engine generator;
@@ -93,7 +93,8 @@ BOOST_AUTO_TEST_CASE(first_test)
                           ++runCnt;
                           for(auto& pNode : allNodes)
                           {
-                              if(norm(generator) > 0.8)
+                              double prob = norm(generator);
+                              if(prob > 0.5 || prob < 0.5)
                               {
                                   pNode->RaiseSelf();
                               }

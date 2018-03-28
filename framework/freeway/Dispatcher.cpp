@@ -18,14 +18,14 @@ Dispatcher::Dispatcher(int32_t workerCount, int32_t miscThread)
           mQueueNum(workerCount + miscThread + 1)  //[0...mQueueNum)
         , mPendingNodes(new PendingNodeQueue[mQueueNum]), mIsRunning(true) {
     for (int i = 0; i < mQueueNum; i++) {
-        mPendingNodes[i].Init(capacity, nullptr);
+        mPendingNodes[i].Init(capacity);
     }
 
     mPendingTask.reserve(MAX_PENDING_NODES);
 }
 
 bool Dispatcher::Enqueue(int32_t fromID, DEventNode *pNode) {
-    if (mIsRunning) {
+    if (LIKELY(mIsRunning)) {
         auto &pNodeQueue = mPendingNodes[fromID];
         pNodeQueue.Push(pNode);
         return true;
@@ -57,7 +57,7 @@ Task *Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId
         auto idxWorker = SelectWorker(pNode);
 
         auto pTargetWorker = Context::GetWorker(idxWorker);
-        Task *pTask = pTargetWorker->AllocateTaskFromPool(workflowId, pTargetWorker, pNode);
+        Task *pTask = pTargetWorker->AllocateTaskFromPool(workflowId, pNode);
         pTask->SetLevel(level);
         mPendingTask.push_back(pTask);
 

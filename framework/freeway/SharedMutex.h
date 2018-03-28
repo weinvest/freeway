@@ -13,12 +13,16 @@ class DEventNode;
 class Task;
 class SharedMutex
 {
-    struct WaiterType
+    struct alignas(8) WaiterType
     {
         WaiterType(Task* ptr, bool write):pTask(ptr), IsWriter(write) {}
         WaiterType( void ): pTask(nullptr), IsWriter(false) {}
         Task* pTask;
         bool IsWriter;
+
+        inline bool IsNull( void ) const { return nullptr == pTask; }
+        inline void Reset( void ) { pTask = nullptr; }
+        static inline WaiterType Null( void ) { return WaiterType(); }
 
         bool operator==(const WaiterType& o) const { return pTask == o.pTask && IsWriter == o.IsWriter; }
         bool operator!=(const WaiterType& o) const { return !(*this == o); }
@@ -44,7 +48,7 @@ public:
 
 
 //后继节点调用(有可能比前驱节点先运行, 或者前驱节点运行结束之后才运行)
-    bool LockShared(Task* pTask);
+    void LockShared(Task* pTask);
 
     void WaitSharedLock4(Task* pTask);
 
@@ -54,7 +58,7 @@ public:
     void UnlockShared(Task* pTask);
 
 //每个节点DoProcess前都调用Lock
-    bool Lock(Task* task);
+    void Lock(Task* task);
 
     void WaitLock4(Task* pTask);
 

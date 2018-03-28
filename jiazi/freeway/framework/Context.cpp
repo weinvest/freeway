@@ -22,7 +22,8 @@ SmallObjectAllocatorImpl* GetAllocator( void )
 std::array<int32_t, MAX_WORKERS+1> CPUS;
 bool Bind2Cpu(int32_t idxCPU)
 {
-#if 0
+#if __APPLE__
+#else
     cpu_set_t mask;
     CPU_ZERO(&mask);
     CPU_SET(idxCPU, &mask);

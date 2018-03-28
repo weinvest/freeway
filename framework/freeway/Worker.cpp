@@ -29,7 +29,7 @@ Worker::Worker(Dispatcher* pDispatcher, WorkerId id, int32_t workerCount)
 {
     mPendingTasks = new PendingTaskQueue[mQueueCount];
     for(int i=0; i<mQueueCount; i++) {
-        mPendingTasks[i].Init(8192, TaskPair{0, nullptr});
+        mPendingTasks[i].Init(8192);
     }
 
     mTaskPool = new TaskPool();
@@ -54,7 +54,7 @@ bool Worker::Initialize( void )
     return true;
 }
 
-Task* Worker::AllocateTaskFromPool(WorkflowID_t flow, Worker* pWorker, DEventNode* pNode)
+Task* Worker::AllocateTaskFromPool(WorkflowID_t flow, DEventNode* pNode)
 {
     auto pTask = &(mTaskPool->at((mNextTaskPos++) % TASK_POOL_SIZE));
 //    std::cout << "allocate task:" << pTask << "\n";

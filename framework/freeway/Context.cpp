@@ -22,14 +22,17 @@ SmallObjectAllocatorImpl* GetAllocator( void )
 std::array<int32_t, MAX_WORKERS+1> CPUS;
 bool Bind2Cpu(int32_t idxCPU)
 {
-//    cpu_set_t mask;
-//    CPU_ZERO(&mask);
-//    CPU_SET(idxCPU, &mask);
-//    if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &mask) != 0)
-//    {
-//        std::cout<<"Failed to set affinity-CPU"<<idxCPU<<std::endl;
-//        return false;
-//    }
+#if __APPLE__
+#else
+    cpu_set_t mask;
+    CPU_ZERO(&mask);
+    CPU_SET(idxCPU, &mask);
+    if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &mask) != 0)
+    {
+        std::cout<<"Failed to set affinity-CPU"<<idxCPU<<std::endl;
+        return false;
+    }
+#endif
     return true;
 }
 
