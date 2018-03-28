@@ -59,6 +59,25 @@ BOOST_AUTO_TEST_CASE(first_test)
     auto pT = CreateNode(allNodes, checker, "T");
 
     AddEdge(pB, pA);
+    AddEdge(pB, pC);
+    AddEdge(pD, pB);
+    AddEdge(pE, pC);
+    AddEdge(pF, pB);
+    AddEdge(pF, pE);
+    AddEdge(pH, pG);
+    AddEdge(pH, pD);
+    AddEdge(pI, pH);
+    AddEdge(pJ, pI);
+    AddEdge(pK, pI);
+    AddEdge(pL, pD);
+    AddEdge(pO, pF);
+    AddEdge(pO, pN);
+    AddEdge(pP, pF);
+    AddEdge(pQ, pM);
+    AddEdge(pS, pR);
+    AddEdge(pS, pR);
+    AddEdge(pT, pN);
+
 
     nodeFamilyTree.Build();
     std::thread t ([&allNodes]
