@@ -6,6 +6,7 @@
 #define ARAGOPROJECT_LOCKPTR_H
 
 #include "Context.h"
+#include "Task.h"
 template <typename T>
 class LockPtr
 {
@@ -24,11 +25,11 @@ public:
 
     const T*operator->() const
     {
-        auto pThisTask = GetCurrentTask();
+        auto pThisTask = Context::GetCurrentTask();
         if(pThisTask != mTask) //同一节点必须保证上一个Workflow与下一个Workflow使用的Task不同
         {
             mNode->WaitSharedLock4(pThisTask);
-            DecreaseWaitingLockCount();
+            pThisTask->DecreaseWaitingLockCount();
 
             mTask = pThisTask;
         }

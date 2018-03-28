@@ -96,6 +96,7 @@ void DEventNode::RaiseSelf( void )
 
 void DEventNode::RaiseSelf(int32_t fromThread)
 {
+    assert(-1 != fromThread);
     mIsAcceptTrigger = true;
     Context::GetDispatcher()->Enqueue(fromThread, this);
 }

@@ -10,29 +10,35 @@
 #include <clock/Clock.h>
 #include "framework/freeway/DEventNode.h"
 #include "WorkflowChecker.h"
-
+#include "framework/freeway/LockPtr.h"
 class MultiNode: public DEventNode
 {
 public:
-    MultiNode(WorkflowChecker& familyTree, int32_t id, int32_t loopCnt)
-            :mFamilyTree(familyTree)
+    MultiNode(WorkflowCheckerPool& checkPool, int32_t id, int32_t loopCnt)
+            :mCheckPool(checkPool)
             ,mId(id)
             ,mLoopCnt(loopCnt)
+            ,mIgnoredParent(new int32_t[checkPool.GetMaxNodeCnt()])
     {}
 
     int32_t GetId() const { return mId; }
 
-    int32_t GetRunCount() const { return mRunCount; }
-    void SetRaiseTime(DateTime t) { mRaiseTime = t; }
-    TimeSpan GetTotalUsedTime() const { return mUsedTime; }
+    //void SetRaiseTime(DateTime t) { mRaiseTime = t; }
+    //TimeSpan GetTotalUsedTime() const { return mUsedTime; }
 
-    void AddPrecessor(MultiNode* pParent);
+    void AddPrecessor(MultiNode* pParent, bool ignore);
+
+    int32_t GetValue( void ) const { return mValue; }
 protected:
     int32_t DoProcess(WorkflowID_t workflowId) override;
 
-    WorkflowChecker& mFamilyTree;
+    WorkflowCheckerPool& mCheckPool;
 
     int32_t mId;
+    int32_t mValue{0};
+    int32_t mLoopCnt;
+    int32_t *mIgnoredParent;
+    std::vector<LockPtr<MultiNode>> mParents;
 };
 
 

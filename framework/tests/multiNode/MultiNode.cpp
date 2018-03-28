@@ -3,24 +3,37 @@
 //
 
 #include "MultiNode.h"
-int32_t MultiNode::DoProcess(WorkflowID_t workflowId) override
+int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
 {
-//        std::cout << Context::GetWorkerId() << "\n";
-    mUsedTime += (Clock::Instance().Now() - mRaiseTime);
     BOOST_CHECK_GT(workflowId, GetLastWorkflowId());
-    int32_t i = 0, sum = 0;
-    for(; i < mLoopCnt; ++i)
+    auto checker = mCheckPool.GetChecker(workflowId);
+    checker->iRun(mId);
+
+    //compute
+    int32_t sum = 0;
+    for(auto i = 0; i < mLoopCnt; ++i)
     {
-        sum += i;
+        sum += i+1;
     }
 
-    ++mRunCount;
-//        std::cout << "workflowId:" << workflowId << ":, sum:" << sum << ",run:" << mRunCount << "\n";
-    return sum;
+    mValue += (sum * 2) / ((1 + mLoopCnt) * mLoopCnt);
+    checker->SetObservedValue(mId, mId, mValue);
+    for(auto pParent : mParents)
+    {
+        auto parentId = pParent.get()->GetId();
+        if(!mIgnoredParent[parentId])
+        {
+            checker->SetObservedValue(mId, parentId, pParent->GetValue());
+        }
+    }
+
+    return 0;
 }
 
-void MultiNode::AddPrecessor(MultiNode* pParent)
+void MultiNode::AddPrecessor(MultiNode* pParent, bool ignore)
 {
     pParent->Connect(this);
-    mFamilyTree.AddRelation(mId, pParent->GetId());
+    mIgnoredParent[pParent->GetId()] = ignore;
+    mCheckPool.GetFamilyTree().AddRelation(mId, pParent->GetId());
+    mParents.push_back(LockPtr<MultiNode>(pParent));
 }

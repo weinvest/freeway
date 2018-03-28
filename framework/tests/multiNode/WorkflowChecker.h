@@ -5,6 +5,7 @@
 #ifndef FREEWAY_WORKFLOWCHECKER_H
 #define FREEWAY_WORKFLOWCHECKER_H
 
+#include <set>
 #include <cstdint>
 #include <cstring>
 #include <atomic>
@@ -20,7 +21,7 @@ public:
 
     void AddRelation(int32_t child, int32_t parent) { mFamilyTree[child].insert(parent); }
     void Build( void );
-    bool IsAncestor(int3_t child, int32_t parent) { return 0 != mFamilyTree[child].count(parent); }
+    bool IsAncestor(int32_t child, int32_t parent) { return 0 != mFamilyTree[child].count(parent); }
 
     int32_t GetMaxNodeCnt( void ) const { return mMaxNodeCnt; }
 private:
@@ -31,22 +32,11 @@ private:
 class WorkflowChecker
 {
 public:
-    WorkflowChecker(NodeFamilyTree& familyTree)
-            :mFamilyTree(familyTree)
-            ,mNodeCount(familyTree.GetMaxNodeCnt())
-            ,mMaxValueCount(maxNodeCnt*maxNodeCnt)
-            ,mObservedValues(new int32_t[mMaxValueCount])
-            ,mRunNodes(new int32_t[maxNodeCnt])
-    {
-        for(int32_t iValue = 0; iValue < mMaxValueCount; ++iValue)
-        {
-            mObservedValues[iValue] = -1;
-        }
+    WorkflowChecker() = default;
 
-        memset(mRunNodes, 0, sizeof(int32_t)*mNodeCount);
-    }
+    void Initialize(NodeFamilyTree* pFamilyTree);
 
-    NodeFamilyTree& GetFamilyTree() { return mFamilyTree }
+    NodeFamilyTree& GetFamilyTree() { return *mFamilyTree; }
 
     void SetObservedValue(int32_t who, int32_t prev, int32_t value)
     {
@@ -62,7 +52,7 @@ public:
 private:
     bool CanRunBefore(int32_t prev, int32_t succ);
 
-    NodeFamilyTree& mFamilyTree;
+    NodeFamilyTree* mFamilyTree{nullptr};
     int32_t mNodeCount{0};
     int32_t mMaxValueCount{0};
     int32_t *mObservedValues{nullptr};
@@ -73,8 +63,28 @@ private:
 
 class WorkflowCheckerPool
 {
+public:
+    WorkflowCheckerPool(NodeFamilyTree& familyTree, int32_t maxWorkflow)
+            :mFamilyTree(familyTree)
+            ,mCheckers(new WorkflowChecker[maxWorkflow])
+            ,mIsWorkflowRun(new bool[maxWorkflow])
+            ,mMaxWorkflow(maxWorkflow)
+    {
+        memset(mIsWorkflowRun, 0, maxWorkflow * sizeof(bool));
+    }
+
+    WorkflowChecker* GetChecker(int32_t workflowId);
+
+    int32_t GetMaxWorkflow() const { return mMaxWorkflow; }
+    int32_t GetMaxNodeCnt() const { return mFamilyTree.GetMaxNodeCnt(); }
+    NodeFamilyTree& GetFamilyTree() const { return mFamilyTree; }
+
+    void CheckAll( void );
 private:
+    NodeFamilyTree& mFamilyTree;
     WorkflowChecker* mCheckers;
-    std::unordered_map<int32_t, WorkflowChecker
+    bool* mIsWorkflowRun;
+    int32_t mMaxWorkflow;
+
 };
 #endif //FREEWAY_WORKFLOWCHECKER_H

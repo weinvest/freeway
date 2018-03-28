@@ -25,9 +25,25 @@ void NodeFamilyTree::Build( void )
     }
 }
 
+void WorkflowChecker::Initialize(NodeFamilyTree* pFamilyTree)
+{
+    mFamilyTree = pFamilyTree;
+    mNodeCount = mFamilyTree->GetMaxNodeCnt();
+    mMaxValueCount = mNodeCount*mNodeCount;
+    mObservedValues = new int32_t[mMaxValueCount];
+    mRunNodes = new int32_t[mNodeCount];
+
+    for(int32_t iValue = 0; iValue < mMaxValueCount; ++iValue)
+    {
+        mObservedValues[iValue] = -1;
+    }
+
+    memset(mRunNodes, 0, sizeof(int32_t)*mNodeCount);
+}
+
 bool WorkflowChecker::CanRunBefore(int32_t prev, int32_t succ)
 {
-    return !mFamilyTree.IsAncestor(prev, succ);
+    return !mFamilyTree->IsAncestor(prev, succ);
 }
 
 void WorkflowChecker::Check( void )
@@ -66,4 +82,23 @@ void WorkflowChecker::Check( void )
     }
 
     mIdxRunNode.store(0);
+}
+
+
+WorkflowChecker* WorkflowCheckerPool::GetChecker(int32_t workflowId)
+{
+    assert(workflowId < mMaxWorkflow);
+    mIsWorkflowRun[workflowId] = true;
+    return &mCheckers[workflowId];
+}
+
+void WorkflowCheckerPool::CheckAll( void )
+{
+    for(int32_t workflow = 0; workflow < mMaxWorkflow; ++workflow)
+    {
+        if(mIsWorkflowRun[workflow])
+        {
+            mCheckers[workflow].Check();
+        }
+    }
 }
