@@ -13,7 +13,9 @@ int32_t DEventNode::Process(WorkflowID_t workflowId) noexcept
 {
     try
     {
-        return DoProcess(workflowId);
+        auto ret = DoProcess(workflowId);
+        mLastWorkflowId = workflowId;
+        return ret;
     }
     catch(const boost::exception& ex)
     {

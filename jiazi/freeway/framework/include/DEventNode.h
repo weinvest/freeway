@@ -311,7 +311,7 @@ public:
      WorkflowID_t GetDispatchedID() {return mLastDispatchedflowId;}
      ITask* GetDispatchedTask() {return mLastTask;}
 
-
+    WorkflowID_t GetLastWorkflowId() const { return mLastWorkflowId; }
     virtual void *GetValue(WorkflowID_t flowID) {return nullptr;};
 protected:
     dvector<DEventNode*> mSuccessors;
@@ -320,6 +320,7 @@ protected:
 private:
     virtual int32_t DoProcess(WorkflowID_t workflowId) = 0;
     WorkflowID_t mLastDispatchedflowId{0};
+    WorkflowID_t mLastWorkflowId{0};
     ITask* mLastTask{nullptr};
     SharedMutex mMutex;
     std::string mName;

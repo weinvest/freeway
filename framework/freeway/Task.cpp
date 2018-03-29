@@ -130,3 +130,8 @@ void Task::Enqueue(int32_t from, void *pWhy)
 {
     mWorker->Enqueue(from, pWhy, this);
 }
+
+bool Task::IsFirstWaiter( void ) const
+{
+    return mNodePtr->GetMutex().FirstWaiter() == this;
+}

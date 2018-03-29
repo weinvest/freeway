@@ -15,22 +15,19 @@ SharedMutex::SharedMutex(DEventNode *pOwner)
 void SharedMutex::LockShared(Task* pTask)
 {
     mWaiters.Push(WaiterType(pTask, false));
-    std::atomic_thread_fence(std::memory_order_release);
+//    std::atomic_thread_fence(std::memory_order_release);
 }
 
 void SharedMutex::Lock(Task* pTask)
 {
-    bool empty = mWaiters.Empty();
     mWaiters.Push(WaiterType(pTask, true));
     mWaitingWriterWorkflowIds.push_back(pTask->GetWorkflowId());
-    std::atomic_thread_fence(std::memory_order_release);
+//    std::atomic_thread_fence(std::memory_order_release);
 }
 
 void SharedMutex::WaitLock4(Task* pTask)
 {
-    std::atomic_thread_fence(std::memory_order_acquire);
-    assert(!mWaiters.Empty());
-    if(mWaiters.First()->value.pTask != pTask)
+    if(mWaiters.First().pTask != pTask)
     {
         pTask->SetWaited(mOwner);
         pTask->Suspend();
@@ -39,14 +36,13 @@ void SharedMutex::WaitLock4(Task* pTask)
 
 bool SharedMutex::TryLock4(Task* pTask)
 {
-    std::atomic_thread_fence(std::memory_order_acquire);
-    auto pFirst = mWaiters.First();
-    return nullptr == pFirst || pFirst->value.pTask == pTask;
+//    std::atomic_thread_fence(std::memory_order_acquire);
+    return mWaiters.First().pTask == pTask;
 }
 
 void SharedMutex::WaitSharedLock4(Task* pTask)
 {
-    std::atomic_thread_fence(std::memory_order_acquire);
+//    std::atomic_thread_fence(std::memory_order_acquire);
     auto hasLock = mWaitingWriterWorkflowIds.empty() || pTask->GetWorkflowId() < mWaitingWriterWorkflowIds.front();
     if(!hasLock)
     {
@@ -57,7 +53,7 @@ void SharedMutex::WaitSharedLock4(Task* pTask)
 
 bool SharedMutex::TrySharedLock4(Task* pTask)
 {
-    std::atomic_thread_fence(std::memory_order_acquire);
+//    std::atomic_thread_fence(std::memory_order_acquire);
     auto itBeg = mWaitingWriterWorkflowIds.begin();
     auto hasLock = itBeg == mWaitingWriterWorkflowIds.end() || pTask->GetWorkflowId() < (*itBeg);
     return hasLock;
@@ -73,11 +69,7 @@ void SharedMutex::UnlockShared(Task* pTask)
     {
         //prevReadCnt == 1, 可能没有其他reader了
         //prevReadCnt <= 0, 说明漏Wake了
-        if(nullptr != mLastLockObject)
-        {
-            mWaiters.Pop2(mLastLockObject);
-            std::atomic_thread_fence(std::memory_order_release);
-        }
+        mWaiters.Skip(mSkipCount);
         Wake();
         mIsInWaking.clear();
     }
@@ -87,41 +79,48 @@ void SharedMutex::Unlock(Task* task)
 {
     mWaiters.Pop();
     mWaitingWriterWorkflowIds.pop_front();
-    std::atomic_thread_fence(std::memory_order_release);
+//    std::atomic_thread_fence(std::memory_order_release);
     LOG_DEBUG("Mutex[%p] Worker-%d pop WRITETask-%s[%d]-%p", this, GetWorker()->GetId(),
               task->GetName().c_str(), task->GetWorkflowId(), task);
 
     Wake();
 }
 
-bool SharedMutex::Wake()
+void SharedMutex::Wake()
 {
-    if(mWaiters.Empty())
+    auto skipCount = 0;
+    while(mWaiters.Valid(skipCount))
     {
-        LOG_DEBUG("Worker-%d mWaiters[%p].empty(), nothing to wake", GetWorker()->GetId(), this);
-        return false;
-    }
+        auto& firstWaiter = mWaiters.First(skipCount);
 
-    auto pCurHolder = mWaiters.First();
-    while(nullptr != pCurHolder)
-    {
-        auto& firstWaiter = pCurHolder->value;
         if(LIKELY(!firstWaiter.IsNull())) {
             if (firstWaiter.IsWriter) {
                 if (0 == mReaders) {
-                    firstWaiter.pTask->Enqueue(Context::GetWorkerId(), mOwner);
-                    return true;
+                    mWaiters.Skip(skipCount);
+                    auto pTask = firstWaiter.pTask;
+                    firstWaiter.pTask = nullptr;
+                    pTask->Enqueue(Context::GetWorkerId(), mOwner);
+                    break;
                 }
                 break;
             } else {
                 ++mReaders;
-                firstWaiter.pTask->Enqueue(Context::GetWorkerId(), mOwner);
+                auto pTask = firstWaiter.pTask;
+                firstWaiter.pTask = nullptr;
+                pTask->Enqueue(Context::GetWorkerId(), mOwner);
             }
+        } else{
+            int i = 0;
+            ++i;
         }
-
-        mLastLockObject = pCurHolder;
-        pCurHolder = mWaiters.Next(pCurHolder);
+        ++skipCount;
     }
 
-    return false;
+    mSkipCount = skipCount;
+}
+
+Task* SharedMutex::FirstWaiter( void )
+{
+    auto& first = mWaiters.First();
+    return first.pTask;
 }

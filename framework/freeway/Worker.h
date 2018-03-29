@@ -41,7 +41,6 @@ public:
         Task* task{nullptr};
 
         inline bool IsNull( void ) const { return nullptr == task; }
-        inline void Reset( void ) { waited = nullptr; task = nullptr; }
         static inline TaskPair Null( void ) { return TaskPair(); }
 
         friend bool operator == (const TaskPair& lhs, const TaskPair& rhs);
@@ -66,11 +65,13 @@ private:
     TaskPool *mTaskPool;
     int32_t mNextTaskPos{0};
     TaskList mWaittingTasks;
+//    std::set<DEventNode*> mWaittingNode;
 
     std::mutex  mRuningMutex;
     std::condition_variable mRuningCond;
     bool mIsRuning;
     bool mInitialized{false};
     Dispatcher* mDispatcher{nullptr};
+
 
 };

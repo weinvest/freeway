@@ -10,6 +10,7 @@
 #include <framework/freeway/Task.h>
 #include <clock/Clock.h>
 #include "Dispatcher.h"
+#include "DEventNode.h"
 bool operator == (const Worker::TaskPair& lhs, const Worker::TaskPair& rhs)
 {
     return lhs.waited == rhs.waited && lhs.task == rhs.task;
@@ -83,6 +84,7 @@ void Worker::Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask)
 void Worker::Push2WaittingList(Task* pTask)
 {
     mWaittingTasks.Push(pTask);
+//    mWaittingNode.insert(pTask->GetNode());
 }
 
 void Worker::Run( void )
@@ -111,9 +113,14 @@ void Worker::Run( void )
         }
 
         ++nLoop;
-        if(UNLIKELY(0 == (nLoop % 100)))
+        if(UNLIKELY(nLoop % 100 == 0))
         {
             CheckLostLamb();
+//            std::set<DEventNode*> nodes(std::move(mWaittingNode));
+//            for(auto pNode : nodes)
+//            {
+//                if(pNode->)
+//            }
         }
 
         while(!mReadyTasks.empty())
@@ -152,29 +159,29 @@ void Worker::CheckLostLamb( void )  {
     TaskList waittingTasks = std::move(mWaittingTasks);
     while(!waittingTasks.Empty()) {
         auto pTask = waittingTasks.Pop();
-        if(pTask->IsWaitting())
+        if(pTask->IsWaitting() && pTask->IsFirstWaiter())
         {
-            bool gotLock = false;
-            if(pTask->IsWaittingLock())
-            {
-                gotLock = pTask->TryLock();
-            } else
-            {
-                gotLock = pTask->TrySharedLock();
-            }
-
-            if(gotLock)
-            {
+//            bool gotLock = false;
+//            if(pTask->IsWaittingLock())
+//            {
+//                gotLock = pTask->TryLock();
+//            } else
+//            {
+//                gotLock = pTask->TrySharedLock();
+//            }
+//
+//            if(gotLock)
+//            {
 #ifdef DEBUG
 //                std::cout << "WorkflowId:" << pTask->GetWorkflowID() << ",Worker:" << mId << " got lock\n";
 #endif
                 pTask->SetWaited(nullptr);
                 mReadyTasks.push(pTask);
-            }
-            else
-            {
-                mWaittingTasks.Push(pTask);
-            }
+//            }
+//            else
+//            {
+//                mWaittingTasks.Push(pTask);
+//            }
         }
     }
 }

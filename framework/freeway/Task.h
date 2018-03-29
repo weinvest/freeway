@@ -47,6 +47,7 @@ public:
 
     bool IsWaitting( void ) const { return nullptr != mWaited; }
     bool IsWaittingLock( void ) const { return mWaited == mNodePtr; }
+    bool IsFirstWaiter( void ) const;
 
     void DecreaseWaitingLockCount( void ) { --mWaitingLockCount; }
 

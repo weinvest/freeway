@@ -12,17 +12,15 @@
 template <typename T>
 struct NullTraits
 {
-    static bool IsNull(const T& o) { return o.IsNull(); }
-    static void Reset(T& o) { o.Reset(); }
-    static T Null( void ) { return T::Null(); }
+    static inline bool IsNull(const T& o) { return o.IsNull(); }
+    static inline T Null( void ) { return T::Null(); }
 };
 
 template<typename T>
 struct NullTraits<T*>
 {
-    static bool IsNull(T* v) { return nullptr == v; }
-    static void Reset(T*& v) {  v = nullptr; }
-    static T* Null( void ) { return nullptr; }
+    static inline bool IsNull(T* v) { return nullptr == v; }
+    static inline T* Null( void ) { return nullptr; }
 };
 
 template <typename T>
@@ -31,8 +29,9 @@ class DSpscQueue
 public:
     struct Holder
     {
-        Holder* next = nullptr;
         T value;
+        char* __pading[64-sizeof(T)];
+        Holder* next = nullptr;
     };
 
     DSpscQueue() = default;
@@ -42,13 +41,13 @@ public:
     void Init(int32_t capacity)
     {
         mPool = new Holder[capacity];
-        NullTraits<T>::Reset(mPool[0].value);
+        (mPool[0].value) = NullTraits<T>::Null();
 
         mFreeHolders.init(&mPool[0]);
 
         for(auto iFreeHolder = 1; iFreeHolder < capacity; ++iFreeHolder)
         {
-            NullTraits<T>::Reset(mPool[iFreeHolder].value);
+            (mPool[iFreeHolder].value) = NullTraits<T>::Null();
             mFreeHolders.push(&mPool[iFreeHolder]);
         }
 
@@ -88,7 +87,7 @@ public:
             if(!NullTraits<T>::IsNull(pLastHolder->value))
             {
                 ret = pLastHolder->value;
-                NullTraits<T>::Reset(pLastHolder->value);
+                (pLastHolder->value) = NullTraits<T>::Null();
             }
 
             return ret;
@@ -108,7 +107,7 @@ public:
 
     void Pop2(Holder* pHolder)
     {
-        NullTraits<T>::Reset(pHolder->value);
+        (pHolder->value) = NullTraits<T>::Null();
         Holder* pLastHolder = nullptr;
         auto pPop = mStoreHolders.pop(&pLastHolder);
         while(nullptr != pPop && pPop != pHolder)
@@ -125,10 +124,6 @@ public:
 
     Holder* First( void ) const {
         auto pHolder = mStoreHolders.head;
-        if(NullTraits<T>::IsNull(pHolder->value))
-        {
-            return pHolder->next;
-        }
         return pHolder;
     }
 
@@ -149,4 +144,85 @@ private:
     spsc_queue<Holder*> mFreeHolders;
     Holder* mPool;
 };
+
+//
+//template <typename T>
+//class DSpscQueue<T*>
+//{
+//public:
+//    struct Holder
+//    {
+//        Holder* next = nullptr;
+//        char* __pading[64-8];
+//        T* value = nullptr;
+//    };
+//
+//    DSpscQueue() = default;
+//    DSpscQueue(const DSpscQueue&) = delete;
+//
+//    //Init must be called before Push/Pop
+//    void Init(int32_t capacity)
+//    {
+//        mPool = new Holder[capacity];
+//        mPool[0].value = nullptr;
+//
+//        mFreeHolders.init(&mPool[0]);
+//
+//        for(auto iFreeHolder = 1; iFreeHolder < capacity; ++iFreeHolder)
+//        {
+//            mPool[iFreeHolder].value = nullptr;
+//            mFreeHolders.push(&mPool[iFreeHolder]);
+//        }
+//
+//        mStoreHolders.init(mFreeHolders.pop());
+//    }
+//
+//    bool Push(T* value)
+//    {
+//        Holder* pLastFreeHolder = nullptr;
+//        Holder* pHolder = mFreeHolders.pop(&pLastFreeHolder);
+//
+//        if(LIKELY(nullptr != pHolder))
+//        {
+//            pHolder->value = value;
+//            mStoreHolders.push(pHolder);
+//            return true;
+//        }
+//
+//        return false;
+//    }
+//
+//    T* Pop( void )
+//    {
+//        T* ret = nullptr;
+//        Holder* pLastHolder = nullptr;
+//        Holder* pHolder = mStoreHolders.pop(&pLastHolder);
+//        if(nullptr == pHolder)
+//        {
+//            ret = pLastHolder->value;
+//            pLastHolder->value = nullptr;
+//        } else{
+//            ret = pHolder->value;
+//        }
+//
+//        return ret;
+//    }
+//
+//    bool Empty() const { return nullptr == mStoreHolders.head->value && nullptr == mStoreHolders.head->next; }
+//
+//    template<typename CallBack_t>
+//    void consume_all(CallBack_t cb)
+//    {
+//        auto node = Pop();
+//        while(LIKELY(nullptr != node))
+//        {
+//            cb(node);
+//            node = Pop();
+//        }
+//    }
+//private:
+//    spsc_queue<Holder*> mStoreHolders;
+//    spsc_queue<Holder*> mFreeHolders;
+//    Holder* mPool;
+//};
 #endif //ARAGOPROJECT_DSPSCQUEUE_HPP_H

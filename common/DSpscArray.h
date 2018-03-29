@@ -8,46 +8,100 @@
 #include <stddef.h>
 
 template <typename T>
+struct CallTraits
+{
+    typedef T&& PushParamType;
+    typedef T& FirstReturnType;
+};
+
+template <typename T>
+struct CallTraits<T*>
+{
+    typedef T* PushParamType;
+    typedef T* FirstReturnType;
+};
+
+#define DEFINE_BUILDIN_CALLTRAITS(T) template <>\
+struct CallTraits<T>\
+{\
+    typedef T PushParamType;\
+    typedef T FirstReturnType;\
+};
+
+DEFINE_BUILDIN_CALLTRAITS(bool)
+DEFINE_BUILDIN_CALLTRAITS(char)
+DEFINE_BUILDIN_CALLTRAITS(int16_t)
+DEFINE_BUILDIN_CALLTRAITS(int32_t)
+DEFINE_BUILDIN_CALLTRAITS(int64_t)
+DEFINE_BUILDIN_CALLTRAITS(uint16_t)
+DEFINE_BUILDIN_CALLTRAITS(uint32_t)
+DEFINE_BUILDIN_CALLTRAITS(uint64_t)
+DEFINE_BUILDIN_CALLTRAITS(float)
+DEFINE_BUILDIN_CALLTRAITS(double)
+
+template <typename T>
 class DSpscArray
 {
 public:
-    DSpscArray(size_t capacity)
-    :mData(new T[capacity])
-    ,mCapacity(capacity)
+    DSpscArray()
+    :mData(nullptr)
+    ,mCapacity(0)
     {
+    }
+
+    void Init(int32_t capacity)
+    {
+        mData = new T[capacity];
+        mCapacity = capacity;
     }
 
     ~DSpscArray() { delete [] mData; }
 
-    void push(T&& data)
+    void Push(typename CallTraits<T>::PushParamType data)
     {
         mData[mWritePos++%mCapacity] = std::move(data);
     }
 
-    T front( void )
+    typename CallTraits<T>::FirstReturnType First( void )
     {
         return mData[mReadPos%mCapacity];
     }
 
-    void pop( void )
+    typename CallTraits<T>::FirstReturnType First(int32_t k)
+    {
+        return mData[(mReadPos+k%mCapacity)];
+    }
+
+    bool Valid(int32_t k)
+    {
+        return mWritePos - mReadPos - k > 0;
+    }
+
+    void Pop( void )
     {
         mReadPos++;
     }
 
-    size_t size( void )
+    void Skip(int32_t k)
     {
-        return mWritePos - mReadPos - 1;
+        mReadPos += k;
     }
 
-    bool empty( void )
+    int32_t Size( void )
     {
-        return 0 == size();
+        return mWritePos - mReadPos;
+    }
+
+    bool Empty( void )
+    {
+        return 0 == Size();
     }
 private:
     T* mData{nullptr};
-    size_t mCapacity;
-    size_t mWritePos{1};
-    char __pading[64-sizeof(size_t)];
-    size_t mReadPos{0};
+    int32_t mCapacity;
+    char __pading[64-sizeof(int32_t)];
+    int32_t mWritePos{0};
+    char __pading1[64-sizeof(int32_t)];
+    int32_t mReadPos{0};
 };
 #endif //FREEWAY_DSPSCARRAY_H

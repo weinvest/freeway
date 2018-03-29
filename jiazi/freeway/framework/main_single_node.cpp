@@ -31,7 +31,7 @@ public:
     int32_t DoProcess(WorkflowID_t workflowId) 
     {
         mUsedTime += (Clock::Instance().Now() - mRaiseTime);
-	int32_t i = 0, sum = 0;
+	    int32_t i = 0, sum = 0;
         for(; i < mLoopCnt; ++i)
         {
             sum += i;

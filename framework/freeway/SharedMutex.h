@@ -6,7 +6,7 @@
 #define ARAGOPROJECT_SHAREDMUTEX_H
 
 #include <boost/circular_buffer.hpp>
-#include <common/DSpscQueue.hpp>
+#include <common/DSpscArray.h>
 #include "DEventNode.h"
 
 class DEventNode;
@@ -21,7 +21,6 @@ class SharedMutex
         bool IsWriter;
 
         inline bool IsNull( void ) const { return nullptr == pTask; }
-        inline void Reset( void ) { pTask = nullptr; }
         static inline WaiterType Null( void ) { return WaiterType(); }
 
         bool operator==(const WaiterType& o) const { return pTask == o.pTask && IsWriter == o.IsWriter; }
@@ -32,7 +31,7 @@ public:
 //    using WaiterBufferType = boost::circular_buffer<WaiterType>;
 //    using WaitingWriterType = boost::circular_buffer<WorkflowID_t >;
 
-    using WaiterBufferType = DSpscQueue<WaiterType>;
+    using WaiterBufferType = DSpscArray<WaiterType>;
     using WaitingWriterType = boost::circular_buffer<WorkflowID_t >;
 
     SharedMutex(DEventNode* pOwner);
@@ -67,17 +66,19 @@ public:
     //当前节点DoProcess结束就可以调用Unlock(即使Unlock后，Task[Nextflow] 依然会被mReaders阻止)
     void Unlock(Task* task);
 
+    Task* FirstWaiter( void );
+
 private:
     //如果后继节点没有调用前驱的GetValue, 则不用唤醒 NextTask?
-    bool Wake();
+    void Wake();
 
     DEventNode* mOwner{nullptr};
 
     std::atomic<int> mReaders{0};
     std::atomic_flag mIsInWaking ATOMIC_FLAG_INIT;
     WaiterBufferType mWaiters;
-    WaiterBufferType::Holder* mLastLockObject{nullptr};
     WaitingWriterType mWaitingWriterWorkflowIds{1024};
+    int32_t mSkipCount{0};
 };
 
 
