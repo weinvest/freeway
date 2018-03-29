@@ -59,7 +59,7 @@ public:
 
     void Push(typename CallTraits<T>::PushParamType data)
     {
-        mData[mWritePos++%mCapacity] = std::move(data);
+        mData[mWritePos++%mCapacity] = data;
     }
 
     typename CallTraits<T>::FirstReturnType First( void )

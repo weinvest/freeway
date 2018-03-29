@@ -98,7 +98,6 @@ void SharedMutex::Wake()
                 if (0 == mReaders) {
                     mWaiters.Skip(skipCount);
                     auto pTask = firstWaiter.pTask;
-                    firstWaiter.pTask = nullptr;
                     pTask->Enqueue(Context::GetWorkerId(), mOwner);
                     break;
                 }
@@ -106,7 +105,6 @@ void SharedMutex::Wake()
             } else {
                 ++mReaders;
                 auto pTask = firstWaiter.pTask;
-                firstWaiter.pTask = nullptr;
                 pTask->Enqueue(Context::GetWorkerId(), mOwner);
             }
         } else{
