@@ -1,10 +1,10 @@
 //
 // Created by 李书淦 on 2018/3/25.
 //
-
+#include <iostream>
 #include "WorkflowChecker.h"
 
-void NodeFamilyTree::Build( void )
+void NodeFamilyTree:: Build( void )
 {
     bool hasChange = true;
     while(hasChange)
@@ -53,7 +53,13 @@ void WorkflowChecker::Check( void )
     auto prevIdxRun = 0;
     for(auto idxRun = 1; idxRun < runNodeCnt; ++idxRun)
     {
-        BOOST_CHECK(CanRunBefore(prevIdxRun, idxRun));
+        bool canBefore = CanRunBefore(prevIdxRun, idxRun);
+        if(!canBefore)
+        {
+            int i = 0;
+            ++i;
+        }
+        BOOST_REQUIRE(canBefore);
         prevIdxRun = idxRun;
     }
 
@@ -87,7 +93,7 @@ void WorkflowChecker::Check( void )
 
 WorkflowChecker* WorkflowCheckerPool::GetChecker(int32_t workflowId)
 {
-    assert(workflowId < mMaxWorkflow);
+    assert(workflowId <= mMaxWorkflow);
     mIsWorkflowRun[workflowId] = true;
     return &mCheckers[workflowId];
 }
@@ -98,6 +104,7 @@ void WorkflowCheckerPool::CheckAll( void )
     {
         if(mIsWorkflowRun[workflow])
         {
+            std::cout << "WorkflowId:" << workflow << " has " << mCheckers[workflow].GetRunCount() << " node run\n";
             mCheckers[workflow].Check();
         }
     }

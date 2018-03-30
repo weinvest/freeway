@@ -55,7 +55,7 @@ bool SharedMutex::TrySharedLock4(Task* pTask)
 {
 //    std::atomic_thread_fence(std::memory_order_acquire);
     auto itBeg = mWaitingWriterWorkflowIds.begin();
-    auto hasLock = itBeg == mWaitingWriterWorkflowIds.end() || pTask->GetWorkflowId() < (*itBeg);
+    auto hasLock = itBeg != mWaitingWriterWorkflowIds.end() && pTask->GetWorkflowId() < (*itBeg);
     return hasLock;
 }
 

@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE SINGLE_NODE_TEST
+#define BOOST_TEST_MODULE MULTI_NODE_TEST
 #include <thread>
 #include <random>
 #include <boost/test/included/unit_test.hpp>
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(first_test)
     auto pDispatcher = Context::Init(2, 1);
 
     const int32_t MAX_NODE_COUNT = 32;
-    const int32_t MAX_WORKFLOW_COUNT = 2048;
+    const int32_t MAX_WORKFLOW_COUNT = 10;
 
     NodeFamilyTree nodeFamilyTree(MAX_NODE_COUNT);
     WorkflowCheckerPool checker(nodeFamilyTree, MAX_WORKFLOW_COUNT);
@@ -102,6 +102,7 @@ BOOST_AUTO_TEST_CASE(first_test)
                           std::this_thread::sleep_for(std::chrono::microseconds(50));
                       }
 
+                      std::this_thread::sleep_for(std::chrono::microseconds(500));
                       Context::Stop();
                   });
     Context::Start();

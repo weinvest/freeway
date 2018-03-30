@@ -49,6 +49,8 @@ public:
     }
 
     void Check( void );
+
+    int32_t GetRunCount() const { return mIdxRunNode.load(); }
 private:
     bool CanRunBefore(int32_t prev, int32_t succ);
 

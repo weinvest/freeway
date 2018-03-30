@@ -7,7 +7,6 @@ int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
 {
     BOOST_CHECK_GT(workflowId, GetLastWorkflowId());
     auto checker = mCheckPool.GetChecker(workflowId);
-    checker->iRun(mId);
 
     //compute
     int32_t sum = 0;
@@ -26,6 +25,7 @@ int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
             checker->SetObservedValue(mId, parentId, pParent->GetValue());
         }
     }
+    checker->iRun(mId);
 
     return 0;
 }
@@ -34,6 +34,8 @@ void MultiNode::AddPrecessor(MultiNode* pParent, bool ignore)
 {
     pParent->Connect(this);
     mIgnoredParent[pParent->GetId()] = ignore;
-    mCheckPool.GetFamilyTree().AddRelation(mId, pParent->GetId());
+    if(!ignore) {
+        mCheckPool.GetFamilyTree().AddRelation(mId, pParent->GetId());
+    }
     mParents.push_back(LockPtr<MultiNode>(pParent));
 }

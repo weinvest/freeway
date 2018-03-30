@@ -19,7 +19,9 @@ public:
             ,mId(id)
             ,mLoopCnt(loopCnt)
             ,mIgnoredParent(new int32_t[checkPool.GetMaxNodeCnt()])
-    {}
+    {
+        assert(loopCnt >= 100);
+    }
 
     int32_t GetId() const { return mId; }
 

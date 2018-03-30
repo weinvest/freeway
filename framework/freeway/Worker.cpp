@@ -161,27 +161,27 @@ void Worker::CheckLostLamb( void )  {
         auto pTask = waittingTasks.Pop();
         if(pTask->IsWaitting() && pTask->IsFirstWaiter())
         {
-//            bool gotLock = false;
-//            if(pTask->IsWaittingLock())
-//            {
-//                gotLock = pTask->TryLock();
-//            } else
-//            {
-//                gotLock = pTask->TrySharedLock();
-//            }
-//
-//            if(gotLock)
-//            {
+            bool gotLock = false;
+            if(pTask->IsWaittingLock())
+            {
+                gotLock = pTask->TryLock();
+            } else
+            {
+                gotLock = pTask->TrySharedLock();
+            }
+
+            if(gotLock)
+            {
 #ifdef DEBUG
 //                std::cout << "WorkflowId:" << pTask->GetWorkflowID() << ",Worker:" << mId << " got lock\n";
 #endif
                 pTask->SetWaited(nullptr);
                 mReadyTasks.push(pTask);
-//            }
-//            else
-//            {
-//                mWaittingTasks.Push(pTask);
-//            }
+            }
+            else
+            {
+                mWaittingTasks.Push(pTask);
+            }
         }
     }
 }
