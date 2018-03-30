@@ -49,7 +49,8 @@ private:
 
 BOOST_AUTO_TEST_CASE(first_test)
 {
-    auto pDispatcher = Context::Init(std::thread::hardware_concurrency()-1, 1);
+    //auto pDispatcher = Context::Init(std::thread::hardware_concurrency()-1, 1);
+    auto pDispatcher = Context::Init(1, 1);
     Delay delay(8192);
     auto singleNode = SingleNode(delay, 3000);
     singleNode.SetName("SingleNode");
@@ -59,17 +60,17 @@ BOOST_AUTO_TEST_CASE(first_test)
                       Context::InitMiscThread("SingleNode");
                       Context::WaitStart();
 
-                      const int32_t MAX_RUN_COUNT = 8192;
+                      const int32_t MAX_RUN_COUNT = 100;
                       int32_t runCnt = 0;
                       while(runCnt < MAX_RUN_COUNT)
                       {
                           ++runCnt;
                           singleNode.SetRaiseTime(Clock::Instance().Now());
                           singleNode.RaiseSelf();
-                          std::this_thread::sleep_for(std::chrono::microseconds(50));
+                          std::this_thread::sleep_for(std::chrono::microseconds(500));
                       }
 
-                      std::this_thread::sleep_for(std::chrono::microseconds(500));
+                      std::this_thread::sleep_for(std::chrono::microseconds(5000));
                       Context::Stop();
                       BOOST_REQUIRE_GE(singleNode.GetRunCount(), 0);
                       BOOST_REQUIRE_LE(singleNode.GetRunCount(), runCnt);

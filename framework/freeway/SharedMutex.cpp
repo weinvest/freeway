@@ -94,23 +94,17 @@ void SharedMutex::Wake()
     {
         auto& firstWaiter = mWaiters.First(skipCount);
 
-        if(LIKELY(!firstWaiter.IsNull())) {
-            if (firstWaiter.IsWriter) {
-                if (0 == mReaders) {
-                    mWaiters.Skip(skipCount);
-                    auto pTask = firstWaiter.pTask;
-                    pTask->Enqueue(Context::GetWorkerId(), mOwner);
-                    break;
-                }
-                break;
-            } else {
-                ++mReaders;
+        if (firstWaiter.IsWriter) {
+            if (0 == mReaders) {
+                mWaiters.Skip(skipCount);
                 auto pTask = firstWaiter.pTask;
                 pTask->Enqueue(Context::GetWorkerId(), mOwner);
             }
-        } else{
-            int i = 0;
-            ++i;
+            break;
+        } else {
+            ++mReaders;
+            auto pTask = firstWaiter.pTask;
+            pTask->Enqueue(Context::GetWorkerId(), mOwner);
         }
         ++skipCount;
     }
