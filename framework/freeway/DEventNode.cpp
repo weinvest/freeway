@@ -47,8 +47,6 @@ int32_t DEventNode::Process(Task* pTask, WorkflowID_t workflowId) noexcept
     }
 
     for (auto precursor : GetPrecursors()) {
-        LOG_INFO(mLog, "Coroutine Task for %s[%d] RunNode is over, Unlockshared(%s) on Worker-%d", GetName(),
-                 mWorkflowId, precursor->GetName(), mWorkerId);
         precursor->GetMutex().UnlockShared(pTask);
     }
 
@@ -56,7 +54,6 @@ int32_t DEventNode::Process(Task* pTask, WorkflowID_t workflowId) noexcept
         successor->Raise(this, result);
     }
 
-    LOG_INFO(mLog, "Coroutine Task for %s[%d] RunNode is over, Unlocking...", GetName(), mWorkflowId);
     mMutex->Unlock(pTask);
     return result;
 }

@@ -88,7 +88,7 @@ void Task::Resume( void )
     }
     else {
         //the mTaskContext is still resuming in other thread rather return.
-        LOG_ERROR("+++++++Task[%p]-%s's context is null flow=%d", this, GetName().c_str(), mWorkflowId);
+        LOG_ERROR(mLog, "Resume task:" << this << " when mTaskContext unresumeable");
     }
 }
 
@@ -96,7 +96,6 @@ void Task::RunNode( void )
 {
     int32_t runCnt = 0;
     while(true) {
-        LOG_INFO("Enter coroutine Task for %s[%d] RunNode", GetName(), mWorkflowId);
 //        char name[32];
 //        pthread_getname_np(pthread_self(), name, sizeof(name));
 //        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";

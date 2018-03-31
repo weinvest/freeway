@@ -176,11 +176,13 @@ void Context::Stop( void )
 {
     GlobalDispatcher->Stop();
     GlobalDispatcher->Join();
+    LOG_DEBUG(mLog, "Dispatcher stoped");
     int32_t idxWork =  ThreadIndex[ThreadType::WORKER].first;
     while(nullptr != AllWorkers[idxWork])
     {
         AllWorkers[idxWork]->Stop();
         WorkerThreads[idxWork]->join();
+        LOG_DEBUG(mLog, "Worker-" << idxWork << " stoped");
 //        WorkerThreads[idxWork].reset(nullptr);
         ++idxWork;
     }

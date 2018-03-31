@@ -76,7 +76,6 @@ void Worker::Start( void )
 //Called by other threads
 void Worker::Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask)
 {
-    LOG_WARN("Task[%p]-%s is enqueued to worker-%d by %d, flow=%d", pTask, pTask->GetName().c_str(), mId, fromWorker, pTask->GetWorkflowId());
     auto& pTaskQueue = mPendingTasks[fromWorker];
     pTaskQueue.Push({pWho, pTask});
 }
@@ -100,9 +99,8 @@ void Worker::Run( void )
 
     int32_t nLoop = 0;
 #ifdef RUN_UNTIL_NOMORE_TASK
-    bool bye = true;
     while (LIKELY(mIsRuning || mDispatcher->IsRunning() || !mWaittingTasks.Empty())){
-        bye = true;
+//        LOG_DEBUG(mLog, "Worker-" << mId << (mWaittingTasks.Empty() ? " no ": " has ") << " watting tasks");
 #else
     while(LIKELY(mIsRuning)){
 #endif
@@ -125,9 +123,6 @@ void Worker::Run( void )
 
         while(!mReadyTasks.empty())
         {
-#ifdef RUN_UNTIL_NOMORE_TASK
-            bye = false;
-#endif
             Task* pTask = mReadyTasks.top();
             mReadyTasks.pop();
         //    printf("=================Worker[%d] get %s\n", mId, pTask->GetName().c_str());
@@ -139,15 +134,15 @@ void Worker::Run( void )
             }
             catch(const boost::exception& ex)
             {
-                LOG_ERROR("%s %s %s", pTask->GetName().c_str(), " exception at Exec:", boost::diagnostic_information(ex).c_str());
+                LOG_ERROR(mLog, pTask->GetName() << " exception when Exec:" << boost::diagnostic_information(ex));
             }
             catch(const std::exception& ex)
             {
-                LOG_ERROR(" exception at Exec: %d", __LINE__);
+                LOG_ERROR(mLog, pTask->GetName() << " exception when Exec@" << __FILE__ << ":" << __LINE__);
             }
             catch(...)
             {
-                LOG_ERROR("%s %s", pTask->GetName().c_str(), " exception at Exec");
+                LOG_ERROR(mLog, pTask->GetName() << " exception at Exec");
             }
         }
     }

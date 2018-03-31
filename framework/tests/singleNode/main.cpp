@@ -71,6 +71,7 @@ BOOST_AUTO_TEST_CASE(first_test)
                       }
 
                       std::this_thread::sleep_for(std::chrono::microseconds(5000));
+                      std::cout << "==================Stopping=============================\n";
                       Context::Stop();
                       BOOST_REQUIRE_GE(singleNode.GetRunCount(), 0);
                       BOOST_REQUIRE_LE(singleNode.GetRunCount(), runCnt);

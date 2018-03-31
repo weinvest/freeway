@@ -44,9 +44,7 @@ WorkerID_t Dispatcher::SelectWorker(DEventNode *pNode) {
     return ++Loop;
 }
 
-Task *Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId) {
-    static int DispatchIndex = ThreadIndex[ThreadType::DISPATCHER].first;
-
+void Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId) {
     //一个节点有多个前驱节点时，只能通过一个前驱节点被Dispatch。
     if (!pNode->HasScheduled(workflowId)) {
         pNode->SetDispatchedID(workflowId);
@@ -54,29 +52,18 @@ Task *Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId
         //2. create task
         //3. acquire locks (Before Worker::Enqueue)
         //4. visit children
-        auto idxWorker = SelectWorker(pNode);
-
-        auto pTargetWorker = Context::GetWorker(idxWorker);
-        Task *pTask = pTargetWorker->AllocateTaskFromPool(workflowId, pNode);
-        pTask->SetLevel(level);
-        mPendingTask.push_back(pTask);
-
-        auto &precessor = pNode->GetPrecursors();
-        for (auto pPrecessor : precessor) {
-            pPrecessor->GetMutex().LockShared(pTask);
-        }
-        pNode->GetMutex().Lock(pTask);
-        pTargetWorker->Enqueue(DispatchIndex, nullptr, pTask);
 
         auto &successors = pNode->GetSuccessors();
         for (auto pSuccessor : successors) {
             VisitNode(pSuccessor, level + 1, workflowId);
         }
 
-        return pTask;
+        auto idxWorker = SelectWorker(pNode);
+        auto pTargetWorker = Context::GetWorker(idxWorker);
+        Task *pTask = pTargetWorker->AllocateTaskFromPool(workflowId, pNode);
+        mPendingTask.push_back(pTask);
     }
     //LOG_ERROR("Node-%s has been scheduled!!!!\n", pNode->GetName().c_str());
-    return nullptr;
 };
 
 
@@ -87,6 +74,7 @@ void Dispatcher::Run(void) {
 #ifdef RUN_UNTIL_NOMORE_TASK
     bool bye = true;
     while (LIKELY(mIsRunning || !bye)) {
+//        LOG_INFO(mLog, "Dispatcher--:XX" << bye);
         bye = true;
 #else
     while(mIsRunning){
@@ -108,9 +96,25 @@ void Dispatcher::Run(void) {
                 VisitNode(pNode, 0, workflowId);
             });
         }
-        workflowId += nWorkflowDelta;
-    }
 
+        for(auto itTask = mPendingTask.rbegin(); itTask != mPendingTask.rend(); ++itTask)
+        {
+            auto pTask = *itTask;
+            auto pNode = pTask->GetNode();
+            auto &precessor = pNode->GetPrecursors();
+            for (auto pPrecessor : precessor) {
+                pPrecessor->GetMutex().LockShared(pTask);
+            }
+            pNode->GetMutex().Lock(pTask);
+            pTask->Enqueue(DispatchIndex, nullptr);
+            LOG_INFO(mLog, "Dispatcher push node:" << pNode->GetName() << " to Worker-" << pTask->GetWorkerId()
+                                                   << " @workflow:" << workflowId << " task:" << pTask);
+        }
+
+        workflowId += nWorkflowDelta;
+//        LOG_INFO(mLog, "Dispatcher--:YY workflow:" << workflowId);
+    }
+    LOG_DEBUG(mLog, "Dispatcher jump out main loop");
     mStopFinished = true;
 }
 
@@ -121,5 +125,8 @@ void Dispatcher::Stop(void)
 
 void Dispatcher::Join( void )
 {
-    while(!mStopFinished);
+    while(UNLIKELY(!mStopFinished))
+    {
+        LOG_DEBUG(mLog, "Dispatcher stopping:" << mStopFinished);
+    }
 }
