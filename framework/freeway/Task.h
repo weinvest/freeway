@@ -61,7 +61,7 @@ public:
 
     bool TryLock( void );
     bool TrySharedLock( void );
-    void WaitSharedLock( void );
+    void WaitSharedLock(DEventNode *pWaited);
     void SetId(int32_t id) { mId = id; }
 #ifdef DEBUG
     void Suspend4Lock( void );

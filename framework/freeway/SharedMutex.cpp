@@ -30,18 +30,18 @@ void SharedMutex::WaitLock4(Task* pTask)
 {
     if(mWaiters.First().pTask != pTask)
     {
-        LOG_INFO(mLog, "task:" << pTask << " wait lock for node:" << mOwner->GetName() << " in worker:"<< Context::GetWorkerId());
+        LOG_INFO(mLog, "task:" << pTask << "(" << pTask->GetName() << ")"<< " wait lock for node:" << mOwner->GetName() << " in Worker-"<< Context::GetWorkerId());
         pTask->SetWaited(mOwner);
         pTask->Suspend();
     }
-    LOG_INFO(mLog, "task:" << pTask << " get lock for node:" << mOwner->GetName() << " in worker:"<< Context::GetWorkerId());
+    LOG_INFO(mLog, "task:" << pTask << "(" << pTask->GetName() << ")"<< " get lock for node:" << mOwner->GetName() << " in Worker-"<< Context::GetWorkerId());
 }
 
 bool SharedMutex::TryLock4(Task* pTask)
 {
 //    std::atomic_thread_fence(std::memory_order_acquire);
     bool goted = mWaiters.First().pTask == pTask;
-    LOG_INFO(mLog, "task:" << pTask << " try lock for node:" << mOwner->GetName() << (goted ? "success" : "failed") << " in worker:"<< Context::GetWorkerId());
+    LOG_INFO(mLog, "task:" << pTask << "(" << pTask->GetName() << ")"<< " try lock for node:" << mOwner->GetName() << (goted ? "success" : "failed") << " in Worker-"<< Context::GetWorkerId());
     return goted;
 }
 
@@ -52,11 +52,12 @@ void SharedMutex::WaitSharedLock4(Task* pTask)
     auto hasLock = !first.IsWriter && pTask->GetWorkflowId() <= first.pTask->GetWorkflowID();
     if(!hasLock)
     {
-        LOG_INFO(mLog, "task:" << pTask << " wait shared lock for node:" << mOwner->GetName() << " in worker:"<< Context::GetWorkerId());
+        assert(pTask->GetName() != mOwner->GetName());
+        LOG_INFO(mLog, "task:" << pTask << "(" << pTask->GetName() << ")"<< " wait shared lock for node:" << mOwner->GetName() << " in Worker-"<< Context::GetWorkerId());
         pTask->SetWaited(mOwner);
         pTask->Suspend();
     }
-    LOG_INFO(mLog, "task:" << pTask << " get shared lock for node:" << mOwner->GetName() << " in worker:"<< Context::GetWorkerId());
+    LOG_INFO(mLog, "task:" << pTask << "(" << pTask->GetName() << ")"<< " get shared lock for node:" << mOwner->GetName() << " in Worker-"<< Context::GetWorkerId());
 }
 
 bool SharedMutex::TrySharedLock4(Task* pTask)
@@ -64,21 +65,24 @@ bool SharedMutex::TrySharedLock4(Task* pTask)
 //    std::atomic_thread_fence(std::memory_order_acquire);
     auto& first = mWaiters.First();
     auto hasLock = !first.IsWriter && pTask->GetWorkflowId() <= first.pTask->GetWorkflowID();
-    LOG_INFO(mLog, "task:" << pTask << " try shared lock for node:" << mOwner->GetName() << (hasLock ? "success" : "failed") << " in worker:"<< Context::GetWorkerId());
+    LOG_INFO(mLog, "task:" << pTask << "(" << pTask->GetName() << ")"<< " try shared lock for node:" << mOwner->GetName() << (hasLock ? "success" : "failed") << " in Worker-"<< Context::GetWorkerId());
     return hasLock;
 }
 
 void SharedMutex::UnlockShared(Task* pTask)
 {
     auto prevReadCnt = mReaders.fetch_sub(1);
-    LOG_INFO(mLog, "task:" << pTask << " unlock shared, has readers:" << (prevReadCnt - 1));
+    LOG_INFO(mLog, "task:" << pTask << "(" << pTask->GetName() << ")"<< " unlock shared lock @"
+                           << mOwner->GetName() << ", has readers:" << (prevReadCnt - 1));
     if((prevReadCnt < 2) && !mIsInWaking.test_and_set())
     {
         //prevReadCnt == 1, 可能没有其他reader了
         //prevReadCnt <= 0, 说明漏Wake了
-        LOG_INFO(mLog, "task:" << pTask << " skip " << mSkipCount << " reades and then wake up " << " in worker:"<< Context::GetWorkerId());
+        LOG_INFO(mLog, "task:" << pTask << "(" << pTask->GetName() << ") unlock shared lock @"
+                               << mOwner->GetName() << ", skip " << mSkipCount
+                               << " reades and then wake up " << " in Worker-"<< Context::GetWorkerId());
         mWaiters.Skip(mSkipCount);
-        Wake();
+        Wake(pTask);
         mIsInWaking.clear();
     }
 }
@@ -88,11 +92,12 @@ void SharedMutex::Unlock(Task* pTask)
     mWaiters.Pop();
     mWaitingWriterWorkflowIds.pop_front();
 //    std::atomic_thread_fence(std::memory_order_release);
-    LOG_INFO(mLog, "task:" << pTask << " unlocked " << " in worker:"<< Context::GetWorkerId());
-    Wake();
+    LOG_INFO(mLog, "task:" << pTask << "(" << pTask->GetName() << ")"<< " unlocked @" << mOwner->GetName()
+                           << " in Worker-"<< Context::GetWorkerId());
+    Wake(pTask);
 }
 
-void SharedMutex::Wake()
+void SharedMutex::Wake(Task* pWaker)
 {
     auto skipCount = 0;
     while(mWaiters.Valid(skipCount))
@@ -103,14 +108,16 @@ void SharedMutex::Wake()
             if (0 == mReaders) {
                 mWaiters.Skip(skipCount);
                 auto pTask = firstWaiter.pTask;
-                LOG_INFO(mLog, " wake up writer:" << pTask  << " in worker:"<< Context::GetWorkerId());
+                LOG_INFO(mLog, "task:" << pWaker << "(" << pWaker->GetName() << ") wake up writer:"
+                                       << pTask  << "(" << pTask->GetName() << ") in Worker-"<< Context::GetWorkerId());
                 pTask->Enqueue(Context::GetWorkerId(), mOwner);
             }
             break;
         } else {
             ++mReaders;
             auto pTask = firstWaiter.pTask;
-            LOG_INFO(mLog, " wake up reader:" << pTask  << " in worker:"<< Context::GetWorkerId());
+            LOG_INFO(mLog, "task:" << pWaker << "(" << pWaker->GetName() << ") wake up reader:"
+                                   << pTask  << "(" << pTask->GetName() << ") in Worker-"<< Context::GetWorkerId());
             pTask->Enqueue(Context::GetWorkerId(), mOwner);
         }
         ++skipCount;

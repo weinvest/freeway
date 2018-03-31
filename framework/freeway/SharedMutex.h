@@ -70,7 +70,7 @@ public:
 
 private:
     //如果后继节点没有调用前驱的GetValue, 则不用唤醒 NextTask?
-    void Wake();
+    void Wake(Task* pTask);
 
     DEventNode* mOwner{nullptr};
 

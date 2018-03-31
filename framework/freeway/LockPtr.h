@@ -23,7 +23,7 @@ public:
         auto pThisTask = Context::GetCurrentTask();
         if(pThisTask != mTask) //同一节点必须保证上一个Workflow与下一个Workflow使用的Task不同
         {
-            pThisTask->WaitSharedLock();
+            pThisTask->WaitSharedLock(mNode);
             pThisTask->DecreaseWaitingLockCount();
 
             mTask = pThisTask;
