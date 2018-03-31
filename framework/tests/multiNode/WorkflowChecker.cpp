@@ -67,8 +67,9 @@ void WorkflowChecker::Check( void )
     for(auto idxRun = 0; idxRun < runNodeCnt; ++idxRun)
     {
         auto runNodeId = mRunNodes[idxRun];
-        auto thisNode = &mObservedValues[runNodeId];
+        auto thisNode = &mObservedValues[runNodeId*mNodeCount];
         auto observedValue = -1;
+        BOOST_CHECK_GE(thisNode[runNodeId], 1);
         for(auto sub = 0; sub < mNodeCount; ++sub)
         {
             if(-1 != thisNode[sub])

@@ -110,7 +110,7 @@ void Dispatcher::Run(void) {
             }
             pNode->GetMutex().Lock(pTask);
             pTask->Enqueue(DispatchIndex, nullptr);
-            LOG_INFO(mLog, "Dispatcher push node:" << pNode->GetName() << " to Worker-" << pTask->GetWorkerId()
+            LOG_INFO(mLog, "push node:" << pNode->GetName() << " to Worker-" << pTask->GetWorkerId()
                                                    << " @workflow:" << workflowId << " task:" << pTask);
         }
 
