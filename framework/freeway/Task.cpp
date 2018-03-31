@@ -8,8 +8,7 @@
 #include "DEventNode.h"
 #include "Context.h"
 using namespace boost::context;
-
-#include <iostream>
+#define mLog Context::GetLog()
 Task::Task()
 {
     mTaskContext =  ctx::callcc( [this](ctx::continuation && from)

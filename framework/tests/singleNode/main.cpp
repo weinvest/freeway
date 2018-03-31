@@ -5,6 +5,7 @@
 #include "framework/freeway/Context.h"
 #include "clock/Clock.h"
 #include "testCommon/Delay.h"
+#include <boost/filesystem.hpp>
 class SingleNode: public DEventNode
 {
 public:

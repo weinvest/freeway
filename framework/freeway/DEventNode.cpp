@@ -9,6 +9,8 @@
 #include "SharedMutex.h"
 #include "Context.h"
 #include "Dispatcher.h"
+
+#define mLog Context::GetLog()
 DEventNode::DEventNode()
 :mMutex(new SharedMutex(this)){
 

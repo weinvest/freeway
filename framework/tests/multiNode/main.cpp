@@ -103,6 +103,7 @@ BOOST_AUTO_TEST_CASE(first_test)
                       }
 
                       std::this_thread::sleep_for(std::chrono::microseconds(500));
+                      std::cout << "==================Stopping=============================\n";
                       Context::Stop();
                   });
     Context::Start();

@@ -27,6 +27,7 @@ Worker::Worker(Dispatcher* pDispatcher, WorkerId id, int32_t workerCount)
         ,mQueueCount(workerCount+1)
         ,mIsRuning(false)
         ,mDispatcher(pDispatcher)
+        ,mLog(Logger::getInstance("Worker" + std::to_string(id)))
 {
     mPendingTasks = new PendingTaskQueue[mQueueCount];
     for(int i=0; i<mQueueCount; i++) {

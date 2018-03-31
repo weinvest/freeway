@@ -8,6 +8,7 @@
 #include <array>
 #include "common/DSpscQueue.hpp"
 #include "Task.h"
+#include "utils/DLog.h"
 class DEventNode;
 class Dispatcher
 {
@@ -35,6 +36,7 @@ private:
     std::vector<Task*> mPendingTask;
     bool mIsRunning;
     bool mStopFinished{false};
+    Logger mLog;
 };
 
 

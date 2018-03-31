@@ -6,6 +6,7 @@
 #include "Context.h"
 #include "Task.h"
 
+#define mLog Context::GetLog()
 SharedMutex::SharedMutex(DEventNode *pOwner)
 :mOwner(pOwner)
 {

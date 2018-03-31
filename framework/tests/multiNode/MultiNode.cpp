@@ -5,7 +5,7 @@
 #include "MultiNode.h"
 int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
 {
-    BOOST_CHECK_GT(workflowId, GetLastWorkflowId());
+    BOOST_REQUIRE_GT(workflowId, GetLastWorkflowId());
     auto checker = mCheckPool.GetChecker(workflowId-1);
 
     //compute

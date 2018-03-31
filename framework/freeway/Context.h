@@ -6,6 +6,7 @@
 #define ARAGOPROJECT_CONTEXT_H
 #include <memory>
 #include <functional>
+#include "utils/DLog.h"
 class Worker;
 class Task;
 class Task;
@@ -49,6 +50,8 @@ public:
     static void InitMiscThread(const std::string& name);
 
     static ThreadId GetThreadId( void );
+
+    static Logger& GetLog( void );
 };
 
 namespace std

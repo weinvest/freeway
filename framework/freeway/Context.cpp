@@ -8,6 +8,7 @@
 #include "Worker.h"
 #include "Dispatcher.h"
 #include <stdio.h>
+#include <boost/filesystem.hpp>
 
 static constexpr int32_t MAX_WORKERS = 64;
 /*
@@ -74,9 +75,31 @@ std::unordered_map<ThreadType, std::pair<int, int>> ThreadIndex;
 */
 static std::atomic<ThreadId> NEXT_MISC_THREAD_ID{-1};
 thread_local ThreadId THIS_THREAD_ID = 0;
+namespace fs = boost::filesystem;
+bool TraverseDirectory(const fs::path& dirPath, std::function<bool (const fs::path& p)> act)
+{
+    bool hasOne = false;
+    fs::directory_iterator end;
+    for(fs::directory_iterator pos(dirPath); pos != end; ++pos)
+    {
+        hasOne = act(*pos) ? true : hasOne;
+    }
+
+    return hasOne;
+}
 
 Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
 {
+    TraverseDirectory("../conf"
+            ,[](const auto& p)
+                             {
+                                 if(p.extension().string() == ".log")
+                                 {
+                                     LoadLogConf(p.string());
+                                     return true;
+                                 }
+                                 return false;
+                             });
 
     int32_t maxWorkerCount = std::min(std::thread::hardware_concurrency(), static_cast<unsigned int>(AllWorkers.size()));
     if(workerCount > maxWorkerCount)
@@ -176,13 +199,12 @@ void Context::Stop( void )
 {
     GlobalDispatcher->Stop();
     GlobalDispatcher->Join();
-    LOG_DEBUG(mLog, "Dispatcher stoped");
     int32_t idxWork =  ThreadIndex[ThreadType::WORKER].first;
     while(nullptr != AllWorkers[idxWork])
     {
         AllWorkers[idxWork]->Stop();
         WorkerThreads[idxWork]->join();
-        LOG_DEBUG(mLog, "Worker-" << idxWork << " stoped");
+        std::cout << "Worker-" << idxWork << " stoped\n";
 //        WorkerThreads[idxWork].reset(nullptr);
         ++idxWork;
     }
@@ -203,4 +225,9 @@ void Context::InitMiscThread(const std::string& name)
 ThreadId Context::GetThreadId( void )
 {
     return THIS_THREAD_ID;
+}
+
+Logger& Context::GetLog( void )
+{
+    return ThisWorker->GetLog();
 }

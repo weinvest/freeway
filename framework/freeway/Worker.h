@@ -12,6 +12,7 @@
 #include "common/DSpscQueue.hpp"
 #include <framework/freeway/Task.h>
 #include <framework/freeway/TaskList.h>
+#include "utils/DLog.h"
 class Dispatcher;
 class Worker
 {
@@ -34,6 +35,7 @@ public:
     int32_t GetWorkerCount( void ) const { return mWorkerCount; }
     Dispatcher* GetDispatcher( void ) { return mDispatcher; }
     Task* AllocateTaskFromPool(WorkflowID_t flow, DEventNode* pNode);
+    Logger& GetLog() { return mLog; }
 
     struct alignas(8) TaskPair
     {
@@ -73,5 +75,5 @@ private:
     bool mInitialized{false};
     Dispatcher* mDispatcher{nullptr};
 
-
+    Logger mLog;
 };

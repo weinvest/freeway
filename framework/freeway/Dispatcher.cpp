@@ -14,9 +14,12 @@ extern std::unordered_map<ThreadType, std::pair<int, int>> ThreadIndex;
 static WorkflowID_t workflowId = 0;
 
 Dispatcher::Dispatcher(int32_t workerCount, int32_t miscThread)
-        : mWorkerCount(workerCount), mMiscThreadCount(miscThread),
-          mQueueNum(workerCount + miscThread + 1)  //[0...mQueueNum)
-        , mPendingNodes(new PendingNodeQueue[mQueueNum]), mIsRunning(true) {
+        : mWorkerCount(workerCount), mMiscThreadCount(miscThread)
+        , mQueueNum(workerCount + miscThread + 1)  //[0...mQueueNum)
+        , mPendingNodes(new PendingNodeQueue[mQueueNum])
+        , mIsRunning(true)
+        , mLog(Logger::getInstance("Dispatcher"))
+{
     for (int i = 0; i < mQueueNum; i++) {
         mPendingNodes[i].Init(capacity);
     }
