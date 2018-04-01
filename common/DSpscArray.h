@@ -59,7 +59,8 @@ public:
 
     void Push(typename CallTraits<T>::PushParamType data)
     {
-        mData[mWritePos++%mCapacity] = data;
+        mData[mWritePos%mCapacity] = data;
+        mWritePos++;
     }
 
     typename CallTraits<T>::FirstReturnType First( void )
@@ -69,7 +70,7 @@ public:
 
     typename CallTraits<T>::FirstReturnType First(int32_t k)
     {
-        return mData[(mReadPos+k%mCapacity)];
+        return mData[(mReadPos+k)%mCapacity];
     }
 
     bool Valid(int32_t k)

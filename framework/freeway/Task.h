@@ -56,7 +56,6 @@ public:
 
     void Resume( void );
 
-    WorkflowID_t GetWorkflowID( void ) const { return mWorkflowId; }
     void Suspend(void);
 
     bool TryLock( void );

@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(first_test)
     AddEdge(pP, pF);
     AddEdge(pQ, pM);
     AddEdge(pS, pR);
-    AddEdge(pS, pR);
+//    AddEdge(pS, pR);
     AddEdge(pT, pN);
 
 
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(first_test)
                           for(auto& pNode : allNodes)
                           {
                               double prob = norm(generator);
-                              if(prob > 0.5 || prob < 0.5)
+                              if(prob > 0.5 || prob < -0.5)
                               {
                                   pNode->RaiseSelf();
                               }
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(first_test)
                           std::this_thread::sleep_for(std::chrono::microseconds(50));
                       }
 
-                      std::this_thread::sleep_for(std::chrono::microseconds(500));
+                      std::this_thread::sleep_for(std::chrono::microseconds(500000));
                       std::cout << "==================Stopping=============================\n";
                       Context::Stop();
                   });

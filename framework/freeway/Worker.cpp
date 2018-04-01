@@ -155,7 +155,7 @@ void Worker::CheckLostLamb( void )  {
     TaskList waittingTasks = std::move(mWaittingTasks);
     while(!waittingTasks.Empty()) {
         auto pTask = waittingTasks.Pop();
-        if(pTask->IsWaitting() && pTask->IsFirstWaiter())
+        if(pTask->IsWaitting())
         {
             bool gotLock = false;
             if(pTask->IsWaittingLock())
