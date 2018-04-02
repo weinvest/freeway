@@ -93,8 +93,10 @@ void Worker::Run( void )
     {
         if(taskPair.task->GetWaited() == taskPair.waited)
         {
-            taskPair.task->SetWaited(nullptr);
-            mReadyTasks.push(taskPair.task);
+	    auto pTask = taskPair.task;
+	    LOG_DEBUG(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << " been wake success");
+            pTask->SetWaited(nullptr);
+            mReadyTasks.push(pTask);
         }
     };
 

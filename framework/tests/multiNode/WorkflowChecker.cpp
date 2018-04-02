@@ -3,6 +3,22 @@
 //
 #include <iostream>
 #include "WorkflowChecker.h"
+#include "MultiNode.h"
+void NodeFamilyTree::AddNode(MultiNode* pNode)
+{
+    mNodes.insert(std::make_pair(pNode->GetId(), pNode));
+}
+
+MultiNode* NodeFamilyTree::GetNode(int32_t id)
+{
+    auto itNode = mNodes.find(id);
+    if(mNodes.end() == itNode)
+    {
+	return nullptr;
+    }
+
+    return itNode->second;
+}
 
 void NodeFamilyTree:: Build( void )
 {
@@ -46,18 +62,18 @@ bool WorkflowChecker::CanRunBefore(int32_t prev, int32_t succ)
     return !mFamilyTree->IsAncestor(prev, succ);
 }
 
-void WorkflowChecker::Check( void )
+void WorkflowChecker::Check(int32_t workflow)
 {
     int32_t runNodeCnt = mIdxRunNode.load();
     //check run orders:
-    auto prevIdxRun = 0;
-    for(auto idxRun = 1; idxRun < runNodeCnt; ++idxRun)
+    auto prevIdxRun = mRunNodes[0];
+    for(auto posRun = 1; posRun < runNodeCnt; ++posRun)
     {
+	auto idxRun = mRunNodes[posRun];
         bool canBefore = CanRunBefore(prevIdxRun, idxRun);
         if(!canBefore)
         {
-            int i = 0;
-            ++i;
+	    std::cout << "ERROR:workflow:" << workflow << ",node:" << mFamilyTree->GetNode(prevIdxRun)->GetName() << " run before node:" << mFamilyTree->GetNode(idxRun)->GetName() << "\n";
         }
         BOOST_REQUIRE(canBefore);
         prevIdxRun = idxRun;
@@ -106,7 +122,7 @@ void WorkflowCheckerPool::CheckAll( void )
         if(mIsWorkflowRun[workflow])
         {
             std::cout << "WorkflowId:" << workflow << " has " << mCheckers[workflow].GetRunCount() << " node run\n";
-            mCheckers[workflow].Check();
+            mCheckers[workflow].Check(workflow);
         }
     }
 }

@@ -6,11 +6,13 @@
 #define FREEWAY_WORKFLOWCHECKER_H
 
 #include <set>
+#include <map>
 #include <cstdint>
 #include <cstring>
 #include <atomic>
 #include <boost/test/test_tools.hpp>
 
+class MultiNode;
 class NodeFamilyTree
 {
 public:
@@ -18,6 +20,9 @@ public:
             :mMaxNodeCnt(maxNodeCnt)
             ,mFamilyTree(new std::set<int32_t>[maxNodeCnt])
     {}
+
+    void AddNode(MultiNode* pNode);
+    MultiNode* GetNode(int32_t id);
 
     void AddRelation(int32_t child, int32_t parent) { mFamilyTree[child].insert(parent); }
     void Build( void );
@@ -27,6 +32,7 @@ public:
 private:
     int32_t mMaxNodeCnt;
     std::set<int32_t>* mFamilyTree{nullptr};
+    std::map<int32_t, MultiNode*> mNodes;
 };
 
 class WorkflowChecker
@@ -48,7 +54,7 @@ public:
         mRunNodes[mIdxRunNode.fetch_add(1)] = who;
     }
 
-    void Check( void );
+    void Check(int32_t workflow);
 
     int32_t GetRunCount() const { return mIdxRunNode.load(); }
 private:

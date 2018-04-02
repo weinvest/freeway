@@ -14,6 +14,7 @@ MultiNode* CreateNode(std::vector<MultiNode*>& allNodes, WorkflowCheckerPool& po
 
     auto pNode = new MultiNode(pool, id++, runCntDist(generator));
     pNode->SetName(nodeName);
+    pool.GetFamilyTree().AddNode(pNode);
 
     allNodes.push_back(pNode);
     return pNode;
