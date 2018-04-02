@@ -20,7 +20,7 @@ int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
     for(auto pParent : mParents)
     {
         auto parentId = pParent.get()->GetId();
-        if(!mIgnoredParent[parentId])
+        //if(!mIgnoredParent[parentId])
         {
             checker->SetObservedValue(mId, parentId, pParent->GetValue());
         }

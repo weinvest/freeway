@@ -112,9 +112,11 @@ void Worker::Run( void )
         }
 
         ++nLoop;
-        if(UNLIKELY(nLoop % 100 == 0))
+        //if(UNLIKELY((nLoop % 100) == 0))
         {
+//　          LOG_INFO(mLog, "===================begin CheckLostLamb=====================");
             CheckLostLamb();
+//            LOG_INFO(mLog, "===================end CheckLostLamb=====================");
 //            std::set<DEventNode*> nodes(std::move(mWaittingNode));
 //            for(auto pNode : nodes)
 //            {
@@ -155,6 +157,7 @@ void Worker::CheckLostLamb( void )  {
     TaskList waittingTasks = std::move(mWaittingTasks);
     while(!waittingTasks.Empty()) {
         auto pTask = waittingTasks.Pop();
+//        LOG_INFO(mLog, "check task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << ")");
         if(pTask->IsWaitting())
         {
             bool gotLock = false;

@@ -20,8 +20,11 @@ Task* TaskList::Pop( void )
 
 void TaskList::Push(Task* pTask)
 {
-    pTask->mNext = mHead;
-    mHead = pTask;
+    if(nullptr == pTask->mNext)
+    {
+        pTask->mNext = mHead;
+        mHead = pTask;
+    }
 }
 
 bool TaskList::Empty( void ) const

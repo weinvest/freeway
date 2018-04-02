@@ -75,9 +75,32 @@ BOOST_AUTO_TEST_CASE(first_test)
     AddEdge(pP, pF);
     AddEdge(pQ, pM);
     AddEdge(pS, pR);
-//    AddEdge(pS, pR);
+    AddEdge(pS, pP);
     AddEdge(pT, pN);
 
+/*
+digraph
+{
+    A->B
+    B->D
+    B->F
+    C->B
+    c->E
+    D->H
+    D->L
+    E->F
+    F->P
+    F->O
+    G->H
+    H->I
+    I->J
+    I->K
+    M->Q
+    N->O
+    N->T
+    P->S
+    R->S
+}*/
 
     nodeFamilyTree.Build();
     std::thread t ([&allNodes]

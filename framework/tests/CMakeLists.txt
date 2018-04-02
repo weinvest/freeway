@@ -1,3 +1,4 @@
 add_subdirectory(singleNode)
 add_subdirectory(testCommon)
 add_subdirectory(multiNode)
+add_subdirectory(twoNode)
