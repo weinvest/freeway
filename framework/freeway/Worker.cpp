@@ -115,6 +115,7 @@ void Worker::Run( void )
 
         ++nLoop;
         //if(UNLIKELY((nLoop % 100) == 0))
+        if(mReadyTasks.empty())
         {
 //　          LOG_INFO(mLog, "===================begin CheckLostLamb=====================");
             CheckLostLamb();

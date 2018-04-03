@@ -71,7 +71,7 @@ private:
 
     std::mutex  mRuningMutex;
     std::condition_variable mRuningCond;
-    bool mIsRuning;
+    bool mIsRuning{false};
     bool mInitialized{false};
     Dispatcher* mDispatcher{nullptr};
 

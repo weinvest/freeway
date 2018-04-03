@@ -6,26 +6,6 @@
 #include "clock/Clock.h"
 #include "MultiNode.h"
 
-MultiNode* CreateNode(std::vector<MultiNode*>& allNodes, WorkflowCheckerPool& pool, const std::string& nodeName)
-{
-    static int32_t id = 0;
-    static std::default_random_engine generator;
-    static std::uniform_int_distribution<int> runCntDist(100, 100000);
-
-    auto pNode = new MultiNode(pool, id++, runCntDist(generator));
-    pNode->SetName(nodeName);
-    pool.GetFamilyTree().AddNode(pNode);
-
-    allNodes.push_back(pNode);
-    return pNode;
-}
-
-void AddEdge(MultiNode* pChild, MultiNode* pParent)
-{
-    static std::default_random_engine generator;
-    static std::uniform_int_distribution<int> ignoreDist(0, 1);
-    pChild->AddPrecessor(pParent, 1 == ignoreDist(generator));
-}
 
 BOOST_AUTO_TEST_CASE(first_test)
 {

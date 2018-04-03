@@ -69,11 +69,12 @@ void WorkflowChecker::Check(int32_t workflow)
     auto prevIdxRun = mRunNodes[0];
     for(auto posRun = 1; posRun < runNodeCnt; ++posRun)
     {
-	auto idxRun = mRunNodes[posRun];
+	    auto idxRun = mRunNodes[posRun];
         bool canBefore = CanRunBefore(prevIdxRun, idxRun);
         if(!canBefore)
         {
-	    std::cout << "ERROR:workflow:" << workflow << ",node:" << mFamilyTree->GetNode(prevIdxRun)->GetName() << " run before node:" << mFamilyTree->GetNode(idxRun)->GetName() << "\n";
+	        std::cout << "ERROR:workflow:" << workflow << ",node:" << mFamilyTree->GetNode(prevIdxRun)->GetName()
+                      << " run before node:" << mFamilyTree->GetNode(idxRun)->GetName() << "\n";
         }
         BOOST_REQUIRE(canBefore);
         prevIdxRun = idxRun;
@@ -83,22 +84,21 @@ void WorkflowChecker::Check(int32_t workflow)
     for(auto idxRun = 0; idxRun < runNodeCnt; ++idxRun)
     {
         auto runNodeId = mRunNodes[idxRun];
+        auto runNodeName = mFamilyTree->GetNode(idxRun)->GetName();
         auto thisNode = &mObservedValues[runNodeId*mNodeCount];
-        auto observedValue = -1;
-        BOOST_CHECK_GE(thisNode[runNodeId], 1);
+        auto observedValue = thisNode[runNodeId];
+        BOOST_CHECK_GE(observedValue, 1);
         for(auto sub = 0; sub < mNodeCount; ++sub)
         {
             if(-1 != thisNode[sub])
             {
-                if(-1 == observedValue)
-                {
-                    observedValue = mObservedValues[sub];
-                }
-                else
-                {
+                if(observedValue != thisNode[sub]) {
+                    std::cout << "ERROR:workflow:" << workflow << ",node:" << mFamilyTree->GetNode(sub)->GetName()
+                              << " see node: " << runNodeName << " failed:" << thisNode[sub] << "!=" << observedValue
+                              << "\n";
+
                     BOOST_CHECK_EQUAL(observedValue, thisNode[sub]);
                 }
-
                 mObservedValues[sub] = -1;
             }
         }

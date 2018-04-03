@@ -43,6 +43,7 @@ protected:
     std::vector<LockPtr<MultiNode>> mParents;
 };
 
-
+MultiNode* CreateNode(std::vector<MultiNode*>& allNodes, WorkflowCheckerPool& pool, const std::string& nodeName);
+void AddEdge(MultiNode* pChild, MultiNode* pParent);
 
 #endif //FREEWAY_MULTINODE_H

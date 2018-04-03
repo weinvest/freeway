@@ -34,7 +34,7 @@ private:
     PendingNodeQueue* mPendingNodes;
 
     std::vector<Task*> mPendingTask;
-    bool mIsRunning;
+    bool mIsRunning{false};
     bool mStopFinished{false};
     Logger mLog;
 };

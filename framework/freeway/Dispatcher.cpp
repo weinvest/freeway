@@ -17,7 +17,6 @@ Dispatcher::Dispatcher(int32_t workerCount, int32_t miscThread)
         : mWorkerCount(workerCount), mMiscThreadCount(miscThread)
         , mQueueNum(workerCount + miscThread + 1)  //[0...mQueueNum)
         , mPendingNodes(new PendingNodeQueue[mQueueNum])
-        , mIsRunning(true)
         , mLog(Logger::getInstance("Dispatcher"))
 {
     for (int i = 0; i < mQueueNum; i++) {
@@ -74,6 +73,8 @@ void Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId)
 
 void Dispatcher::Run(void) {
     int32_t workflowId = 0;
+    mIsRunning = true;
+
 #ifdef RUN_UNTIL_NOMORE_TASK
     bool bye = true;
     while (LIKELY(mIsRunning || !bye)) {

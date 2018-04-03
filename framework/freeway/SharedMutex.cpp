@@ -151,6 +151,7 @@ void SharedMutex::Wake(Task* pWaker)
         if (firstWaiter.IsWriter) {
             if (0 == mReaders) {
                 mWaiters.Skip(skipCount);
+                skipCount = 0;
                 auto pTask = firstWaiter.pTask;
                 LOG_INFO(mLog, "task:" << pWaker << "(node:" << pWaker->GetName() << ",workflow:" << pWaker->GetWorkflowId()
                                        << ") wake up writer:"
