@@ -42,7 +42,10 @@ void SharedMutex::WaitLock4(Task* pTask)
     if(realFirst->pTask != pTask)
     {
         LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
-                               << ") wait lock for node:" << mOwner->GetName() << " in Worker-"<< Context::GetWorkerId());
+                               << ") wait lock for node:" << mOwner->GetName() << " in Worker-"<< Context::GetWorkerId()
+                               << " current first task:" << realFirst->pTask << "(node:" << realFirst->pTask->GetName()
+                               << ",workflow:" << realFirst->pTask->GetWorkflowId()
+        );
         pTask->SetWaited(mOwner);
         pTask->Suspend();
     }
@@ -68,7 +71,8 @@ bool SharedMutex::TryLock4(Task* pTask)
 
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                            << ") try lock for node:" << mOwner->GetName() << (goted ? " success" : " failed")
-                           << " in Worker-"<< Context::GetWorkerId());
+                           << " in Worker-"<< Context::GetWorkerId() << " current first task:"
+                           << realFirst->pTask << "(node:" << realFirst->pTask->GetName() << ",workflow:" << realFirst->pTask->GetWorkflowId());
     return goted;
 }
 

@@ -71,6 +71,7 @@ void Worker::WaitStart( void ) {
 
 void Worker::Start( void )
 {
+    assert(IsInitialized());
     mIsRuning = true;
     mRuningCond.notify_all();
 }

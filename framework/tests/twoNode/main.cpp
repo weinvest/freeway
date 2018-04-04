@@ -28,6 +28,7 @@ BOOST_AUTO_TEST_CASE(first_test)
                    {
                        Context::InitMiscThread("TwoNode");
                        Context::WaitStart();
+                       std::cout << "==================Started=============================\n";
 
                        std::default_random_engine generator;
                        std::normal_distribution<double> norm(0,1);

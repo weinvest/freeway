@@ -1,6 +1,9 @@
 //
 // Created by shgli on 17-9-27.
 //
+
+#include <stdio.h>
+#include <thread>
 #include "Task.h"
 #include "Dispatcher.h"
 #include "Context.h"
@@ -68,12 +71,20 @@ void Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId)
     //LOG_ERROR("Node-%s has been scheduled!!!!\n", pNode->GetName().c_str());
 };
 
-
-#include <stdio.h>
+void Dispatcher::WaitStart()
+{
+    while(!mIsRunning)
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
+        std::atomic_signal_fence(std::memory_order_acquire);
+    }
+}
 
 void Dispatcher::Run(void) {
-    int32_t workflowId = 0;
     mIsRunning = true;
+
+    std::atomic_signal_fence(std::memory_order_relaxed);
+    int32_t workflowId = 0;
 
 #ifdef RUN_UNTIL_NOMORE_TASK
     bool bye = true;

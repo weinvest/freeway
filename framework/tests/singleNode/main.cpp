@@ -61,6 +61,8 @@ BOOST_AUTO_TEST_CASE(first_test)
                       Context::InitMiscThread("SingleNode");
                       Context::WaitStart();
 
+                      std::cout << "==================Started=============================\n";
+
                       const int32_t MAX_RUN_COUNT = 8192;
                       int32_t runCnt = 0;
                       while(runCnt < MAX_RUN_COUNT)

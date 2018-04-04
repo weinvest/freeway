@@ -21,6 +21,7 @@ public:
     void Run( void );
     void Join( void );
     void Stop();
+    void WaitStart();
 private:
     int32_t SelectWorker(DEventNode* );
     void VisitNode (DEventNode* pNode, int32_t level, int32_t workflowId);

@@ -66,7 +66,7 @@ digraph
     B->D
     B->F
     C->B
-    c->E
+    C->E
     D->H
     D->L
     E->F
@@ -88,6 +88,7 @@ digraph
                   {
                       Context::InitMiscThread("MultiNode");
                       Context::WaitStart();
+                      std::cout << "==================Started=============================\n";
 
                       std::default_random_engine generator;
                       std::normal_distribution<double> norm(0,1);
