@@ -11,12 +11,26 @@ std::string Waiter::GetDisplayName( void ) const
     return displayName;
 }
 
-Waiter* Node::GetWaiter(const std::string& name, int32_t workflowId)
+Waiter* Node::GetWaiter(const std::string& n, int32_t workflowId)
 {
-    std::string waiterName(name + std::to_string(workflowId));
+    std::string waiterName(n + std::to_string(workflowId));
     auto itWaiter = waiterMapping.find(waiterName);
     if(waiterMapping.end() == itWaiter){
         return nullptr;
+    }
+
+    return itWaiter->second;
+}
+
+Waiter* Node::AddWaiter(const std::string& n, int32_t worker, int32_t workflowId)
+{
+    std::string waiterName(n + std::to_string(workflowId));
+    auto itWaiter = waiterMapping.find(n);
+    if(waiterMapping.end() == itWaiter){
+        auto pWaiter = new Waiter(n, name, worker, workflowId);
+        waiters.push_back(pWaiter);
+        waiterMapping[waiterName] = pWaiter;
+        return pWaiter;
     }
 
     return itWaiter->second;
@@ -129,13 +143,10 @@ void Graph::Dispatch(const std::string& name, int32_t worker, int32_t workflowId
     else
     {
         std::string sWorkflowId = std::to_string(workflowId);
-        pNode->waiters.push_back(new Waiter(name, name, worker, workflowId));
-        pNode->waiterMapping[name + sWorkflowId] = pNode->waiters.back();
+        pNode->AddWaiter(name, worker, workflowId);
         for(auto pPreNode : pNode->precessors)
         {
-            pPreNode->waiters.push_back(new Waiter(name, pPreNode->name, worker, workflowId));
-            auto pWaiter = pPreNode->waiters.back();
-            pPreNode->waiterMapping[name + sWorkflowId] = pWaiter;
+            pPreNode->AddWaiter(name, worker, workflowId);
         }
     }
 }
