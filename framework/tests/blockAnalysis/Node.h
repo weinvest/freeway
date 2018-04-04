@@ -18,14 +18,17 @@ struct Waiter
         Doing,
         Done
     };
-    Waiter(const std::string& n, int32_t w, int32_t wf)
-            :name(n), worker(w), workflowId(wf){
+    Waiter(const std::string& n, const std::string& wa, int32_t w, int32_t wf)
+            :name(n), waited(wa), worker(w), workflowId(wf){
     }
 
+    std::string GetDisplayName( void ) const ;
+
     std::string name;
+    std::string waited;
     int32_t worker;
     int32_t workflowId;
-    WaitState state;
+    WaitState state{WaitState::Waitting};
 
     friend std::ostream& operator<< (std::ostream& out, const Waiter& n);
 };

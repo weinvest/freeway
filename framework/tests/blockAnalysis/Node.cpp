@@ -3,7 +3,14 @@
 //
 
 #include <iostream>
+#include <cassert>
 #include "Node.h"
+std::string Waiter::GetDisplayName( void ) const
+{
+    std::string displayName(name + "_" + std::to_string(workflowId) + "_" + waited);
+    return displayName;
+}
+
 Waiter* Node::GetWaiter(const std::string& name, int32_t workflowId)
 {
     std::string waiterName(name + std::to_string(workflowId));
@@ -17,21 +24,23 @@ Waiter* Node::GetWaiter(const std::string& name, int32_t workflowId)
 
 std::ostream& operator<< (std::ostream& out, const Waiter& n)
 {
+    std::string displayName(n.GetDisplayName());
     switch (n.state)
     {
         case Waiter::Waitting:
-            out << n.name << "[label={<n>" << n.name << "[" << n.workflowId << "]|" << n.worker << "|<p>},"
-                << "style=filled, color=grey\"]";
+            out << displayName << "[label=\"{<n>|" << displayName << "|" << n.worker << "|<p>}\","
+                << "style=filled, color=grey]";
             break;
         case Waiter::Doing:
-            out << n.name << "[label={<n>" << n.name << "[" << n.workflowId << "]|" << n.worker << "|<p>},"
+            out << displayName << "[label=\"{<n>|" << displayName << "|" << n.worker << "|<p>}\","
                 << "style=filled, color=lightblue]";
             break;
         case Waiter::Done:
-            out << n.name << "[label={<n>" << n.name << "[" << n.workflowId << "]|" << n.worker << "|<p>},"
+            out << displayName << "[label=\"{<n>|" << displayName << "|" << n.worker << "|<p>}\","
                 << "style=filled, color=green]";
             break;
         default:
+            assert(false);
             break;
     }
 
@@ -44,12 +53,17 @@ std::ostream& operator<< (std::ostream& out, const Node& n)
     std::string prevNode("node0:"+n.name);
     for(int32_t iWaiter = 0; iWaiter < n.waiters.size(); ++iWaiter)
     {
-        auto& waiter = n.waiters[iWaiter];
+        auto waiter = n.waiters[iWaiter];
         if(Waiter::Done != waiter->state || ((iWaiter != (n.waiters.size()-1)) && (Waiter::Done != n.waiters[iWaiter]->state))) {
-            out << waiter << "\n";
-            out << prevNode << "->" << waiter->name << ":n\n";
-            prevNode = waiter->name + ":p";
+            out << (*waiter) << "\n";
+            std::string displayName(waiter->GetDisplayName());
+            out << prevNode << "->" << displayName << ":n\n";
+            prevNode = displayName + ":p";
             ++waiterCount;
+
+            if(waiterCount >= 5){
+                break;
+            }
         }
     }
 
@@ -115,11 +129,11 @@ void Graph::Dispatch(const std::string& name, int32_t worker, int32_t workflowId
     else
     {
         std::string sWorkflowId = std::to_string(workflowId);
-        pNode->waiters.push_back(new Waiter(name, worker, workflowId));
+        pNode->waiters.push_back(new Waiter(name, name, worker, workflowId));
         pNode->waiterMapping[name + sWorkflowId] = pNode->waiters.back();
         for(auto pPreNode : pNode->precessors)
         {
-            pPreNode->waiters.push_back(new Waiter(name, worker, workflowId));
+            pPreNode->waiters.push_back(new Waiter(name, pPreNode->name, worker, workflowId));
             auto pWaiter = pPreNode->waiters.back();
             pPreNode->waiterMapping[name + sWorkflowId] = pWaiter;
         }
