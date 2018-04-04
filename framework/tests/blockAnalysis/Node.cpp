@@ -40,6 +40,7 @@ std::ostream& operator<< (std::ostream& out, const Waiter& n)
 
 std::ostream& operator<< (std::ostream& out, const Node& n)
 {
+    int32_t waiterCount = 0;
     std::string prevNode("node0:"+n.name);
     for(int32_t iWaiter = 0; iWaiter < n.waiters.size(); ++iWaiter)
     {
@@ -48,9 +49,14 @@ std::ostream& operator<< (std::ostream& out, const Node& n)
             out << waiter << "\n";
             out << prevNode << "->" << waiter->name << ":n\n";
             prevNode = waiter->name + ":p";
+            ++waiterCount;
         }
     }
 
+    if(waiterCount > 0)
+    {
+        out << "\n";
+    }
     return out;
 }
 
@@ -60,17 +66,17 @@ std::ostream& operator<< (std::ostream& out, const Graph& g)
     out << "digraph g{\n";
     out << " nodesep = 0.05;\n";
     out << " rankdir = LR;\n";
-    out << " node[shape=record, width= .1, height = .1];\n";
+    out << " node[shape=record, width= .2, height = .1];\n";
     out << " node0[label=\"";
     for(auto& n : nodes)
     {
-        out << "<" << n->name << ">|";
+        out << "<" << n->name << ">" << n->name << "|";
     }
-    out << "\", height = 2.5];";
+    out << "\", height = 2.5];\n";
 
     for(auto& n : nodes)
     {
-        out << n << "\n";
+        out << (*n);
     }
 
     out << "}";
@@ -125,7 +131,7 @@ void Graph::Lock(const std::string& node, int32_t workflowId){
     if(nullptr != pNode)
     {
         auto pWaiter = pNode->GetWaiter(node, workflowId);
-        if(nullptr == pWaiter)
+        if(nullptr != pWaiter)
         {
             pWaiter->state = Waiter::Doing;
         }else{
@@ -143,7 +149,7 @@ void Graph::Unlock(const std::string& node, int32_t workflowId){
     if(nullptr != pNode)
     {
         auto pWaiter = pNode->GetWaiter(node, workflowId);
-        if(nullptr == pWaiter)
+        if(nullptr != pWaiter)
         {
             pWaiter->state = Waiter::Done;
         }else{
