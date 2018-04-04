@@ -51,8 +51,10 @@ void ConstructWaitGraph(Graph& g, std::ifstream& d)
 
 bool ParseWorkLogFile(Graph& g, std::ifstream& w)
 {
+    const std::string TRY_LOCK_TEXT("try lock for node:");
     const std::string GET_LOCK_TEXT("get lock for node:");
     const std::string REL_LOCK_TEXT("unlocked node:");
+    const std::string TRY_SHARED_LOCK_TEXT("try shared lock for node:");
     const std::string GET_SHARED_LOCK_TEXT("get shared lock for node:");
     const std::string REL_SHARED_LOCK_TEXT("unlock shared lock node:");
     const size_t NODE_PREFIX_LEN = 5;
@@ -79,53 +81,68 @@ bool ParseWorkLogFile(Graph& g, std::ifstream& w)
     while(std::getline(w, line))
     {
         isEmpty = false;
+        auto iTryLockPos = line.find(TRY_LOCK_TEXT);
+        if(line.npos != iTryLockPos)
+        {
+            getWaiterInfo(iTryLockPos, waiterName, workflowId);
+            g.TryLock(waiterName, workflowId);
+	    continue;
+        }
+
         auto iLockPos = line.find(GET_LOCK_TEXT);
         if(line.npos != iLockPos)
         {
             getWaiterInfo(iLockPos, waiterName, workflowId);
             g.Lock(waiterName, workflowId);
+	    continue;
         }
-        else
+
+	auto relLockPos = line.find(REL_LOCK_TEXT);
+	if(line.npos != relLockPos) {
+	    getWaiterInfo(relLockPos, waitedName, workflowId);
+	    g.Unlock(waitedName, workflowId);
+	    continue;
+	}
+
+	auto trySharedLockPos = line.find(TRY_SHARED_LOCK_TEXT);
+	if(line.npos != trySharedLockPos) {
+	    getWaiterInfo(trySharedLockPos, waitedName, workflowId);
+
+	    auto tryNodePos = trySharedLockPos+TRY_SHARED_LOCK_TEXT.length();
+	    auto tryNodeEnd = tryNodePos+1;
+	    while(!std::isspace(line[tryNodeEnd])){
+		++tryNodeEnd;
+	    }
+	    g.TryShared(waitedName, workflowId, line.substr(tryNodePos, tryNodeEnd - tryNodePos));
+	    continue;
+	}
+
+	auto iSharedLockPos = line.find(GET_SHARED_LOCK_TEXT);
+	if(line.npos != iSharedLockPos)
+	{
+	    getWaiterInfo(iSharedLockPos, waitedName, workflowId);
+
+	    auto waitedNodePos = iSharedLockPos+GET_SHARED_LOCK_TEXT.length();
+	    auto waitedNodeEnd = waitedNodePos+1;
+	    while(!std::isspace(line[waitedNodeEnd])){
+		++waitedNodeEnd;
+	    }
+	    g.LockShared(waitedName, workflowId, line.substr(waitedNodePos, waitedNodeEnd - waitedNodePos));
+	    continue;
+	}
+
+        auto iRelSharedLockPos = line.find(REL_SHARED_LOCK_TEXT);
+        if(line.npos != iRelSharedLockPos)
         {
-            auto relLockPos = line.find(REL_LOCK_TEXT);
-            if(line.npos != relLockPos) {
-                getWaiterInfo(relLockPos, waitedName, workflowId);
-                g.Unlock(waitedName, workflowId);
+            getWaiterInfo(iRelSharedLockPos, waitedName, workflowId);
+
+            auto waitedNodePos = iRelSharedLockPos+REL_SHARED_LOCK_TEXT.length();
+            auto waitedNodeEnd = waitedNodePos+1;
+            while(',' != line[waitedNodeEnd]){
+                ++waitedNodeEnd;
             }
-            else
-            {
-                auto iSharedLockPos = line.find(GET_SHARED_LOCK_TEXT);
-                if(line.npos != iSharedLockPos)
-                {
-                    getWaiterInfo(iSharedLockPos, waitedName, workflowId);
-
-                    auto waitedNodePos = iSharedLockPos+GET_SHARED_LOCK_TEXT.length();
-                    auto waitedNodeEnd = waitedNodePos+1;
-                    while(!std::isspace(line[waitedNodeEnd])){
-                        ++waitedNodeEnd;
-                    }
-                    g.LockShared(waitedName, workflowId, line.substr(waitedNodePos, waitedNodeEnd - waitedNodePos));
-                }
-                else
-                {
-                    auto iRelSharedLockPos = line.find(REL_SHARED_LOCK_TEXT);
-                    if(line.npos != iRelSharedLockPos)
-                    {
-                        getWaiterInfo(iRelSharedLockPos, waitedName, workflowId);
-
-                        auto waitedNodePos = iRelSharedLockPos+REL_SHARED_LOCK_TEXT.length();
-                        auto waitedNodeEnd = waitedNodePos+1;
-                        while(',' != line[waitedNodeEnd]){
-                            ++waitedNodeEnd;
-                        }
-                        g.UnlockShared(waitedName, workflowId, line.substr(waitedNodePos, waitedNodeEnd - waitedNodePos));
-                    }
-                }
-            }
-
-
+            g.UnlockShared(waitedName, workflowId, line.substr(waitedNodePos, waitedNodeEnd - waitedNodePos));
         }
-
     }
     return !isEmpty;
 }

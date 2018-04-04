@@ -15,6 +15,7 @@ struct Waiter
     enum WaitState
     {
         Waitting,
+	Trying,
         Doing,
         Done
     };
@@ -71,9 +72,11 @@ struct Graph{
     void AddEdge(const std::string& from, const std::string& to);
     void Dispatch(const std::string& name, int32_t worker, int32_t workflowId);
 
+    void TryLock(const std::string& node, int32_t workflowId);
     void Lock(const std::string& node, int32_t workflowId);
     void Unlock(const std::string& node, int32_t workflowId);
 
+    void TryShared(const std::string& whoLock, int32_t workflowId, const std::string& waitedNode);
     void LockShared(const std::string& whoLock, int32_t workflowId, const std::string& waitedNode);
     void UnlockShared(const std::string& whoLock, int32_t workflowId, const std::string& waitedNode);
 
