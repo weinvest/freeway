@@ -4,6 +4,16 @@
 
 #include <iostream>
 #include "Node.h"
+Waiter* Node::GetWaiter(const std::string& name, int32_t workflowId)
+{
+    std::string waiterName(name + std::to_string(workflowId));
+    auto itWaiter = waiterMapping.find(waiterName);
+    if(waiterMapping.end() == itWaiter){
+        return nullptr;
+    }
+
+    return itWaiter->second;
+}
 
 std::ostream& operator<< (std::ostream& out, const Waiter& n)
 {
@@ -98,10 +108,84 @@ void Graph::Dispatch(const std::string& name, int32_t worker, int32_t workflowId
     }
     else
     {
+        std::string sWorkflowId = std::to_string(workflowId);
         pNode->waiters.emplace_back(name, worker, workflowId);
+        pNode->waiterMapping[name + sWorkflowId] = &pNode->waiters.back();
         for(auto pPreNode : pNode->precessors)
         {
             pPreNode->waiters.emplace_back(name, worker, workflowId);
+            auto pWaiter = &pPreNode->waiters.back();
+            pPreNode->waiterMapping[name + sWorkflowId] = pWaiter;
         }
+    }
+}
+
+void Graph::Lock(const std::string& node, int32_t workflowId){
+    auto pNode = GetNode(node);
+    if(nullptr != pNode)
+    {
+        auto pWaiter = pNode->GetWaiter(node, workflowId);
+        if(nullptr == pWaiter)
+        {
+            pWaiter->state = Waiter::Doing;
+        }else{
+            std::cerr << __FUNCTION__ << ":" << __LINE__ << " can't find waiter:" << node
+                      << ",workflowId:" << workflowId << " in " << node << "'s waitting queue\n";
+        }
+    }else{
+        std::cerr << __FUNCTION__ << ":" << __LINE__ << " can't find node:" << node
+                  << ",workflowId:" << workflowId << "\n";
+    }
+}
+
+void Graph::Unlock(const std::string& node, int32_t workflowId){
+    auto pNode = GetNode(node);
+    if(nullptr != pNode)
+    {
+        auto pWaiter = pNode->GetWaiter(node, workflowId);
+        if(nullptr == pWaiter)
+        {
+            pWaiter->state = Waiter::Done;
+        }else{
+            std::cerr << __FUNCTION__ << ":" << __LINE__ << " can't find waiter:" << node
+                      << ",workflowId:" << workflowId << " in " << node << "'s waitting queue\n";
+        }
+    }else{
+        std::cerr << __FUNCTION__ << ":" << __LINE__ << " can't find node:" << node
+                  << ",workflowId:" << workflowId << "\n";
+    }
+}
+void Graph::LockShared(const std::string& whoLock, int32_t workflowId, const std::string& waitedNode){
+    auto pNode = GetNode(waitedNode);
+    if(nullptr != pNode)
+    {
+        auto pWaiter = pNode->GetWaiter(whoLock, workflowId);
+        if(nullptr == pWaiter)
+        {
+            pWaiter->state = Waiter::Doing;
+        }else{
+            std::cerr << __FUNCTION__ << ":" << __LINE__ << " can't find waiter:" << whoLock
+                      << ",workflowId:" << workflowId << " in " << waitedNode << "'s waitting queue\n";
+        }
+    }else{
+        std::cerr << __FUNCTION__ << ":" << __LINE__ << " can't find node:" << waitedNode
+                  << ",workflowId:" << workflowId << "\n";
+    }
+}
+void Graph::UnlockShared(const std::string& whoLock, int32_t workflowId, const std::string& waitedNode){
+    auto pNode = GetNode(waitedNode);
+    if(nullptr != pNode)
+    {
+        auto pWaiter = pNode->GetWaiter(whoLock, workflowId);
+        if(nullptr == pWaiter)
+        {
+            pWaiter->state = Waiter::Done;
+        }else{
+            std::cerr << __FUNCTION__ << ":" << __LINE__ << " can't find waiter:" << whoLock
+                      << ",workflowId:" << workflowId << " in " << waitedNode << "'s waitting queue\n";
+        }
+    }else{
+        std::cerr << __FUNCTION__ << ":" << __LINE__ << " can't find node:" << waitedNode
+                  << ",workflowId:" << workflowId << "\n";
     }
 }

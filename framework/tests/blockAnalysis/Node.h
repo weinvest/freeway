@@ -38,6 +38,8 @@ struct Node {
     std::vector<Node*> precessors;
     std::unordered_map<std::string, Waiter*> waiterMapping;
 
+    Waiter* GetWaiter(const std::string& name, int32_t workflowId);
+
     friend std::ostream& operator<< (std::ostream& out, const Node& n);
 };
 
@@ -56,6 +58,12 @@ struct Graph{
     Node* AddNode(const std::string& name);
     void AddEdge(const std::string& from, const std::string& to);
     void Dispatch(const std::string& name, int32_t worker, int32_t workflowId);
+
+    void Lock(const std::string& node, int32_t workflowId);
+    void Unlock(const std::string& node, int32_t workflowId);
+
+    void LockShared(const std::string& whoLock, int32_t workflowId, const std::string& waitedNode);
+    void UnlockShared(const std::string& whoLock, int32_t workflowId, const std::string& waitedNode);
 
     friend std::ostream& operator<< (std::ostream& out, const Graph& g);
 };
