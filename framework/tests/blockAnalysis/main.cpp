@@ -16,13 +16,22 @@ void BuildGraph(Graph& g, std::ifstream& o)
     while(std::getline(o, line))
     {
         if(!line.empty() && line.npos == line.find("}")){
-            std::vector<std::string> r;
-            boost::split(r, line, [](char c) {
-                             return std::isspace(c) || c == '-' || c == '>' || c == ';';
-                         }
-                    , boost::token_compress_on);
-            assert(2 == r.size());
-            g.AddEdge(r[0], r[1]);
+            size_t firstStart = 0;
+            while(std::isspace(line[firstStart])){
+                ++firstStart;
+            }
+
+            size_t firstEnd = line.find('-', firstStart+1);
+
+            size_t secondStart = firstEnd + 2;
+            size_t secondEnd = secondStart+1;
+            while(!std::isspace(secondEnd)){
+                ++secondEnd;
+            }
+
+            auto firstNode = line.substr(firstStart, firstEnd-firstStart);
+            auto sendNode = line.substr(secondStart, secondEnd-secondStart);
+            g.AddEdge(firstNode, sendNode);
         }
     }
 }
@@ -34,8 +43,8 @@ void ConstructWaitGraph(Graph& g, std::ifstream& d)
     std::smatch sm;
     while(std::getline(d, line))
     {
-        if(std::regex_match(line, sm, r)){
-            g.Dispatch(sm[0], std::stoi(sm[1]), std::stoi(sm[2]));
+        if(std::regex_search(line, sm, r)){
+            g.Dispatch(sm[1], std::stoi(sm[2]), std::stoi(sm[3]));
         }
     }
 }
@@ -46,16 +55,26 @@ bool ParseWorkLogFile(Graph& g, std::ifstream& w)
     const std::string REL_LOCK_TEXT("unlocked node:");
     const std::string GET_SHARED_LOCK_TEXT("get shared lock for node:");
     const std::string REL_SHARED_LOCK_TEXT("unlock shared lock node:");
+    const size_t NODE_PREFIX_LEN = 5;
 
     bool isEmpty = true;
     std::string line;
     auto getWaiterInfo = [&line](int32_t from, std::string& name, int32_t& workflowId)
     {
+        auto iNodePos = line.rfind("node:", from);
+        assert(iNodePos != line.npos);
 
+        auto nodeNameStart = iNodePos + NODE_PREFIX_LEN;
+        auto nodeNameEnd = line.find(',', nodeNameStart+1);
+        name = line.substr(nodeNameStart, nodeNameEnd - nodeNameStart);
+
+        auto workflowStart = line.find(':', nodeNameEnd+1)+1;
+        auto workflowEnd = line.find(')', workflowStart+1);
+        workflowId = std::stod(line.substr(workflowStart, workflowEnd - workflowStart));
     };
 
     std::string waiterName;
-    int32_t workflowId;
+    int32_t workflowId = 0;
     std::string waitedName;
     while(std::getline(w, line))
     {
@@ -81,7 +100,11 @@ bool ParseWorkLogFile(Graph& g, std::ifstream& w)
                     getWaiterInfo(iSharedLockPos, waitedName, workflowId);
 
                     auto waitedNodePos = iSharedLockPos+GET_SHARED_LOCK_TEXT.length();
-                    g.LockShared(waitedName, workflowId, line.substr(waitedNodePos, line.find(waitedNodePos, ':') - waitedNodePos));
+                    auto waitedNodeEnd = waitedNodePos+1;
+                    while(!std::isspace(line[waitedNodeEnd])){
+                        ++waitedNodeEnd;
+                    }
+                    g.LockShared(waitedName, workflowId, line.substr(waitedNodePos, waitedNodeEnd - waitedNodePos));
                 }
                 else
                 {
@@ -91,7 +114,11 @@ bool ParseWorkLogFile(Graph& g, std::ifstream& w)
                         getWaiterInfo(iRelSharedLockPos, waitedName, workflowId);
 
                         auto waitedNodePos = iRelSharedLockPos+REL_SHARED_LOCK_TEXT.length();
-                        g.UnlockShared(waitedName, workflowId, line.substr(waitedNodePos, line.find(waitedNodePos, ':') - waitedNodePos));
+                        auto waitedNodeEnd = waitedNodePos+1;
+                        while(',' != line[waitedNodeEnd]){
+                            ++waitedNodeEnd;
+                        }
+                        g.UnlockShared(waitedName, workflowId, line.substr(waitedNodePos, waitedNodeEnd - waitedNodePos));
                     }
                 }
             }

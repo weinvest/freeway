@@ -34,7 +34,7 @@ struct Node {
     Node(const std::string& n): name(n) {}
 
     std::string name;
-    std::vector<Waiter> waiters;
+    std::vector<Waiter*> waiters;
     std::vector<Node*> precessors;
     std::unordered_map<std::string, Waiter*> waiterMapping;
 
@@ -44,7 +44,7 @@ struct Node {
 };
 
 struct Graph{
-    std::vector<Node> nodes;
+    std::vector<Node*> nodes;
     std::unordered_map<std::string, Node*> nodeMapping;
     Node* GetNode(const std::string& name) {
         auto itNode = nodeMapping.find(name);

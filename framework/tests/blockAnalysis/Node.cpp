@@ -44,10 +44,10 @@ std::ostream& operator<< (std::ostream& out, const Node& n)
     for(int32_t iWaiter = 0; iWaiter < n.waiters.size(); ++iWaiter)
     {
         auto& waiter = n.waiters[iWaiter];
-        if(Waiter::Done != waiter.state || ((iWaiter != (n.waiters.size()-1)) && (Waiter::Done != n.waiters[iWaiter].state))) {
+        if(Waiter::Done != waiter->state || ((iWaiter != (n.waiters.size()-1)) && (Waiter::Done != n.waiters[iWaiter]->state))) {
             out << waiter << "\n";
-            out << prevNode << "->" << waiter.name << ":n\n";
-            prevNode = waiter.name + ":p";
+            out << prevNode << "->" << waiter->name << ":n\n";
+            prevNode = waiter->name + ":p";
         }
     }
 
@@ -64,7 +64,7 @@ std::ostream& operator<< (std::ostream& out, const Graph& g)
     out << " node0[label=\"";
     for(auto& n : nodes)
     {
-        out << "<" << n.name << ">|";
+        out << "<" << n->name << ">|";
     }
     out << "\", height = 2.5];";
 
@@ -82,8 +82,8 @@ Node* Graph::AddNode(const std::string& name)
 {
     auto itNode = nodeMapping.find(name);
     if(nodeMapping.end() == itNode) {
-        nodes.emplace_back(name);
-        auto pNode = &nodes.back();
+        nodes.push_back(new Node(name));
+        auto pNode = nodes.back();
         nodeMapping[name] = pNode;
         return pNode;
     }
@@ -109,12 +109,12 @@ void Graph::Dispatch(const std::string& name, int32_t worker, int32_t workflowId
     else
     {
         std::string sWorkflowId = std::to_string(workflowId);
-        pNode->waiters.emplace_back(name, worker, workflowId);
-        pNode->waiterMapping[name + sWorkflowId] = &pNode->waiters.back();
+        pNode->waiters.push_back(new Waiter(name, worker, workflowId));
+        pNode->waiterMapping[name + sWorkflowId] = pNode->waiters.back();
         for(auto pPreNode : pNode->precessors)
         {
-            pPreNode->waiters.emplace_back(name, worker, workflowId);
-            auto pWaiter = &pPreNode->waiters.back();
+            pPreNode->waiters.push_back(new Waiter(name, worker, workflowId));
+            auto pWaiter = pPreNode->waiters.back();
             pPreNode->waiterMapping[name + sWorkflowId] = pWaiter;
         }
     }
@@ -160,7 +160,7 @@ void Graph::LockShared(const std::string& whoLock, int32_t workflowId, const std
     if(nullptr != pNode)
     {
         auto pWaiter = pNode->GetWaiter(whoLock, workflowId);
-        if(nullptr == pWaiter)
+        if(nullptr != pWaiter)
         {
             pWaiter->state = Waiter::Doing;
         }else{
@@ -177,7 +177,7 @@ void Graph::UnlockShared(const std::string& whoLock, int32_t workflowId, const s
     if(nullptr != pNode)
     {
         auto pWaiter = pNode->GetWaiter(whoLock, workflowId);
-        if(nullptr == pWaiter)
+        if(nullptr != pWaiter)
         {
             pWaiter->state = Waiter::Done;
         }else{
