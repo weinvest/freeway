@@ -9,17 +9,26 @@
 #include "SharedMutex.h"
 #include "Context.h"
 #include "Dispatcher.h"
-
+#include "DEventNodeSpecial.h"
 #define mLog Context::GetLog()
 DEventNode::DEventNode()
 :mMutex(new SharedMutex(this)){
 
 }
 
-void DEventNode::Connect(DEventNode* pSuccessor)
+DEventNodeSpecial* DEventNode::EnsureSpecial(DEventNode* pPrecessor)
 {
-    AddSuccessor(pSuccessor);
-    pSuccessor->AddPrecursor(this);
+    auto itSpecial = mPrecursorSpecials.find(pPrecessor);
+    if(itSpecial != mPrecursorSpecials.end())
+    {
+        return itSpecial->second;
+    }
+
+    auto pSpecial = new DEventNodeSpecial();
+    AddPrecursor(pPrecessor);
+    pPrecessor->AddSuccessor(this);
+    mPrecursorSpecials[pPrecessor] = pSpecial;
+    return pSpecial;
 }
 
 SharedMutex& DEventNode::GetMutex()
@@ -47,16 +56,11 @@ int32_t DEventNode::Process(Task* pTask, WorkflowID_t workflowId) noexcept
 
         mLastWorkflowId = workflowId;
     }
-
-    for (auto precursor : GetPrecursors()) {
-        precursor->GetMutex().UnlockShared(pTask);
-    }
-
+    mMutex->Unlock(pTask);
     for(auto successor : GetSuccessors()){
         successor->Raise(this, result);
     }
 
-    mMutex->Unlock(pTask);
     return result;
 }
 

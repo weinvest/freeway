@@ -100,6 +100,9 @@ void Task::RunNode( void )
 //        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
         ++runCnt;
         mNodePtr->Process(this, mWorkflowId);
+        for (auto precursor : mNodePtr->GetPrecursors()) {
+            precursor->GetMutex().UnlockShared(this);
+        }
 #ifdef DEBUG
         mLastSuspendWaitLock = false;
         mLastSuspendWkflowId = mWorkflowId;

@@ -5,30 +5,45 @@
 #ifndef ARAGOPROJECT_LOCKPTR_H
 #define ARAGOPROJECT_LOCKPTR_H
 
-#include "Context.h"
-#include "Task.h"
+class Task;
+class DEventNode;
+class DEventNodeSpecial;
+class LockPtrBase
+{
+public:
+    ~LockPtrBase() { mNode = nullptr; }
+
+    void Connect(DEventNode* pSuccessor);
+
+    void WaitSharedLock( void );
+    bool HasSharedLock4(Task* pTask) const;
+    bool HasSpecial( void ) const { return nullptr != mSpecial; }
+
+protected:
+    LockPtrBase(DEventNode* pNode)
+            :mNode(pNode)
+    {}
+
+    DEventNodeSpecial* mSpecial{nullptr};
+    DEventNode* mNode{nullptr};
+};
+
 template <typename T>
-class LockPtr
+class LockPtr: public LockPtrBase
 {
 public:
     LockPtr(T* pNode)
-         :mNode(pNode)
-         ,mTask(nullptr)
+         :LockPtrBase(pNode)
     {}
-
-    ~LockPtr() { mNode = nullptr; }
 
     T* operator-> ()
     {
-        auto pThisTask = Context::GetCurrentTask();
-        if(mNode != pThisTask->GetNode() && pThisTask != mTask) //同一节点必须保证上一个Workflow与下一个Workflow使用的Task不同
-        {
-            pThisTask->WaitSharedLock(mNode);
-            pThisTask->DecreaseWaitingLockCount();
-
-            mTask = pThisTask;
+        if(!HasSpecial()){
+            return (T*)mNode;
         }
-        return mNode;
+
+        WaitSharedLock();
+        return (T*)mNode;
     }
 
     const T*operator->() const
@@ -36,12 +51,10 @@ public:
         return const_cast<LockPtr<T>*>(this)->operator->();
     }
 
-    T* get() { return mNode; }
+    T* get() { return (T*)mNode; }
 
-    const T* get() const { return mNode; }
-private:
-    T* mNode;
-    Task* mTask;
+    const T* get() const { return (T*)mNode; }
+
 };
 
 
