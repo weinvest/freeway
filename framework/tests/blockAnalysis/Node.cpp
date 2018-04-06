@@ -165,9 +165,10 @@ void Graph::TryLock(const std::string& node, int32_t workflowId)
     if(nullptr != pNode)
     {
         auto pWaiter = pNode->GetWaiter(node, workflowId);
-        if(nullptr != pWaiter)
-        {
-            pWaiter->state = Waiter::Trying;
+        if(nullptr != pWaiter) {
+            if (Waiter::Waitting == pWaiter->state) {
+                pWaiter->state = Waiter::Trying;
+            }
             //std::cout << pWaiter << ":" << pWaiter->GetDisplayName() << " doing\n";
         }else{
             std::cerr << __FUNCTION__ << ":" << __LINE__ << " can't find waiter:" << node
@@ -242,7 +243,9 @@ void Graph::TryShared(const std::string& whoLock, int32_t workflowId, const std:
         auto pWaiter = pNode->GetWaiter(whoLock, workflowId);
         if(nullptr != pWaiter)
         {
-            pWaiter->state = Waiter::Trying;
+            if (Waiter::Waitting == pWaiter->state) {
+                pWaiter->state = Waiter::Trying;
+            }
             //std::cout << pWaiter << ":" << pWaiter->GetDisplayName() << " done\n";
         }else{
             std::cerr << __FUNCTION__ << ":" << __LINE__ << " can't find waiter:" << whoLock

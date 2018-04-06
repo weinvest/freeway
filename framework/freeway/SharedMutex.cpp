@@ -183,11 +183,6 @@ void SharedMutex::Wake(Task* pWaker)
 //    if(curReaders < 0) {
 //        assert(curReaders < mReaders.load());
 //    }
-    mSkipCount = skipCount;
+//    mSkipCount = skipCount;
 }
 
-Task* SharedMutex::FirstWaiter( void )
-{
-    auto& first = mWaiters.First();
-    return first.pTask;
-}

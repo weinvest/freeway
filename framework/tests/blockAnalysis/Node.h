@@ -15,7 +15,7 @@ struct Waiter
     enum WaitState
     {
         Waitting,
-	Trying,
+	    Trying,
         Doing,
         Done
     };

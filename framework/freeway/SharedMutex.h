@@ -7,7 +7,6 @@
 
 #include <boost/circular_buffer.hpp>
 #include <common/DSpscArray.h>
-#include "DEventNode.h"
 
 class DEventNode;
 class Task;
@@ -66,8 +65,6 @@ public:
     //当前节点DoProcess结束就可以调用Unlock(即使Unlock后，Task[Nextflow] 依然会被mReaders阻止)
     void Unlock(Task* task);
 
-    Task* FirstWaiter( void );
-
 private:
     //如果后继节点没有调用前驱的GetValue, 则不用唤醒 NextTask?
     void Wake(Task* pTask);
@@ -78,7 +75,6 @@ private:
     std::atomic_flag mIsInWaking ATOMIC_FLAG_INIT;
     WaiterBufferType mWaiters;
     WaitingWriterType mWaitingWriterWorkflowIds{1024};
-    int32_t mSkipCount{0};
 };
 
 

@@ -7,9 +7,9 @@
 
 #include <array>
 #include "common/DSpscQueue.hpp"
-#include "Task.h"
 #include "utils/DLog.h"
 class DEventNode;
+class Task;
 class Dispatcher
 {
 public:

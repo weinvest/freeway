@@ -36,22 +36,13 @@ void Task::Update(WorkflowID_t flow, DEventNode* pNode)
     mNodePtr = pNode;
     mWaitingLockCount = pNode->GetPrecursors().size();
     mLevel = 0;
+    assert(mDeferred.empty());  //说明Worker的Task Pool太小啦
 }
 
-
-/*
-//Node 本身是不是需要运行 --jiazi
-bool Task::IsScheduleAble( void ) const
-{
-    return mAccepted || 0 == mWaitingLockCount.load(std::memory_order_relaxed);
-}
-*/
 const std::string& Task::GetName( void )
 {
     return mNodePtr->GetName();
 }
-
-//只有Ready的task才可以加入Queue，因为只要加入了queue就会被立刻取出来，非init/ready状态的则被丢弃
 
 void Task::Suspend(void)
 {
@@ -99,16 +90,39 @@ void Task::RunNode( void )
 //        pthread_getname_np(pthread_self(), name, sizeof(name));
 //        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
         ++runCnt;
+        mNodePtr->GetMutex().WaitLock4(this);
+
         mNodePtr->Process(this, mWorkflowId);
+
         for (auto precursor : mNodePtr->GetPrecursors()) {
-            precursor->GetMutex().UnlockShared(this);
+            auto& mutex = precursor->GetMutex();
+            if(mutex.TrySharedLock4(this))
+            {
+                mutex.UnlockShared(this);
+            } else{
+                mDeferred.insert(precursor);
+            }
         }
+
+        mNodePtr->GetMutex().Unlock(this);
+        mNodePtr = nullptr;
 #ifdef DEBUG
         mLastSuspendWaitLock = false;
         mLastSuspendWkflowId = mWorkflowId;
         mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
 #endif
         mMainContext = mMainContext.resume();
+    }
+}
+
+void Task::CompleteDeffered(DEventNode* pNode)
+{
+    if(nullptr == mNodePtr)
+    {
+        if(1 == mDeferred.erase(pNode))
+        {
+            pNode->GetMutex().UnlockShared(this);
+        }
     }
 }
 
@@ -132,7 +146,3 @@ void Task::Enqueue(int32_t from, void *pWhy)
     mWorker->Enqueue(from, pWhy, this);
 }
 
-bool Task::IsFirstWaiter( void ) const
-{
-    return mNodePtr->GetMutex().FirstWaiter() == this;
-}

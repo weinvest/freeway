@@ -92,12 +92,15 @@ void Worker::Run( void )
 {
     auto push2ReadyQueue = [this](const TaskPair& taskPair)
     {
-        if(taskPair.task->GetWaited() == taskPair.waited)
+        auto pTask = taskPair.task;
+        if(pTask->GetWaited() == taskPair.waited)
         {
-	    auto pTask = taskPair.task;
-	    LOG_DEBUG(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << " been wake success");
+            LOG_DEBUG(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << " been wake success");
             pTask->SetWaited(nullptr);
             mReadyTasks.push(pTask);
+        }
+        else{
+            pTask->CompleteDeffered((DEventNode*)taskPair.waited);
         }
     };
 

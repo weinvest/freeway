@@ -7,11 +7,6 @@
 #include "DEventNodeSpecial.h"
 #include "DEventNode.h"
 
-void LockPtrBase::Connect(DEventNode* pSuccessor)
-{
-    mSpecial = pSuccessor->EnsureSpecial(mNode);
-}
-
 void LockPtrBase::WaitSharedLock( void )
 {
     auto pThisTask = Context::GetCurrentTask();
@@ -24,7 +19,3 @@ void LockPtrBase::WaitSharedLock( void )
     }
 }
 
-bool LockPtrBase::HasSharedLock4(Task* pTask) const
-{
-    return mSpecial->pTask == pTask;
-}

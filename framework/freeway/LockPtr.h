@@ -11,30 +11,40 @@ class DEventNodeSpecial;
 class LockPtrBase
 {
 public:
+    LockPtrBase(DEventNode* pNode, DEventNodeSpecial* pSpecial)
+            :mNode(pNode)
+            ,mSpecial(pSpecial)
+    {}
+
     ~LockPtrBase() { mNode = nullptr; }
 
-    void Connect(DEventNode* pSuccessor);
-
     void WaitSharedLock( void );
-    bool HasSharedLock4(Task* pTask) const;
+
     bool HasSpecial( void ) const { return nullptr != mSpecial; }
 
 protected:
-    LockPtrBase(DEventNode* pNode)
-            :mNode(pNode)
-    {}
-
-    DEventNodeSpecial* mSpecial{nullptr};
     DEventNode* mNode{nullptr};
+    DEventNodeSpecial* mSpecial{nullptr};
 };
 
 template <typename T>
 class LockPtr: public LockPtrBase
 {
 public:
-    LockPtr(T* pNode)
-         :LockPtrBase(pNode)
+    LockPtr( void )
+         :LockPtrBase(nullptr, nullptr)
     {}
+
+    LockPtr(const LockPtrBase& o)
+    :LockPtrBase(o)
+    {
+    }
+
+    void reset(const LockPtrBase& o)
+    {
+        mNode = o.mNode;
+        mSpecial = o.mSpecial;
+    }
 
     T* operator-> ()
     {

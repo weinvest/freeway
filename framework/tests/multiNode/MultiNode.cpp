@@ -20,7 +20,7 @@ int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
     for(auto pParent : mParents)
     {
         auto parentId = pParent.get()->GetId();
-        //if(!mIgnoredParent[parentId])
+        if(!mIgnoredParent[parentId])
         {
             checker->SetObservedValue(mId, parentId, pParent->GetValue());
         }
@@ -32,12 +32,11 @@ int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
 
 void MultiNode::AddPrecessor(MultiNode* pParent, bool ignore)
 {
-    pParent->Connect(this);
+    mParents.emplace_back(pParent->Connect(this));
     mIgnoredParent[pParent->GetId()] = ignore;
     if(!ignore) {
         mCheckPool.GetFamilyTree().AddRelation(mId, pParent->GetId());
     }
-    mParents.push_back(LockPtr<MultiNode>(pParent));
 }
 
 

@@ -10,8 +10,8 @@
 #include <condition_variable>
 
 #include "common/DSpscQueue.hpp"
-#include <framework/freeway/Task.h>
-#include <framework/freeway/TaskList.h>
+#include "framework/freeway/Task.h"
+#include "framework/freeway/TaskList.h"
 #include "utils/DLog.h"
 class Dispatcher;
 class Worker

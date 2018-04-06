@@ -5,6 +5,7 @@
 #ifndef ARAGOPROJECT_DEVENTNODE_H
 #define ARAGOPROJECT_DEVENTNODE_H
 #include "common/Types.h"
+#include "framework/freeway/LockPtr.h"
 const int32_t NoRaiseSuccessor = -1;
 
 using WorkflowID_t = uint64_t;
@@ -24,6 +25,8 @@ public:
 
     const std::string& GetName() {return mName;}
     void SetName(const std::string& name) {mName = name;}
+
+    LockPtrBase Connect(DEventNode* pSuccessor);
 
     int32_t Process(Task* pTask, WorkflowID_t workflowId) noexcept ;
 

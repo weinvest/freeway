@@ -16,19 +16,19 @@ DEventNode::DEventNode()
 
 }
 
-DEventNodeSpecial* DEventNode::EnsureSpecial(DEventNode* pPrecessor)
+LockPtrBase DEventNode::Connect(DEventNode* pSuccessor)
 {
-    auto itSpecial = mPrecursorSpecials.find(pPrecessor);
-    if(itSpecial != mPrecursorSpecials.end())
+    auto itSpecial = pSuccessor->mPrecursorSpecials.find(this);
+    if(itSpecial != pSuccessor->mPrecursorSpecials.end())
     {
-        return itSpecial->second;
+        return LockPtrBase(this, (itSpecial->second));
     }
 
     auto pSpecial = new DEventNodeSpecial();
-    AddPrecursor(pPrecessor);
-    pPrecessor->AddSuccessor(this);
-    mPrecursorSpecials[pPrecessor] = pSpecial;
-    return pSpecial;
+    pSuccessor->AddPrecursor(this);
+    AddSuccessor(pSuccessor);
+    pSuccessor->mPrecursorSpecials[this] = pSpecial;
+    return LockPtrBase(this, pSpecial);
 }
 
 SharedMutex& DEventNode::GetMutex()
@@ -40,7 +40,6 @@ int32_t DEventNode::Process(Task* pTask, WorkflowID_t workflowId) noexcept
 {
     int32_t result = NoRaiseSuccessor;
     if(mIsAcceptTrigger) {
-        mMutex->WaitLock4(pTask);
         try {
             result = DoProcess(workflowId);
         }
@@ -56,7 +55,7 @@ int32_t DEventNode::Process(Task* pTask, WorkflowID_t workflowId) noexcept
 
         mLastWorkflowId = workflowId;
     }
-    mMutex->Unlock(pTask);
+
     for(auto successor : GetSuccessors()){
         successor->Raise(this, result);
     }

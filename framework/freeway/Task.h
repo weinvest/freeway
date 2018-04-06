@@ -8,8 +8,8 @@
 #include <boost/context/all.hpp>
 #include <string>
 #include <unordered_map>
-#include <vector>
-#include <framework/freeway/types.h>
+#include <set>
+#include "framework/freeway/types.h"
 
 
 namespace ctx = boost::context;
@@ -67,6 +67,8 @@ public:
 #endif
 
     void Enqueue(int32_t from, void *pWhy);
+
+    void CompleteDeffered(DEventNode* pNode);
 private:
     Task& operator =(const Task&) = delete;
     void RunNode( void );
@@ -82,6 +84,7 @@ private:
     Worker* mWorker{nullptr};
     void* mWaited{nullptr};
     Task* mNext{nullptr};
+    std::set<DEventNode*> mDeferred;
 
     ctx::continuation mMainContext;
     ctx::continuation mTaskContext;
