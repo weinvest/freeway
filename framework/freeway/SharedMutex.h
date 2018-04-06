@@ -4,10 +4,10 @@
 
 #ifndef ARAGOPROJECT_SHAREDMUTEX_H
 #define ARAGOPROJECT_SHAREDMUTEX_H
-
+#include <atomic>
 #include <boost/circular_buffer.hpp>
-#include <common/DSpscArray.h>
-
+#include "common/DSpscArray.h"
+#include "framework/freeway/types.h"
 class DEventNode;
 class Task;
 class SharedMutex
