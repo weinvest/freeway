@@ -46,19 +46,19 @@ std::ostream& operator<< (std::ostream& out, const Waiter& n)
     switch (n.state)
     {
         case Waiter::Waitting:
-            out << displayName << "[label=\"{<n>|" << displayName << "|" << n.worker << "|<p>}\","
+            out << displayName << "[label=\"{" << displayName << "|" << n.worker << "}\","
                 << "style=filled, color=grey]";
             break;
         case Waiter::Trying:
-            out << displayName << "[label=\"{<n>|" << displayName << "|" << n.worker << "|<p>}\","
+            out << displayName << "[label=\"{" << displayName << "|" << n.worker << "}\","
                 << "style=filled, color=yellow]";
             break;
         case Waiter::Doing:
-            out << displayName << "[label=\"{<n>|" << displayName << "|" << n.worker << "|<p>}\","
+            out << displayName << "[label=\"{" << displayName << "|" << n.worker << "}\","
                 << "style=filled, color=lightblue]";
             break;
         case Waiter::Done:
-            out << displayName << "[label=\"{<n>|" << displayName << "|" << n.worker << "|<p>}\","
+            out << displayName << "[label=\"{" << displayName << "|" << n.worker << "}\","
                 << "style=filled, color=green]";
             break;
         default:
@@ -79,8 +79,8 @@ std::ostream& operator<< (std::ostream& out, const Node& n)
         if(Waiter::Done != waiter->state || ((iWaiter != (n.waiters.size()-1)) && (Waiter::Done != n.waiters[iWaiter+1]->state))) {
             out << (*waiter) << "\n";
             std::string displayName(waiter->GetDisplayName());
-            out << prevNode << "->" << displayName << ":n\n";
-            prevNode = displayName + ":p";
+            out << prevNode << "->" << displayName << ":w\n";
+            prevNode = displayName + ":e";
             ++waiterCount;
 
             if(waiterCount >= 5){
