@@ -105,7 +105,6 @@ void Task::RunNode( void )
         }
 
         mNodePtr->GetMutex().Unlock(this);
-        mNodePtr = nullptr;
 #ifdef DEBUG
         mLastSuspendWaitLock = false;
         mLastSuspendWkflowId = mWorkflowId;
@@ -117,7 +116,7 @@ void Task::RunNode( void )
 
 void Task::CompleteDeffered(DEventNode* pNode)
 {
-    if(nullptr == mNodePtr)
+    if(!mDeferred.empty())
     {
         if(1 == mDeferred.erase(pNode))
         {
