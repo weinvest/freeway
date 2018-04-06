@@ -99,7 +99,9 @@ bool SharedMutex::TrySharedLock4(Task* pTask)
     auto itFirstWriterWkflow = mWaitingWriterWorkflowIds.begin();
     auto hasLock = itFirstWriterWkflow == mWaitingWriterWorkflowIds.end() || *itFirstWriterWkflow > pTask->GetWorkflowId();
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
-                           << ") try shared lock for node:" << mOwner->GetName() << (hasLock ? " success" : " failed") << " in Worker-"<< Context::GetWorkerId());
+                           << ") try shared lock for node:" << mOwner->GetName() << (hasLock ? " success" : " failed")
+                           << " in Worker-"<< Context::GetWorkerId() << " current first writer workflow:"
+                           <<  ((itFirstWriterWkflow == mWaitingWriterWorkflowIds.end()) ? -1 : *itFirstWriterWkflow));
     return hasLock;
 }
 
