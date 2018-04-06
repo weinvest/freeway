@@ -132,7 +132,7 @@ bool Task::TryLock( void )
 
 bool Task::TrySharedLock( void )
 {
-    return ((DEventNode*)mWaited)->GetMutex().TrySharedLock4(this);
+    return mWaited->GetMutex().TrySharedLock4(this);
 }
 
 void Task::WaitSharedLock(DEventNode *pWaited)
@@ -140,7 +140,7 @@ void Task::WaitSharedLock(DEventNode *pWaited)
     return pWaited->GetMutex().WaitSharedLock4(this);
 }
 
-void Task::Enqueue(int32_t from, void *pWhy)
+void Task::Enqueue(int32_t from, DEventNode *pWhy)
 {
     mWorker->Enqueue(from, pWhy, this);
 }

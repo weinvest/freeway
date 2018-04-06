@@ -39,7 +39,7 @@ public:
 
     struct alignas(8) TaskPair
     {
-        void* waited{nullptr};
+        DEventNode* waited{nullptr};
         Task* task{nullptr};
 
         inline bool IsNull( void ) const { return nullptr == task; }

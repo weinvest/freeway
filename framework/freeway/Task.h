@@ -41,9 +41,9 @@ public:
     int32_t GetWaitingLockCount( void ) const { return mWaitingLockCount; }
 
 
-    void* GetWaited() { return mWaited; }
+    DEventNode* GetWaited() { return mWaited; }
 
-    void SetWaited(void* pWaited) { mWaited = pWaited; }
+    void SetWaited(DEventNode* pWaited) { mWaited = pWaited; }
 
     bool IsWaitting( void ) const { return nullptr != mWaited; }
     bool IsWaittingLock( void ) const { return mWaited == mNodePtr; }
@@ -66,7 +66,7 @@ public:
     void Suspend4Lock( void );
 #endif
 
-    void Enqueue(int32_t from, void *pWhy);
+    void Enqueue(int32_t from, DEventNode *pWhy);
 
     void CompleteDeffered(DEventNode* pNode);
 private:
@@ -82,7 +82,7 @@ private:
     friend class TaskList;
 
     Worker* mWorker{nullptr};
-    void* mWaited{nullptr};
+    DEventNode* mWaited{nullptr};
     Task* mNext{nullptr};
     std::set<DEventNode*> mDeferred;
 
