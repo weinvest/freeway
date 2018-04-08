@@ -131,6 +131,7 @@ void Dispatcher::Run(void) {
     }
     LOG_DEBUG(mLog, "Dispatcher jump out main loop");
     mStopFinished = true;
+    std::atomic_signal_fence(std::memory_order_relaxed);
 }
 
 void Dispatcher::Stop(void)
@@ -140,8 +141,10 @@ void Dispatcher::Stop(void)
 
 void Dispatcher::Join( void )
 {
+    std::atomic_signal_fence(std::memory_order_acquire);
     while(UNLIKELY(!mStopFinished))
     {
+        std::atomic_signal_fence(std::memory_order_acquire);
         LOG_DEBUG(mLog, "Dispatcher stopping:" << mStopFinished);
     }
 }

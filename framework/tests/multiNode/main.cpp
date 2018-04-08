@@ -12,10 +12,10 @@ BOOST_AUTO_TEST_CASE(first_test)
     auto pDispatcher = Context::Init(2, 1);
 
     const int32_t MAX_NODE_COUNT = 32;
-    const int32_t MAX_WORKFLOW_COUNT = 100;
+    const int32_t MAX_WORKFLOW_COUNT = 500;
 
     NodeFamilyTree nodeFamilyTree(MAX_NODE_COUNT);
-    WorkflowCheckerPool checker(nodeFamilyTree, 2*MAX_WORKFLOW_COUNT);
+    WorkflowCheckerPool checker(nodeFamilyTree, 10*MAX_WORKFLOW_COUNT);
 
     std::vector<MultiNode*> allNodes;
     auto pA = CreateNode(allNodes, checker, "A");

@@ -50,8 +50,8 @@ private:
 
 BOOST_AUTO_TEST_CASE(first_test)
 {
-    //auto pDispatcher = Context::Init(std::thread::hardware_concurrency()-1, 1);
-    auto pDispatcher = Context::Init(2, 1);
+    auto pDispatcher = Context::Init(std::thread::hardware_concurrency()-1, 1);
+    //auto pDispatcher = Context::Init(2, 1);
     Delay delay(8192);
     auto singleNode = SingleNode(delay, 3000);
     singleNode.SetName("SingleNode");

@@ -201,9 +201,13 @@ void Context::Stop( void )
     while(nullptr != AllWorkers[idxWork])
     {
         AllWorkers[idxWork]->Stop();
+        ++idxWork;
+    }
+
+    idxWork =  ThreadIndex[ThreadType::WORKER].first;
+    while(nullptr != AllWorkers[idxWork])
+    {
         WorkerThreads[idxWork]->join();
-        std::cout << "Worker-" << idxWork << " stoped\n";
-//        WorkerThreads[idxWork].reset(nullptr);
         ++idxWork;
     }
 }

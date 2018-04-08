@@ -21,7 +21,7 @@ public:
     ~Worker( void );
     bool Initialize( void );
 
-    void Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask);
+    void Enqueue(WorkerID_t fromWorker, DEventNode* pWho, Task* pTask);
 
     void Push2WaittingList(Task* pTask);
 

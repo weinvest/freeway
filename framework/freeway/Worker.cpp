@@ -76,7 +76,7 @@ void Worker::Start( void )
     mRuningCond.notify_all();
 }
 //Called by other threads
-void Worker::Enqueue(WorkerID_t fromWorker, void* pWho, Task* pTask)
+void Worker::Enqueue(WorkerID_t fromWorker, DEventNode* pWho, Task* pTask)
 {
     auto& pTaskQueue = mPendingTasks[fromWorker];
     pTaskQueue.Push({pWho, pTask});
@@ -100,7 +100,7 @@ void Worker::Run( void )
             mReadyTasks.push(pTask);
         }
         else{
-            pTask->CompleteDeffered((DEventNode*)taskPair.waited);
+            pTask->CompleteDeffered(taskPair.waited);
         }
     };
 
@@ -121,14 +121,7 @@ void Worker::Run( void )
         //if(UNLIKELY((nLoop % 100) == 0))
         if(mReadyTasks.empty())
         {
-//　          LOG_INFO(mLog, "===================begin CheckLostLamb=====================");
             CheckLostLamb();
-//            LOG_INFO(mLog, "===================end CheckLostLamb=====================");
-//            std::set<DEventNode*> nodes(std::move(mWaittingNode));
-//            for(auto pNode : nodes)
-//            {
-//                if(pNode->)
-//            }
         }
 
         while(!mReadyTasks.empty())
