@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 SET(BUILD_SHARED_LIBS ON)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Werror=uninitialized -Werror=return-type")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Werror=uninitialized -Werror=return-type -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 
 
 SET(TARGET freeway)
@@ -30,6 +30,12 @@ set_target_properties(${TARGET} PROPERTIES VERSION $ENV{BUILD_VERSION} SOVERSION
 #set_target_properties(${TARGET} PROPERTIES COTIRE_PREFIX_HEADER_IGNORE_PATH "boost/preprocessor")
 #cotire(${TARGET})
 TARGET_LINK_LIBRARIES(${TARGET} clock log4cplus tbb boost_context boost_thread boost_filesystem boost_system profiler)
+if (CMAKE_BUILD_TYPE MATCHES "debug")
+    TARGET_LINK_LIBRARIES(${TARGET} tcmalloc_debug)
+else()
+    TARGET_LINK_LIBRARIES(${TARGET} tcmalloc)
+endif()
+
 if(win32)
     LINK_DIRECTORIES(C:\Windows\System32)
 TARGET_LINK_LIBRARIES(${TARGET} gdi32 user32 ws2_32)

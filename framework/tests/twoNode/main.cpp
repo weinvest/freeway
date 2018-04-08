@@ -58,6 +58,7 @@ BOOST_AUTO_TEST_CASE(first_test)
     }
 
     checker.CheckAll();
+    FreeNode(allNodes);
 //    auto meanTime = MultiNode.GetTotalUsedTime() / MultiNode.GetRunCount();
 //    std::cout << "======================================================\n";
 //    std::cout << "Mean frame used time:" << meanTime.total_nanoseconds() << "\n";

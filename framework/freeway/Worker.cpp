@@ -39,6 +39,15 @@ Worker::Worker(Dispatcher* pDispatcher, WorkerId id, int32_t workerCount)
 
 Worker::~Worker( void )
 {
+    for(WorkerId fromWorker = 0; fromWorker < mQueueCount; ++fromWorker)
+    {
+        auto& pTaskQueue = mPendingTasks[fromWorker];
+        pTaskQueue.consume_all([this](const TaskPair& taskPair){
+            auto pTask = taskPair.task;
+            LOG_ERROR(mLog, " found unfinished task"<< pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << ")");
+        });
+    }
+
     delete[] mPendingTasks;
     delete mTaskPool;
 }
@@ -58,7 +67,8 @@ bool Worker::Initialize( void )
 
 Task* Worker::AllocateTaskFromPool(WorkflowID_t flow, DEventNode* pNode)
 {
-    auto pTask = &(mTaskPool->at((mNextTaskPos++) % TASK_POOL_SIZE));
+    auto pTask = &(mTaskPool->at(mNextTaskPos % TASK_POOL_SIZE));
+    ++mNextTaskPos;
 //    std::cout << "allocate task:" << pTask << "\n";
     pTask->Update(flow, pNode);
     return pTask;
@@ -150,7 +160,7 @@ void Worker::Run( void )
         }
     }
 
-    std::cout << "worker-" << mId << " stoped@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
+    std::cout << "worker-" << mId << " stoped@" << Clock::Instance().TimeOfDay().total_microseconds() << std::endl;
 }
 
 void Worker::CheckLostLamb( void )  {

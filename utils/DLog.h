@@ -14,7 +14,8 @@ using namespace log4cplus::helpers;
 
 #define LoadLogConf(cfg)  PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(cfg));
 
-#ifndef DEBUG
+//#ifndef DEBUG
+#if 0
 #define TRACE(logger,msg)
 #define LOG_INFO(logger,msg)
 #define LOG_DEBUG(logger,msg)

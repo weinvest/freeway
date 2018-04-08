@@ -21,6 +21,11 @@ public:
             ,mFamilyTree(new std::set<int32_t>[maxNodeCnt])
     {}
 
+    ~NodeFamilyTree()
+    {
+        delete []mFamilyTree;
+    }
+
     void AddNode(MultiNode* pNode);
     MultiNode* GetNode(int32_t id);
 
@@ -39,6 +44,7 @@ class WorkflowChecker
 {
 public:
     WorkflowChecker() = default;
+    ~WorkflowChecker();
 
     void Initialize(NodeFamilyTree* pFamilyTree);
 

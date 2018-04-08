@@ -44,6 +44,7 @@ protected:
 };
 
 MultiNode* CreateNode(std::vector<MultiNode*>& allNodes, WorkflowCheckerPool& pool, const std::string& nodeName);
+void FreeNode(std::vector<MultiNode*>& allNodes);
 void AddEdge(MultiNode* pChild, MultiNode* pParent);
 
 #endif //FREEWAY_MULTINODE_H

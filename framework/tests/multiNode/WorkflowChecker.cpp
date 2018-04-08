@@ -41,6 +41,12 @@ void NodeFamilyTree:: Build( void )
     }
 }
 
+WorkflowChecker::~WorkflowChecker()
+{
+    delete[] mObservedValues;
+    delete[] mRunNodes;
+}
+
 void WorkflowChecker::Initialize(NodeFamilyTree* pFamilyTree)
 {
     mFamilyTree = pFamilyTree;

@@ -9,7 +9,7 @@
 
 BOOST_AUTO_TEST_CASE(first_test)
 {
-    auto pDispatcher = Context::Init(2, 1);
+    auto pDispatcher = Context::Init(3, 1);
 
     const int32_t MAX_NODE_COUNT = 32;
     const int32_t MAX_WORKFLOW_COUNT = 500;
@@ -118,6 +118,7 @@ digraph
     }
 
     checker.CheckAll();
+    FreeNode(allNodes);
 //    auto meanTime = MultiNode.GetTotalUsedTime() / MultiNode.GetRunCount();
 //    std::cout << "======================================================\n";
 //    std::cout << "Mean frame used time:" << meanTime.total_nanoseconds() << "\n";

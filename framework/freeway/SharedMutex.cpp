@@ -16,19 +16,19 @@ SharedMutex::SharedMutex(DEventNode *pOwner)
 void SharedMutex::LockShared(Task* pTask)
 {
     mWaiters.Push(WaiterType(pTask, false));
-//    std::atomic_thread_fence(std::memory_order_release);
+    std::atomic_thread_fence(std::memory_order_release);
 }
 
 void SharedMutex::Lock(Task* pTask)
 {
     mWaiters.Push(WaiterType(pTask, true));
     mWaitingWriterWorkflowIds.push_back(pTask->GetWorkflowId());
-//    std::atomic_thread_fence(std::memory_order_release);
+    std::atomic_thread_fence(std::memory_order_release);
 }
 
 void SharedMutex::WaitLock4(Task* pTask)
 {
-    auto readers = mReaders.load(std::memory_order_relaxed);
+    auto readers = mReaders.load(std::memory_order_acquire);
     WaiterType* realFirst = nullptr;
     if(readers < 0)
     {
@@ -56,7 +56,7 @@ void SharedMutex::WaitLock4(Task* pTask)
 bool SharedMutex::TryLock4(Task* pTask)
 {
 //    std::atomic_thread_fence(std::memory_order_acquire);
-    auto readers = mReaders.load(std::memory_order_relaxed);
+    auto readers = mReaders.load(std::memory_order_acquire);
     WaiterType* realFirst = nullptr;
     if(readers < 0)
     {
@@ -78,7 +78,7 @@ bool SharedMutex::TryLock4(Task* pTask)
 
 void SharedMutex::WaitSharedLock4(Task* pTask)
 {
-//    std::atomic_thread_fence(std::memory_order_acquire);
+    std::atomic_thread_fence(std::memory_order_acquire);
     auto itFirstWriterWkflow = mWaitingWriterWorkflowIds.begin();
     auto hasLock = itFirstWriterWkflow == mWaitingWriterWorkflowIds.end() || *itFirstWriterWkflow > pTask->GetWorkflowId();
     if(!hasLock)
@@ -95,7 +95,7 @@ void SharedMutex::WaitSharedLock4(Task* pTask)
 
 bool SharedMutex::TrySharedLock4(Task* pTask)
 {
-//    std::atomic_thread_fence(std::memory_order_acquire);
+    std::atomic_thread_fence(std::memory_order_acquire);
     auto itFirstWriterWkflow = mWaitingWriterWorkflowIds.begin();
     auto hasLock = itFirstWriterWkflow == mWaitingWriterWorkflowIds.end() || *itFirstWriterWkflow > pTask->GetWorkflowId();
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
@@ -107,26 +107,14 @@ bool SharedMutex::TrySharedLock4(Task* pTask)
 
 void SharedMutex::UnlockShared(Task* pTask)
 {
-    auto prevReadCnt = mReaders.fetch_sub(1);
+    auto prevReadCnt = mReaders.fetch_sub(1, std::memory_order_relaxed);
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                            << ") unlock shared lock node:"
                            << mOwner->GetName() << ", has readers:" << (prevReadCnt - 1));
-//    if((prevReadCnt < 2) && !mIsInWaking.test_and_set())
-//    {
-//        //prevReadCnt == 1, 可能没有其他reader了
-//        //prevReadCnt <= 0, 说明漏Wake了
-//        LOG_INFO(mLog, "task:" << pTask << "(" << pTask->GetName() << ") unlock shared lock @"
-//                               << mOwner->GetName() << ", skip " << mSkipCount
-//                               << " reades and then wake up " << " in Worker-"<< Context::GetWorkerId());
-//        mWaiters.Skip(mSkipCount);
-//        Wake(pTask);
-//        mIsInWaking.clear();
-//    }
 }
 
 void SharedMutex::Unlock(Task* pTask)
 {
-//    std::atomic_thread_fence(std::memory_order_release);
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                            << ") unlocked node:" << mOwner->GetName()
                            << " in Worker-"<< Context::GetWorkerId());
@@ -144,7 +132,7 @@ void SharedMutex::Unlock(Task* pTask)
     mWaitingWriterWorkflowIds.pop_front();
     Wake(pTask);
 
-    mIsInWaking.clear(std::memory_order_acquire);
+    mIsInWaking.clear(std::memory_order_release);
 }
 
 void SharedMutex::Wake(Task* pWaker)
@@ -155,7 +143,7 @@ void SharedMutex::Wake(Task* pWaker)
         auto& firstWaiter = mWaiters.First(skipCount);
 
         if (firstWaiter.IsWriter) {
-            if (0 == mReaders) {
+            if (0 == mReaders.load(std::memory_order_relaxed)) {
                 mWaiters.Skip(skipCount);
                 skipCount = 0;
                 auto pTask = firstWaiter.pTask;
@@ -168,7 +156,7 @@ void SharedMutex::Wake(Task* pWaker)
 
             break;
         } else {
-            ++mReaders;
+            mReaders.fetch_add(1, std::memory_order_relaxed);
             ++skipCount;
 
             auto pTask = firstWaiter.pTask;
@@ -180,7 +168,7 @@ void SharedMutex::Wake(Task* pWaker)
         }
     }
 
-    mReaders.fetch_sub(skipCount);
+    mReaders.fetch_sub(skipCount, std::memory_order_relaxed);
 
 //    if(curReaders < 0) {
 //        assert(curReaders < mReaders.load());

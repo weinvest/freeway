@@ -210,6 +210,15 @@ void Context::Stop( void )
         WorkerThreads[idxWork]->join();
         ++idxWork;
     }
+
+    idxWork =  ThreadIndex[ThreadType::WORKER].first;
+    while(nullptr != AllWorkers[idxWork])
+    {
+        WorkerThreads[idxWork] = nullptr;
+        ++idxWork;
+    }
+
+    GlobalDispatcher = nullptr;
 }
 
 void Context::InitMiscThread(const std::string& name)

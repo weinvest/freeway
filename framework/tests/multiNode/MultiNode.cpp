@@ -1,10 +1,14 @@
 //
 // Created by 李书淦 on 2018/3/25.
 //
-
+#include <iostream>
 #include "MultiNode.h"
 int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
 {
+    if(workflowId <= GetLastWorkflowId())
+    {
+        std::cout << GetName() <<  " workflow error:" << workflowId <<"<=" << GetLastWorkflowId() << std::endl;
+    }
     BOOST_REQUIRE_GT(workflowId, GetLastWorkflowId());
     auto checker = mCheckPool.GetChecker(workflowId-1);
 
@@ -52,6 +56,14 @@ MultiNode* CreateNode(std::vector<MultiNode*>& allNodes, WorkflowCheckerPool& po
 
     allNodes.push_back(pNode);
     return pNode;
+}
+
+void FreeNode(std::vector<MultiNode*>& allNodes)
+{
+    for(auto pNode : allNodes)
+    {
+        delete pNode;
+    }
 }
 
 void AddEdge(MultiNode* pChild, MultiNode* pParent)
