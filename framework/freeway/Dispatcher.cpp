@@ -83,7 +83,7 @@ void Dispatcher::WaitStart()
 void Dispatcher::Run(void) {
     mIsRunning = true;
 
-    std::atomic_signal_fence(std::memory_order_relaxed);
+    std::atomic_signal_fence(std::memory_order_release);
     int32_t workflowId = 0;
 
 #ifdef RUN_UNTIL_NOMORE_TASK
@@ -131,7 +131,6 @@ void Dispatcher::Run(void) {
     }
     LOG_DEBUG(mLog, "Dispatcher jump out main loop");
     mStopFinished = true;
-    std::atomic_signal_fence(std::memory_order_relaxed);
 }
 
 void Dispatcher::Stop(void)
@@ -141,10 +140,8 @@ void Dispatcher::Stop(void)
 
 void Dispatcher::Join( void )
 {
-    std::atomic_signal_fence(std::memory_order_acquire);
     while(UNLIKELY(!mStopFinished))
     {
-        std::atomic_signal_fence(std::memory_order_acquire);
         LOG_DEBUG(mLog, "Dispatcher stopping:" << mStopFinished);
     }
 }
