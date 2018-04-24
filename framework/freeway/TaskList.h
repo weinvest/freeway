@@ -16,7 +16,10 @@ public:
 
     Task* Pop( void );
     void Push(Task* pTask);
+    void Insert(Task* pBefore, Task* pTask);
+    void Merge(Task* pTail, TaskList& other);
 
+    Task* Head( void ) { return mHead; }
     bool Empty( void ) const;
 private:
     Task* mHead{nullptr};

@@ -95,7 +95,8 @@ void Worker::Enqueue(WorkerID_t fromWorker, DEventNode* pWho, Task* pTask)
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
 void Worker::Push2WaittingList(DEventNode* pNode)
 {
-    mWaittingNodes.push_back(pNode);
+    mWaittingNodes[mWaittingNodeCount] = pNode;
+    ++mWaittingNodeCount;
 }
 #else
 void Worker::Push2WaittingList(Task* pTask)
@@ -123,7 +124,7 @@ void Worker::Run( void )
     int32_t nLoop = 0;
 #ifdef RUN_UNTIL_NOMORE_TASK
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
-    while (LIKELY(mIsRuning || mDispatcher->IsRunning() || !mWaittingNodes.empty())){
+    while (LIKELY(mIsRuning || mDispatcher->IsRunning() || 0 != mWaittingNodeCount)){
 #else
     while (LIKELY(mIsRuning || mDispatcher->IsRunning() || !mWaittingTasks.Empty())){
 #endif
@@ -176,15 +177,14 @@ void Worker::Run( void )
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
 void Worker::CheckLostLamb( void )  {
 
-    decltype(mWaittingNodes) waittingNodes;
-    waittingNodes.swap(mWaittingNodes);
-    for(auto pNode : waittingNodes)
+    int32_t newCount = 0;
+    for(auto iNode = 0; iNode < mWaittingNodeCount; ++iNode)
     {
+        auto pNode = mWaittingNodes[iNode];
         auto& waittingList = pNode->GetWaittingList(mId);
-        while(!waittingList.empty())
+        while(!waittingList.Empty())
         {
-            auto pTask = waittingList.front();
-            waittingList.pop_front();
+            auto pTask = waittingList.Head();
             if(pTask->IsWaitting())
             {
                 bool gotLock = false;
@@ -201,24 +201,29 @@ void Worker::CheckLostLamb( void )  {
                 {
                     pTask->SetWaited(nullptr);
                     mReadyTasks.push(pTask);
+                    waittingList.Pop();
                 }
-                else
-                {
-                    waittingList.push_front(pTask);
-                    break;
-                }
+                break;
+            }
+            else
+            {
+                waittingList.Pop();
             }
         }
 
-        if(!waittingList.empty())
+        if(!waittingList.Empty())
         {
-            mWaittingNodes.push_back(pNode);
+            mWaittingNodes[newCount] = pNode;
+            newCount++;
         }
     }
+
+    mWaittingNodeCount = newCount;
 }
 #else
 void Worker::CheckLostLamb( void )  {
     TaskList waittingTasks = std::move(mWaittingTasks);
+    Task* pTail = nullptr;
     while(!waittingTasks.Empty()) {
         auto pTask = waittingTasks.Pop();
 
@@ -237,10 +242,16 @@ void Worker::CheckLostLamb( void )  {
             {
                 pTask->SetWaited(nullptr);
                 mReadyTasks.push(pTask);
+                mWaittingTasks.Merge(pTail, waittingTasks);
+                break;
             }
             else
             {
                 mWaittingTasks.Push(pTask);
+                if(nullptr == pTail)
+                {
+                    pTail = pTask;
+                }
             }
         }
     }

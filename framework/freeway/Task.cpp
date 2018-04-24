@@ -16,7 +16,7 @@ Task::Task()
                                      mMainContext = from.resume();
 //                                     std::cout << "task begin runnode\n";
                                      if(LIKELY(nullptr != mNodePtr)) {
-                                         RunNode();
+                                         Run();
                                      }
 //                                     std::cout << "task after runnode\n";
                                      return std::move(mMainContext);  //此时Task必须有效
@@ -48,39 +48,40 @@ void Task::Suspend(void)
 {
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     auto& taskList = mWaited->mWaitingTasks[GetWorkerId()];
-    auto isEmpty = taskList.empty();
+    auto isEmpty = taskList.Empty();
+    Task* pBeforeTask = nullptr;
     if(isEmpty)
     {
-        taskList.push_back(this);
+        taskList.Push(this);
         mWorker->Push2WaittingList(mWaited);
     }
     else if(mWaited == mNodePtr)
     {
-        auto it = taskList.rbegin();
-        for(; it != taskList.rend(); ++it)
+        auto pCurrTask = taskList.Head();
+        while(nullptr != pCurrTask && pCurrTask->GetWorkflowId() < GetWorkflowId())
         {
-            if((*it)->GetWorkflowId() < GetWorkflowId())
-            {
-                break;
-            }
+            pBeforeTask = pCurrTask;
+            pCurrTask = pCurrTask->mNext;
         }
-
-        auto itInsert = it.base();
-        taskList.insert(itInsert, this);
+        taskList.Insert(pBeforeTask, this);
     }
     else
     {
-        auto it = taskList.rbegin();
-        for(; it != taskList.rend(); ++it)
+        auto pCurrTask = taskList.Head();
+        while(nullptr != pCurrTask && pCurrTask->GetWorkflowId() < GetWorkflowId())
         {
-            if((*it)->GetWorkflowId() <= GetWorkflowId())
-            {
-                break;
-            }
+            pBeforeTask = pCurrTask;
+            pCurrTask = pCurrTask->mNext;
         }
 
-        auto itInsert = it.base();
-        taskList.insert(itInsert, this);
+        if(nullptr == pCurrTask || pCurrTask->GetWorkflowId() > GetWorkflowId())
+        {
+            taskList.Insert(pBeforeTask, this);
+        }
+        else
+        {
+            taskList.Insert(pCurrTask, this);
+        }
     }
 #else
     mWorker->Push2WaittingList(this);
@@ -120,55 +121,51 @@ void Task::Resume( void )
     }
 }
 
-void Task::RunNode( void )
+void Task::Run( void )
 {
     int32_t runCnt = 0;
     while(true) {
-//        char name[32];
-//        pthread_getname_np(pthread_self(), name, sizeof(name));
-//        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
         ++runCnt;
-        mNodePtr->GetMutex().WaitLock4(this);
-
-        mNodePtr->Process(this, mWorkflowId);
-
-        for (auto precursor : mNodePtr->GetPrecursors()) {
-            auto& mutex = precursor->GetMutex();
-            if(mutex.TrySharedLock4(this))
-            {
-                mutex.UnlockShared(this);
-            } else{
-                mDeferred.insert(precursor);
-            }
-        }
-
-        mNodePtr->GetMutex().Unlock(this);
-        while(!mDeferred.empty())
-        {
-            auto pPrecursor = *(mDeferred.begin());
-            auto& mutex = pPrecursor->GetMutex();
-            mutex.WaitSharedLock4(this);
-            mutex.UnlockShared(this);
-            mDeferred.erase(pPrecursor);
-        }
-#ifdef DEBUG
-        mLastSuspendWaitLock = false;
-        mLastSuspendWkflowId = mWorkflowId;
-        mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
-#endif
-        mMainContext = mMainContext.resume();
+        RunNode();
     }
 }
 
-void Task::CompleteDeffered(DEventNode* pNode)
+void Task::RunNode( void )
 {
-    if(!mDeferred.empty())
-    {
-        if(1 == mDeferred.erase(pNode))
+//        char name[32];
+//        pthread_getname_np(pthread_self(), name, sizeof(name));
+//        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
+    mNodePtr->GetMutex().WaitLock4(this);
+
+    mNodePtr->Process(this, mWorkflowId);
+
+    for (auto precursor : mNodePtr->GetPrecursors()) {
+        auto& mutex = precursor->GetMutex();
+        if(mutex.TrySharedLock4(this))
         {
-            pNode->GetMutex().UnlockShared(this);
+            mutex.UnlockShared(this);
+        }
+        else
+        {
+            mDeferred.insert(precursor);
         }
     }
+
+    mNodePtr->GetMutex().Unlock(this);
+    while(!mDeferred.empty())
+    {
+        auto pPrecursor = *(mDeferred.begin());
+        auto& mutex = pPrecursor->GetMutex();
+        mutex.WaitSharedLock4(this);
+        mutex.UnlockShared(this);
+        mDeferred.erase(pPrecursor);
+    }
+#ifdef DEBUG
+    mLastSuspendWaitLock = false;
+    mLastSuspendWkflowId = mWorkflowId;
+    mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
+#endif
+    mMainContext = mMainContext.resume();
 }
 
 bool Task::TryLock( void )
@@ -191,3 +188,10 @@ void Task::Enqueue(int32_t from, DEventNode *pWhy)
     mWorker->Enqueue(from, pWhy, this);
 }
 
+void Task::CompleteDeffered(DEventNode* pNode)
+{
+    if(1 == mDeferred.erase(pNode))
+    {
+        pNode->GetMutex().UnlockShared(this);
+    }
+}

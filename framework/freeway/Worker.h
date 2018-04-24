@@ -71,7 +71,8 @@ private:
     TaskPool *mTaskPool;
     int32_t mNextTaskPos{0};
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
-    std::vector<DEventNode*> mWaittingNodes;
+    std::array<DEventNode*, 1024> mWaittingNodes;
+    int32_t mWaittingNodeCount{0};
 #else
     TaskList mWaittingTasks;
 #endif

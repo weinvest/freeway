@@ -7,6 +7,7 @@
 
 #include "common/Types.h"
 #include "framework/freeway/LockPtr.h"
+#include "framework/freeway/TaskList.h"
 const int32_t NoRaiseSuccessor = -1;
 
 using WorkflowID_t = uint64_t;
@@ -66,7 +67,7 @@ private:
 
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     friend class Task;
-    typedef std::list<Task*> TaskQueue;
+    typedef TaskList TaskQueue;
     TaskQueue* mWaitingTasks{nullptr};
 #endif
 };

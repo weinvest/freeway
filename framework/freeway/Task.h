@@ -72,6 +72,7 @@ public:
 private:
     Task& operator =(const Task&) = delete;
     void RunNode( void );
+    void Run( void );
 
     DEventNode* mNodePtr {nullptr};
     WorkflowID_t mWorkflowId{0};
