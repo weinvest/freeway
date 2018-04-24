@@ -39,6 +39,7 @@ Worker::Worker(Dispatcher* pDispatcher, WorkerId id, int32_t workerCount)
 
 Worker::~Worker( void )
 {
+#if 0
     for(WorkerId fromWorker = 0; fromWorker < mQueueCount; ++fromWorker)
     {
         auto& pTaskQueue = mPendingTasks[fromWorker];
@@ -47,7 +48,7 @@ Worker::~Worker( void )
             LOG_ERROR(mLog, " found unfinished task"<< pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << ")");
         });
     }
-
+#endif
     delete[] mPendingTasks;
     delete mTaskPool;
 }

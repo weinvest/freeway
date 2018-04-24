@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(first_test)
     const int32_t MAX_WORKFLOW_COUNT = 500;
 
     NodeFamilyTree nodeFamilyTree(MAX_NODE_COUNT);
-    WorkflowCheckerPool checker(nodeFamilyTree, 7*MAX_WORKFLOW_COUNT);
+    WorkflowCheckerPool checker(nodeFamilyTree, 20*MAX_WORKFLOW_COUNT);
 
     std::vector<MultiNode*> allNodes;
     auto pA = CreateNode(allNodes, checker, "A");

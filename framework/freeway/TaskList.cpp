@@ -29,7 +29,11 @@ void TaskList::Push(Task* pTask)
 
 void TaskList::Insert(Task* pBefore, Task* pTask)
 {
-    assert(nullptr == pTask->mNext);
+    if(nullptr != pTask->mNext)
+    {
+        return;
+    }
+
     if(nullptr == pBefore)
     {
         pTask->mNext = mHead;
