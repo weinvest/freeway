@@ -10,10 +10,14 @@
 #include "Context.h"
 #include "Dispatcher.h"
 #include "DEventNodeSpecial.h"
+#include "TaskList.h"
 #define mLog Context::GetLog()
 DEventNode::DEventNode()
-:mMutex(new SharedMutex(this)){
-
+     :mMutex(new SharedMutex(this))
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+     ,mWaitingTasks(new TaskQueue[8])
+#endif
+{
 }
 
 LockPtrBase DEventNode::Connect(DEventNode* pSuccessor)

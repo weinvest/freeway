@@ -92,11 +92,17 @@ void Worker::Enqueue(WorkerID_t fromWorker, DEventNode* pWho, Task* pTask)
     pTaskQueue.Push({pWho, pTask});
 }
 
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+void Worker::Push2WaittingList(DEventNode* pNode)
+{
+    mWaittingNodes.push_back(pNode);
+}
+#else
 void Worker::Push2WaittingList(Task* pTask)
 {
     mWaittingTasks.Push(pTask);
-//    mWaittingNode.insert(pTask->GetNode());
 }
+#endif
 
 void Worker::Run( void )
 {
@@ -116,7 +122,11 @@ void Worker::Run( void )
 
     int32_t nLoop = 0;
 #ifdef RUN_UNTIL_NOMORE_TASK
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+    while (LIKELY(mIsRuning || mDispatcher->IsRunning() || !mWaittingNodes.empty())){
+#else
     while (LIKELY(mIsRuning || mDispatcher->IsRunning() || !mWaittingTasks.Empty())){
+#endif
 //        LOG_DEBUG(mLog, "Worker-" << mId << (mWaittingTasks.Empty() ? " no ": " has ") << " watting tasks");
 #else
     while(LIKELY(mIsRuning)){
@@ -163,11 +173,55 @@ void Worker::Run( void )
     std::cout << "worker-" << mId << " stoped@" << Clock::Instance().TimeOfDay().total_microseconds() << std::endl;
 }
 
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+void Worker::CheckLostLamb( void )  {
+
+    decltype(mWaittingNodes) waittingNodes;
+    waittingNodes.swap(mWaittingNodes);
+    for(auto pNode : waittingNodes)
+    {
+        auto& waittingList = pNode->GetWaittingList(mId);
+        while(!waittingList.empty())
+        {
+            auto pTask = waittingList.front();
+            waittingList.pop_front();
+            if(pTask->IsWaitting())
+            {
+                bool gotLock = false;
+                if(pTask->IsWaittingLock())
+                {
+                    gotLock = pTask->TryLock();
+                }
+                else
+                {
+                    gotLock = pTask->TrySharedLock();
+                }
+
+                if(gotLock)
+                {
+                    pTask->SetWaited(nullptr);
+                    mReadyTasks.push(pTask);
+                }
+                else
+                {
+                    waittingList.push_front(pTask);
+                    break;
+                }
+            }
+        }
+
+        if(!waittingList.empty())
+        {
+            mWaittingNodes.push_back(pNode);
+        }
+    }
+}
+#else
 void Worker::CheckLostLamb( void )  {
     TaskList waittingTasks = std::move(mWaittingTasks);
     while(!waittingTasks.Empty()) {
         auto pTask = waittingTasks.Pop();
-//        LOG_INFO(mLog, "check task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << ")");
+
         if(pTask->IsWaitting())
         {
             bool gotLock = false;
@@ -181,9 +235,6 @@ void Worker::CheckLostLamb( void )  {
 
             if(gotLock)
             {
-#ifdef DEBUG
-//                std::cout << "WorkflowId:" << pTask->GetWorkflowID() << ",Worker:" << mId << " got lock\n";
-#endif
                 pTask->SetWaited(nullptr);
                 mReadyTasks.push(pTask);
             }
@@ -194,6 +245,7 @@ void Worker::CheckLostLamb( void )  {
         }
     }
 }
+#endif
 
 void Worker::Stop( void )
 {

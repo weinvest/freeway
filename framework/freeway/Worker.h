@@ -22,8 +22,11 @@ public:
     bool Initialize( void );
 
     void Enqueue(WorkerID_t fromWorker, DEventNode* pWho, Task* pTask);
-
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+    void Push2WaittingList(DEventNode* pNode);
+#else
     void Push2WaittingList(Task* pTask);
+#endif
 
     void WaitStart( void );
     void Start( void );
@@ -51,6 +54,7 @@ public:
     };
 private:
     void CheckLostLamb(void);
+    void CheckLostLamb(TaskList& waittings);
 
 
     const WorkerID_t mId;
@@ -66,7 +70,11 @@ private:
     using TaskPool = std::array<Task, TASK_POOL_SIZE>;
     TaskPool *mTaskPool;
     int32_t mNextTaskPos{0};
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+    std::vector<DEventNode*> mWaittingNodes;
+#else
     TaskList mWaittingTasks;
+#endif
 //    std::set<DEventNode*> mWaittingNode;
 
     std::mutex  mRuningMutex;

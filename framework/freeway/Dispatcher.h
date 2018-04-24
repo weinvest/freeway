@@ -36,7 +36,7 @@ private:
 
     std::vector<Task*> mPendingTask;
     bool mIsRunning{false};
-    bool mStopFinished{false};
+    std::atomic<bool> mStopFinished{false};
     Logger mLog;
 };
 

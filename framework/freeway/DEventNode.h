@@ -4,12 +4,14 @@
 
 #ifndef ARAGOPROJECT_DEVENTNODE_H
 #define ARAGOPROJECT_DEVENTNODE_H
+
 #include "common/Types.h"
 #include "framework/freeway/LockPtr.h"
 const int32_t NoRaiseSuccessor = -1;
 
 using WorkflowID_t = uint64_t;
 class Task;
+class TaskList;
 class SharedMutex;
 class DEventNodeSpecial;
 class LockPtrBase;
@@ -37,6 +39,11 @@ public:
 
     void RaiseSelf( void );
     void RaiseSelf(int32_t fromThread);
+
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+    auto& GetWaittingList(int32_t workerId) { return mWaitingTasks[workerId]; }
+#endif
+
 protected:
     void AddPrecursor(DEventNode* pNode) {mPrecursors.push_back(pNode);}
     void AddSuccessor(DEventNode* pNode) {mSuccessors.push_back(pNode);}
@@ -56,6 +63,12 @@ private:
     std::string mName;
     bool mIsAcceptTrigger{false};
     std::unordered_map<DEventNode*, DEventNodeSpecial*> mPrecursorSpecials;
+
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+    friend class Task;
+    typedef std::list<Task*> TaskQueue;
+    TaskQueue* mWaitingTasks{nullptr};
+#endif
 };
 
 #endif //ARAGOPROJECT_DEVENTNODE_H

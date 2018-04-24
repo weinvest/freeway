@@ -1,39 +1,39 @@
-log4cplus.logger.Dispatcher =INFO,DispatcherLogFile
+log4cplus.logger.Dispatcher =WARN,DispatcherLogFile
 log4cplus.appender.DispatcherLogFile = log4cplus::FileAppender
 log4cplus.appender.DispatcherLogFile.File = Dispatcher.log
 log4cplus.appender.DispatcherLogFile.Append = true
 log4cplus.appender.DispatcherLogFile.layout = log4cplus::PatternLayout
 log4cplus.appender.DispatcherLogFile.layout.ConversionPattern = %D{%H:%M:%S.%Q} %-5p %c %m%n
 
-log4cplus.logger.Worker1 =INFO,Worker1LogFile
+log4cplus.logger.Worker1 =WARN,Worker1LogFile
 log4cplus.appender.Worker1LogFile = log4cplus::FileAppender
 log4cplus.appender.Worker1LogFile.File = Worker1.log
 log4cplus.appender.Worker1LogFile.Append = true
 log4cplus.appender.Worker1LogFile.layout = log4cplus::PatternLayout
 log4cplus.appender.Worker1LogFile.layout.ConversionPattern = %D{%H:%M:%S.%Q} %-5p %c %m%n
 
-log4cplus.logger.Worker2 =INFO,Worker2LogFile
+log4cplus.logger.Worker2 =WARN,Worker2LogFile
 log4cplus.appender.Worker2LogFile = log4cplus::FileAppender
 log4cplus.appender.Worker2LogFile.File = Worker2.log
 log4cplus.appender.Worker2LogFile.Append = true
 log4cplus.appender.Worker2LogFile.layout = log4cplus::PatternLayout
 log4cplus.appender.Worker2LogFile.layout.ConversionPattern = %D{%H:%M:%S.%Q} %-5p %c %m%n
 
-log4cplus.logger.Worker3 =INFO,Worker3LogFile
+log4cplus.logger.Worker3 =WARN,Worker3LogFile
 log4cplus.appender.Worker3LogFile = log4cplus::FileAppender
 log4cplus.appender.Worker3LogFile.File = Worker3.log
 log4cplus.appender.Worker3LogFile.Append = true
 log4cplus.appender.Worker3LogFile.layout = log4cplus::PatternLayout
 log4cplus.appender.Worker3LogFile.layout.ConversionPattern = %D{%H:%M:%S.%Q} %-5p %c %m%n
 
-log4cplus.logger.Worker4 =INFO,Worker4LogFile
+log4cplus.logger.Worker4 =WARN,Worker4LogFile
 log4cplus.appender.Worker4LogFile = log4cplus::FileAppender
 log4cplus.appender.Worker4LogFile.File = Worker4.log
 log4cplus.appender.Worker4LogFile.Append = true
 log4cplus.appender.Worker4LogFile.layout = log4cplus::PatternLayout
 log4cplus.appender.Worker4LogFile.layout.ConversionPattern = %D{%H:%M:%S.%Q} %-5p %c %m%n
 
-log4cplus.logger.Worker5 =INFO,Worker5LogFile
+log4cplus.logger.Worker5 =WARN,Worker5LogFile
 log4cplus.appender.Worker5LogFile = log4cplus::FileAppender
 log4cplus.appender.Worker5LogFile.File = Worker5.log
 log4cplus.appender.Worker5LogFile.Append = true

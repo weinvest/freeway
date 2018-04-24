@@ -46,7 +46,45 @@ const std::string& Task::GetName( void )
 
 void Task::Suspend(void)
 {
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+    auto& taskList = mWaited->mWaitingTasks[GetWorkerId()];
+    auto isEmpty = taskList.empty();
+    if(isEmpty)
+    {
+        taskList.push_back(this);
+        mWorker->Push2WaittingList(mWaited);
+    }
+    else if(mWaited == mNodePtr)
+    {
+        auto it = taskList.rbegin();
+        for(; it != taskList.rend(); ++it)
+        {
+            if((*it)->GetWorkflowId() < GetWorkflowId())
+            {
+                break;
+            }
+        }
+
+        auto itInsert = it.base();
+        taskList.insert(itInsert, this);
+    }
+    else
+    {
+        auto it = taskList.rbegin();
+        for(; it != taskList.rend(); ++it)
+        {
+            if((*it)->GetWorkflowId() <= GetWorkflowId())
+            {
+                break;
+            }
+        }
+
+        auto itInsert = it.base();
+        taskList.insert(itInsert, this);
+    }
+#else
     mWorker->Push2WaittingList(this);
+#endif
     mMainContext = mMainContext.resume();
 }
 
@@ -105,6 +143,14 @@ void Task::RunNode( void )
         }
 
         mNodePtr->GetMutex().Unlock(this);
+        while(!mDeferred.empty())
+        {
+            auto pPrecursor = *(mDeferred.begin());
+            auto& mutex = pPrecursor->GetMutex();
+            mutex.WaitSharedLock4(this);
+            mutex.UnlockShared(this);
+            mDeferred.erase(pPrecursor);
+        }
 #ifdef DEBUG
         mLastSuspendWaitLock = false;
         mLastSuspendWkflowId = mWorkflowId;
