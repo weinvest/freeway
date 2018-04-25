@@ -47,7 +47,7 @@ void SharedMutex::WaitLock4(Task* pTask)
                                << ",workflow:" << realFirst->pTask->GetWorkflowId()
         );
         pTask->SetWaited(mOwner);
-        pTask->Suspend();
+        pTask->Suspend4Lock();
     }
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                            << ") get lock for node:" << mOwner->GetName() << " in Worker-"<< Context::GetWorkerId());
@@ -87,7 +87,7 @@ void SharedMutex::WaitSharedLock4(Task* pTask)
         LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                                << ") wait shared lock for node:" << mOwner->GetName() << " in Worker-"<< Context::GetWorkerId());
         pTask->SetWaited(mOwner);
-        pTask->Suspend();
+        pTask->Suspend4Shared();
     }
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                            << ") get shared lock for node:" << mOwner->GetName() << " in Worker-"<< Context::GetWorkerId());

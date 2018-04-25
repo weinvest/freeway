@@ -56,7 +56,8 @@ public:
 
     void Resume( void );
 
-    void Suspend(void);
+    void Suspend4Lock(void);
+    void Suspend4Shared( void );
 
     bool TryLock( void );
     bool TrySharedLock( void );

@@ -45,29 +45,42 @@ const std::string& Task::GetName( void )
     return mNodePtr->GetName();
 }
 
-void Task::Suspend(void)
+void Task::Suspend4Lock(void)
 {
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     auto& taskList = mWaited->mWaitingTasks[GetWorkerId()];
-    auto isEmpty = taskList.Empty();
-    Task* pBeforeTask = nullptr;
-    if(isEmpty)
+    auto pCurrTask = taskList.Back();
+        if(taskList.TraseEnd(pCurrTask))
     {
-        taskList.PushBack(this);
         mWorker->Push2WaittingList(mWaited);
+        taskList.PushBack(this);
     }
-    else if(mWaited == mNodePtr)
+    else
     {
-        auto pCurrTask = taskList.Back();
         while(!taskList.TraseEnd(pCurrTask) && pCurrTask->GetWorkflowId() >= GetWorkflowId())
         {
             pCurrTask = pCurrTask->mPrev;
         }
         taskList.InsertAfter(pCurrTask, this);
     }
+#else
+    mWorker->Push2WaittingList(this);
+#endif
+    mMainContext = mMainContext.resume();
+}
+
+void Task::Suspend4Shared( void )
+{
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+    auto& taskList = mWaited->mWaitingTasks[GetWorkerId()];
+    auto pCurrTask = taskList.Back();
+    if(taskList.TraseEnd(pCurrTask))
+    {
+        mWorker->Push2WaittingList(mWaited);
+        taskList.PushBack(this);
+    }
     else
     {
-        auto pCurrTask = taskList.Back();
         while(!taskList.TraseEnd(pCurrTask) && pCurrTask->GetWorkflowId() > GetWorkflowId())
         {
             pCurrTask = pCurrTask->mPrev;
@@ -80,7 +93,6 @@ void Task::Suspend(void)
 #endif
     mMainContext = mMainContext.resume();
 }
-
 #ifdef DEBUG
 #include "clock/Clock.h"
 
@@ -104,7 +116,7 @@ void Task::Resume( void )
     pthread_getname_np(pthread_self(), mLastResumeThreadName, sizeof(mLastResumeThreadName));
     mLastResumeTime = Clock::Instance().TimeOfDay().total_microseconds();
 #endif
-    if(mTaskContext) {
+    if(LIKELY(mTaskContext)) {
         mTaskContext = mTaskContext.resume();
     }
     else {

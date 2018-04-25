@@ -185,7 +185,7 @@ void Worker::CheckLostLamb( void )  {
     {
         auto pNode = mWaittingNodes[iNode];
         auto& waittingList = pNode->GetWaittingList(mId);
-        while(!waittingList.Empty())
+        if(!waittingList.Empty())
         {
             auto pTask = waittingList.Front();
             bool gotLock = false;
@@ -204,7 +204,6 @@ void Worker::CheckLostLamb( void )  {
                 mReadyTasks.push(pTask);
                 waittingList.PopFront();
             }
-            break;
         }
 
         if(!waittingList.Empty())
