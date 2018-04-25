@@ -1,6 +1,7 @@
 //
 // Created by 李书淦 on 2018/3/25.
 //
+#include <random>
 #include <iostream>
 #include "MultiNode.h"
 int32_t MultiNode::DoProcess(WorkflowID_t workflowId)

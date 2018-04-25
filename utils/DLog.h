@@ -2,15 +2,9 @@
 #define _DFC_LOG_H
 #include <cstdint>
 #include <log4cplus/logger.h>
-#include <log4cplus/consoleappender.h>
-#include <log4cplus/fileappender.h>
-#include <log4cplus/layout.h>
 #include <log4cplus/loggingmacros.h>
 #include <log4cplus/configurator.h>
-#include <log4cplus/helpers/loglog.h>
-#include <log4cplus/helpers/stringhelper.h>
 using namespace log4cplus;
-using namespace log4cplus::helpers;
 
 #define LoadLogConf(cfg)  PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(cfg));
 

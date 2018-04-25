@@ -22,6 +22,12 @@ public:
 
     bool HasSpecial( void ) const { return nullptr != mSpecial; }
 
+    void reset(const LockPtrBase& o)
+    {
+        mNode = o.mNode;
+        mSpecial = o.mSpecial;
+    }
+
 protected:
     DEventNode* mNode{nullptr};
     DEventNodeSpecial* mSpecial{nullptr};
@@ -38,12 +44,6 @@ public:
     LockPtr(const LockPtrBase& o)
     :LockPtrBase(o)
     {
-    }
-
-    void reset(const LockPtrBase& o)
-    {
-        mNode = o.mNode;
-        mSpecial = o.mSpecial;
     }
 
     T* operator-> ()

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 SET(BUILD_SHARED_LIBS ON)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Werror=uninitialized -Werror=return-type -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Werror=uninitialized -Werror=return-type -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 
 
 SET(TARGET multiNode)
