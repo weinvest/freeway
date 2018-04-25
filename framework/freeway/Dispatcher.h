@@ -15,7 +15,7 @@ class Dispatcher
 public:
     Dispatcher(int32_t workerCount, int32_t miscThreads);
     ~Dispatcher();
-    bool IsRunning( void ) const { return mIsRunning; }
+    bool IsRunning( void ) const { return !mStopFinished.load(std::memory_order_relaxed); }
     bool Enqueue(int32_t fromID, DEventNode* );
 
     void Run( void );

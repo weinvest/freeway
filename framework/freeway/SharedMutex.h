@@ -31,7 +31,8 @@ public:
 //    using WaitingWriterType = boost::circular_buffer<WorkflowID_t >;
 
     using WaiterBufferType = DSpscArray<WaiterType>;
-    using WaitingWriterType = boost::circular_buffer<WorkflowID_t >;
+//    using WaitingWriterType = boost::circular_buffer<WorkflowID_t >;
+    using WaitingWriterType = DSpscArray<WorkflowID_t >;
 
     SharedMutex(DEventNode* pOwner);
     SharedMutex(const SharedMutex&) = delete;
@@ -74,7 +75,7 @@ private:
     std::atomic<int> mReaders{0};
     std::atomic_flag mIsInWaking ATOMIC_FLAG_INIT;
     WaiterBufferType mWaiters;
-    WaitingWriterType mWaitingWriterWorkflowIds{1024};
+    WaitingWriterType mWaitingWriterWorkflowIds;
 };
 
 

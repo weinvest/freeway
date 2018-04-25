@@ -11,6 +11,7 @@ SharedMutex::SharedMutex(DEventNode *pOwner)
 :mOwner(pOwner)
 {
     mWaiters.Init(8192);
+    mWaitingWriterWorkflowIds.Init(1024);
 }
 
 void SharedMutex::LockShared(Task* pTask)
@@ -22,7 +23,7 @@ void SharedMutex::LockShared(Task* pTask)
 void SharedMutex::Lock(Task* pTask)
 {
     mWaiters.Push(WaiterType(pTask, true));
-    mWaitingWriterWorkflowIds.push_back(pTask->GetWorkflowId());
+    mWaitingWriterWorkflowIds.Push(pTask->GetWorkflowId());
     std::atomic_thread_fence(std::memory_order_release);
 }
 
@@ -79,8 +80,8 @@ bool SharedMutex::TryLock4(Task* pTask)
 void SharedMutex::WaitSharedLock4(Task* pTask)
 {
     std::atomic_thread_fence(std::memory_order_acquire);
-    auto itFirstWriterWkflow = mWaitingWriterWorkflowIds.begin();
-    auto hasLock = itFirstWriterWkflow == mWaitingWriterWorkflowIds.end() || *itFirstWriterWkflow > pTask->GetWorkflowId();
+    auto firstWriterWkflow = mWaitingWriterWorkflowIds.First();
+    auto hasLock = mWaitingWriterWorkflowIds.Empty() || firstWriterWkflow > pTask->GetWorkflowId();
     if(!hasLock)
     {
         assert(pTask->GetName() != mOwner->GetName());
@@ -96,12 +97,12 @@ void SharedMutex::WaitSharedLock4(Task* pTask)
 bool SharedMutex::TrySharedLock4(Task* pTask)
 {
     std::atomic_thread_fence(std::memory_order_acquire);
-    auto itFirstWriterWkflow = mWaitingWriterWorkflowIds.begin();
-    auto hasLock = itFirstWriterWkflow == mWaitingWriterWorkflowIds.end() || *itFirstWriterWkflow > pTask->GetWorkflowId();
+    auto firstWriterWkflow = mWaitingWriterWorkflowIds.First();
+    auto hasLock = mWaitingWriterWorkflowIds.Empty() || firstWriterWkflow > pTask->GetWorkflowId();
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                            << ") try shared lock for node:" << mOwner->GetName() << (hasLock ? " success" : " failed")
                            << " in Worker-"<< Context::GetWorkerId() << " current first writer workflow:"
-                           <<  ((itFirstWriterWkflow == mWaitingWriterWorkflowIds.end()) ? -1 : *itFirstWriterWkflow));
+                           <<  ((mWaitingWriterWorkflowIds.Empty()) ? -1 : firstWriterWkflow));
     return hasLock;
 }
 
@@ -129,7 +130,7 @@ void SharedMutex::Unlock(Task* pTask)
 
     mReaders.store(0);
     mWaiters.Skip(finished + 1);
-    mWaitingWriterWorkflowIds.pop_front();
+    mWaitingWriterWorkflowIds.Pop();
     Wake(pTask);
 
     mIsInWaking.clear(std::memory_order_release);
