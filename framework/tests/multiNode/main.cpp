@@ -86,39 +86,51 @@ digraph
     nodeFamilyTree.Build();
     std::thread t ([&allNodes]
                   {
-                      Context::InitMiscThread("MultiNode");
-                      Context::WaitStart();
-                      std::cout << "==================Started=============================\n";
+                      try {
+                          Context::InitMiscThread("MultiNode");
+                          Context::WaitStart();
+                          std::cout << "==================Started=============================\n";
 
-                      std::default_random_engine generator;
-                      std::normal_distribution<double> norm(0,1);
-                      int32_t runCnt = 0;
-                      while(runCnt < MAX_WORKFLOW_COUNT)
-                      {
-                          ++runCnt;
-                          for(auto& pNode : allNodes)
-                          {
-                              double prob = norm(generator);
-                              if(prob > 0.5 || prob < -0.5)
-                              {
-                                  pNode->RaiseSelf();
+                          std::default_random_engine generator;
+                          std::normal_distribution<double> norm(0, 1);
+                          int32_t runCnt = 0;
+                          while (runCnt < MAX_WORKFLOW_COUNT) {
+                              ++runCnt;
+                              for (auto &pNode : allNodes) {
+                                  double prob = norm(generator);
+                                  if (prob > 0.5 || prob < -0.5) {
+                                      pNode->RaiseSelf();
+                                  }
                               }
+                              std::this_thread::sleep_for(std::chrono::microseconds(50));
                           }
-                          std::this_thread::sleep_for(std::chrono::microseconds(50));
-                      }
 
-                      std::this_thread::sleep_for(std::chrono::microseconds(500000));
-                      std::cout << "==================Stopping=============================\n";
-                      Context::Stop();
+                          std::this_thread::sleep_for(std::chrono::microseconds(500000));
+                          std::cout << "==================Stopping=============================\n";
+                          Context::Stop();
+                      }
+                      catch (const std::exception& ex)
+                      {
+                          std::cout << "Misc exception:" << ex.what() << "\n";
+                      }
                   });
-    Context::Start();
-    if(t.joinable())
+
+    try
     {
-        t.join();
+        Context::Start();
+        if(t.joinable())
+        {
+            t.join();
+        }
+
+        checker.CheckAll();
+        FreeNode(allNodes);
+    }
+    catch(const std::exception& ex)
+    {
+        std::cout << "Main exception:" << ex.what() << "\n";
     }
 
-    checker.CheckAll();
-    FreeNode(allNodes);
 //    auto meanTime = MultiNode.GetTotalUsedTime() / MultiNode.GetRunCount();
 //    std::cout << "======================================================\n";
 //    std::cout << "Mean frame used time:" << meanTime.total_nanoseconds() << "\n";

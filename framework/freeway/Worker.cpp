@@ -126,12 +126,8 @@ void Worker::Run( void )
 
     int32_t nLoop = 0;
 #ifdef RUN_UNTIL_NOMORE_TASK
-#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
-    while (LIKELY(mIsRuning || mDispatcher->IsRunning() || 0 != mWaittingNodeCount)){
-#else
-    while (LIKELY(mIsRuning || mDispatcher->IsRunning() || !mWaittingTasks.Empty())){
-#endif
-//        LOG_DEBUG(mLog, "Worker-" << mId << (mWaittingTasks.Empty() ? " no ": " has ") << " watting tasks");
+    while (LIKELY(mIsRuning || mDispatcher->IsRunning() || mFinishedTasks < mNextTaskPos))
+    {
 #else
     while(LIKELY(mIsRuning)){
 #endif

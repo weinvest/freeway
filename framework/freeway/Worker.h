@@ -52,6 +52,8 @@ public:
         friend bool operator != (const TaskPair& lhs, const TaskPair& rhs);
 
     };
+
+    void FinishATask( void ) { ++mFinishedTasks; }
 private:
     void CheckLostLamb(void);
     void CheckLostLamb(TaskList& waittings);
@@ -69,7 +71,7 @@ private:
     static const int32_t TASK_POOL_SIZE = 8192;
     using TaskPool = std::array<Task, TASK_POOL_SIZE>;
     TaskPool *mTaskPool;
-    int32_t mNextTaskPos{0};
+    alignas(64) int32_t mNextTaskPos{0};
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     std::array<DEventNode*, 1024> mWaittingNodes;
     int32_t mWaittingNodeCount{0};
@@ -83,6 +85,7 @@ private:
     bool mIsRuning{false};
     bool mInitialized{false};
     Dispatcher* mDispatcher{nullptr};
+    int32_t mFinishedTasks{0};
 
     Logger mLog;
 };

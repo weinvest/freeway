@@ -164,6 +164,8 @@ void Task::RunNode( void )
         mutex.UnlockShared(this);
         mDeferred.erase(pPrecursor);
     }
+
+    mWorker->FinishATask();
 #ifdef DEBUG
     mLastSuspendWaitLock = false;
     mLastSuspendWkflowId = mWorkflowId;
