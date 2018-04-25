@@ -85,6 +85,7 @@ private:
     Worker* mWorker{nullptr};
     DEventNode* mWaited{nullptr};
     Task* mNext{nullptr};
+    Task* mPrev{nullptr};
     std::set<DEventNode*> mDeferred;
 
     ctx::continuation mMainContext;

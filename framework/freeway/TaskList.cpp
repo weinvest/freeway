@@ -4,63 +4,85 @@
 
 #include "TaskList.h"
 #include "Task.h"
+
+TaskList::TaskList()
+:mHead(new Task())
+{
+    mHead->mNext = mHead;
+    mHead->mPrev = mHead;
+}
+
 TaskList::TaskList(TaskList&& o)
-:mHead(o.mHead)
+    :mHead(o.mHead)
 {
     o.mHead = nullptr;
 }
 
-Task* TaskList::Pop( void )
+TaskList::~TaskList()
 {
-    auto pTask = mHead;
-    mHead = mHead->mNext;
-    pTask->mNext = nullptr;
+    delete mHead;
+}
+
+void TaskList::PushFront(Task* pTask)
+{
+    InsertAfter(mHead, pTask);
+}
+
+void TaskList::PushBack(Task *pTask)
+{
+    InsertBefore(mHead, pTask);
+}
+
+Task* TaskList::PopFront( void )
+{
+    auto pTask = mHead->mNext;
+    Erase(pTask);
     return pTask;
 }
 
-void TaskList::Push(Task* pTask)
+Task* TaskList::PopBack()
 {
-    if(nullptr == pTask->mNext)
-    {
-        pTask->mNext = mHead;
-        mHead = pTask;
-    }
+    auto pTask = mHead->mPrev;
+    Erase(pTask);
+    return pTask;
 }
 
-void TaskList::Insert(Task* pBefore, Task* pTask)
+void TaskList::Erase(Task* pTask)
 {
-    if(nullptr != pTask->mNext)
-    {
-        return;
-    }
-
-    if(nullptr == pBefore)
-    {
-        pTask->mNext = mHead;
-        mHead = pTask;
-    }
-    else
-    {
-        pTask->mNext = pBefore->mNext;
-        pBefore->mNext = pTask;
-    }
+    pTask->mPrev->mNext = pTask->mNext;
+    pTask->mNext->mPrev = pTask->mPrev;
+    pTask->mPrev = nullptr;
+    pTask->mNext = nullptr;
 }
 
-void TaskList::Merge(Task* pTail, TaskList& other)
+void TaskList::InsertAfter(Task* pPrev, Task* pTask)
 {
-    if(nullptr == mHead)
-    {
-        mHead = other.mHead;
-        other.mHead = nullptr;
-    }
-    else
-    {
-        pTail->mNext = other.mHead;
-        other.mHead = nullptr;
-    }
+    pTask->mNext = pPrev->mNext;
+    pTask->mPrev = pPrev;
+    pPrev->mNext->mPrev = pTask;
+    pPrev->mNext = pTask;
 }
+
+void TaskList::InsertBefore(Task* pNext, Task* pTask)
+{
+    pTask->mNext = pNext;
+    pTask->mPrev = pNext->mPrev;
+    pNext->mPrev->mNext = pTask;
+    pNext->mPrev = pTask;
+}
+
 
 bool TaskList::Empty( void ) const
 {
-    return nullptr == mHead;
+    return mHead == mHead->mNext;
+}
+
+Task* TaskList::Front( void ) const
+{
+    return mHead->mNext;
+}
+
+Task* TaskList::Back( void )
+{
+    return mHead->mPrev;
 }

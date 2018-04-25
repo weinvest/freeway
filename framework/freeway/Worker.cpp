@@ -114,10 +114,15 @@ void Worker::Run( void )
         if(pTask->GetWaited() == taskPair.waited)
         {
             LOG_DEBUG(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << " been wake success");
-            pTask->SetWaited(nullptr);
             mReadyTasks.push(pTask);
+            if(nullptr != pTask->GetWaited())
+            {
+                TaskList::Erase(pTask);
+                pTask->SetWaited(nullptr);
+            }
         }
-        else{
+        else
+        {
             pTask->CompleteDeffered(taskPair.waited);
         }
     };
@@ -185,31 +190,24 @@ void Worker::CheckLostLamb( void )  {
         auto& waittingList = pNode->GetWaittingList(mId);
         while(!waittingList.Empty())
         {
-            auto pTask = waittingList.Head();
-            if(pTask->IsWaitting())
+            auto pTask = waittingList.Front();
+            bool gotLock = false;
+            if(pTask->IsWaittingLock())
             {
-                bool gotLock = false;
-                if(pTask->IsWaittingLock())
-                {
-                    gotLock = pTask->TryLock();
-                }
-                else
-                {
-                    gotLock = pTask->TrySharedLock();
-                }
-
-                if(gotLock)
-                {
-                    pTask->SetWaited(nullptr);
-                    mReadyTasks.push(pTask);
-                    waittingList.Pop();
-                }
-                break;
+                gotLock = pTask->TryLock();
             }
             else
             {
-                waittingList.Pop();
+                gotLock = pTask->TrySharedLock();
             }
+
+            if(gotLock)
+            {
+                pTask->SetWaited(nullptr);
+                mReadyTasks.push(pTask);
+                waittingList.PopFront();
+            }
+            break;
         }
 
         if(!waittingList.Empty())

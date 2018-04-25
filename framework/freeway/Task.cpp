@@ -52,36 +52,27 @@ void Task::Suspend(void)
     Task* pBeforeTask = nullptr;
     if(isEmpty)
     {
-        taskList.Push(this);
+        taskList.PushBack(this);
         mWorker->Push2WaittingList(mWaited);
     }
     else if(mWaited == mNodePtr)
     {
-        auto pCurrTask = taskList.Head();
-        while(nullptr != pCurrTask && pCurrTask->GetWorkflowId() < GetWorkflowId())
+        auto pCurrTask = taskList.Back();
+        while(!taskList.TraseEnd(pCurrTask) && pCurrTask->GetWorkflowId() >= GetWorkflowId())
         {
-            pBeforeTask = pCurrTask;
-            pCurrTask = pCurrTask->mNext;
+            pCurrTask = pCurrTask->mPrev;
         }
-        taskList.Insert(pBeforeTask, this);
+        taskList.InsertAfter(pCurrTask, this);
     }
     else
     {
-        auto pCurrTask = taskList.Head();
-        while(nullptr != pCurrTask && pCurrTask->GetWorkflowId() < GetWorkflowId())
+        auto pCurrTask = taskList.Back();
+        while(!taskList.TraseEnd(pCurrTask) && pCurrTask->GetWorkflowId() > GetWorkflowId())
         {
-            pBeforeTask = pCurrTask;
-            pCurrTask = pCurrTask->mNext;
+            pCurrTask = pCurrTask->mPrev;
         }
 
-        if(nullptr == pCurrTask || pCurrTask->GetWorkflowId() > GetWorkflowId())
-        {
-            taskList.Insert(pBeforeTask, this);
-        }
-        else
-        {
-            taskList.Insert(pCurrTask, this);
-        }
+        taskList.InsertAfter(pCurrTask, this);
     }
 #else
     mWorker->Push2WaittingList(this);

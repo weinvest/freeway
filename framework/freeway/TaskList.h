@@ -9,18 +9,30 @@ class Task;
 class TaskList {
 
 public:
-    TaskList() = default;
+    TaskList();
     TaskList(const TaskList&) = delete;
 
     TaskList(TaskList&& o);
 
-    Task* Pop( void );
-    void Push(Task* pTask);
-    void Insert(Task* pBefore, Task* pTask);
-    void Merge(Task* pTail, TaskList& other);
+    ~TaskList();
 
-    Task* Head( void ) { return mHead; }
+    void PushFront(Task* pTask);
+    void PushBack(Task* pTask);
+
+    Task* PopFront( void );
+    Task* PopBack( void );
+
+    static void Erase(Task* pTask);
+
+    void InsertAfter(Task* pPrev, Task* pTask);
+    void InsertBefore(Task* pNext, Task* pTask);
+
     bool Empty( void ) const;
+
+    Task* Front( void ) const;
+    Task* Back( void );
+
+    bool TraseEnd(Task* pTask) const { return mHead == pTask; }
 private:
     Task* mHead{nullptr};
 };
