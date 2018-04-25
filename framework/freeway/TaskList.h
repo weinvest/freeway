@@ -33,6 +33,7 @@ public:
     Task* Back( void );
 
     bool TraseEnd(Task* pTask) const { return mHead == pTask; }
+
 private:
     Task* mHead{nullptr};
 };

@@ -36,6 +36,7 @@ void Task::Update(WorkflowID_t flow, DEventNode* pNode)
     mNodePtr = pNode;
     mWaitingLockCount = pNode->GetPrecursors().size();
     mLevel = 0;
+    mNext = mPrev = this;
     assert(mDeferred.empty());  //说明Worker的Task Pool太小啦
 }
 

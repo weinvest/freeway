@@ -102,7 +102,7 @@ void Worker::Push2WaittingList(DEventNode* pNode)
 #else
 void Worker::Push2WaittingList(Task* pTask)
 {
-    mWaittingTasks.Push(pTask);
+    mWaittingTasks.PushBack(pTask);
 }
 #endif
 
@@ -115,11 +115,8 @@ void Worker::Run( void )
         {
             LOG_DEBUG(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << " been wake success");
             mReadyTasks.push(pTask);
-            if(nullptr != pTask->GetWaited())
-            {
-                TaskList::Erase(pTask);
-                pTask->SetWaited(nullptr);
-            }
+            TaskList::Erase(pTask);
+            pTask->SetWaited(nullptr);
         }
         else
         {
@@ -221,37 +218,28 @@ void Worker::CheckLostLamb( void )  {
 }
 #else
 void Worker::CheckLostLamb( void )  {
-    TaskList waittingTasks = std::move(mWaittingTasks);
-    Task* pTail = nullptr;
-    while(!waittingTasks.Empty()) {
-        auto pTask = waittingTasks.Pop();
-
-        if(pTask->IsWaitting())
+    while(!mWaittingTasks.Empty())
+    {
+        auto pTask = mWaittingTasks.PopFront();
+        bool gotLock = false;
+        if(pTask->IsWaittingLock())
         {
-            bool gotLock = false;
-            if(pTask->IsWaittingLock())
-            {
-                gotLock = pTask->TryLock();
-            } else
-            {
-                gotLock = pTask->TrySharedLock();
-            }
+            gotLock = pTask->TryLock();
+        }
+        else
+        {
+            gotLock = pTask->TrySharedLock();
+        }
 
-            if(gotLock)
-            {
-                pTask->SetWaited(nullptr);
-                mReadyTasks.push(pTask);
-                mWaittingTasks.Merge(pTail, waittingTasks);
-                break;
-            }
-            else
-            {
-                mWaittingTasks.Push(pTask);
-                if(nullptr == pTail)
-                {
-                    pTail = pTask;
-                }
-            }
+        if(gotLock)
+        {
+            pTask->SetWaited(nullptr);
+            mReadyTasks.push(pTask);
+        }
+        else
+        {
+            mWaittingTasks.PushBack(pTask);
+            break;
         }
     }
 }

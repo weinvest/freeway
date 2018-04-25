@@ -69,6 +69,9 @@ public:
     void Enqueue(int32_t from, DEventNode *pWhy);
 
     void CompleteDeffered(DEventNode* pNode);
+
+    Task* Next( void ) { return mNext; }
+    Task* Prev( void ) { return mPrev; }
 private:
     Task& operator =(const Task&) = delete;
     void RunNode( void );
