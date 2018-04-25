@@ -9,7 +9,7 @@ int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
     {
         std::cout << GetName() <<  " workflow error:" << workflowId <<"<=" << GetLastWorkflowId() << std::endl;
     }
-    BOOST_REQUIRE_GT(workflowId, GetLastWorkflowId());
+    BOOST_CHECK_GT(workflowId, GetLastWorkflowId());
     auto checker = mCheckPool.GetChecker(workflowId-1);
 
     //compute

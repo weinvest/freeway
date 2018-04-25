@@ -1,13 +1,15 @@
-#define BOOST_TEST_MODULE MULTI_NODE_TEST
+//#define BOOST_TEST_MODULE MULTI_NODE_TEST
 #include <thread>
 #include <random>
-#include <boost/test/included/unit_test.hpp>
+#include <iostream>
+//#include <boost/test/included/unit_test.hpp>
 #include "framework/freeway/Context.h"
 #include "clock/Clock.h"
 #include "MultiNode.h"
 
 
-BOOST_AUTO_TEST_CASE(first_test)
+//BOOST_AUTO_TEST_CASE(first_test)
+int main( void )
 {
     auto pDispatcher = Context::Init(3, 1);
 
@@ -59,30 +61,6 @@ BOOST_AUTO_TEST_CASE(first_test)
     AddEdge(pS, pP);
     AddEdge(pT, pN);
 
-/*
-digraph
-{
-    A->B
-    B->D
-    B->F
-    C->B
-    C->E
-    D->H
-    D->L
-    E->F
-    F->P
-    F->O
-    G->H
-    H->I
-    I->J
-    I->K
-    M->Q
-    N->O
-    N->T
-    P->S
-    R->S
-}*/
-
     nodeFamilyTree.Build();
     std::thread t ([&allNodes]
                   {
@@ -129,8 +107,9 @@ digraph
     catch(const std::exception& ex)
     {
         std::cout << "Main exception:" << ex.what() << "\n";
+        return 1;
     }
-
+    return 0;
 //    auto meanTime = MultiNode.GetTotalUsedTime() / MultiNode.GetRunCount();
 //    std::cout << "======================================================\n";
 //    std::cout << "Mean frame used time:" << meanTime.total_nanoseconds() << "\n";

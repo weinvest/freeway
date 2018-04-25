@@ -82,7 +82,7 @@ void WorkflowChecker::Check(int32_t workflow)
 	        std::cout << "ERROR:workflow:" << workflow << ",node:" << mFamilyTree->GetNode(prevIdxRun)->GetName()
                       << " run before node:" << mFamilyTree->GetNode(idxRun)->GetName() << "\n";
         }
-        BOOST_REQUIRE(canBefore);
+        BOOST_CHECK(canBefore);
         prevIdxRun = idxRun;
     }
 
