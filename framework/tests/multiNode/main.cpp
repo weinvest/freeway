@@ -11,7 +11,7 @@
 //BOOST_AUTO_TEST_CASE(first_test)
 int main( void )
 {
-    auto pDispatcher = Context::Init(3, 1);
+    auto pDispatcher = Context::Init(std::thread::hardware_concurrency()-1, 1);
 
     const int32_t MAX_NODE_COUNT = 32;
     const int32_t MAX_WORKFLOW_COUNT = 500;
