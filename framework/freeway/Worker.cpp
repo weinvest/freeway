@@ -125,12 +125,8 @@ void Worker::Run( void )
     };
 
     int32_t nLoop = 0;
-#ifdef RUN_UNTIL_NOMORE_TASK
     while (LIKELY(mIsRuning || mDispatcher->IsRunning() || mFinishedTasks < mNextTaskPos))
     {
-#else
-    while(LIKELY(mIsRuning)){
-#endif
         for(WorkerId fromWorker = 0; fromWorker < mQueueCount; ++fromWorker)
         {
             auto& pTaskQueue = mPendingTasks[fromWorker];
