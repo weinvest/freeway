@@ -5,7 +5,6 @@
 #ifndef ARAGOPROJECT_SHAREDMUTEX_H
 #define ARAGOPROJECT_SHAREDMUTEX_H
 #include <atomic>
-#include <boost/circular_buffer.hpp>
 #include "common/DSpscArray.h"
 #include "framework/freeway/types.h"
 class DEventNode;
@@ -27,11 +26,8 @@ class SharedMutex
     };
 
 public:
-//    using WaiterBufferType = boost::circular_buffer<WaiterType>;
-//    using WaitingWriterType = boost::circular_buffer<WorkflowID_t >;
 
     using WaiterBufferType = DSpscArray<WaiterType>;
-//    using WaitingWriterType = boost::circular_buffer<WorkflowID_t >;
     using WaitingWriterType = DSpscArray<WorkflowID_t >;
 
     SharedMutex(DEventNode* pOwner);
