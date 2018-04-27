@@ -11,7 +11,8 @@ using namespace boost::context;
 #define mLog Context::GetLog()
 Task::Task()
 {
-    mTaskContext =  ctx::callcc(std::allocator_arg, ctx::fixedsize_stack(8192), [this](ctx::continuation && from)
+    constexpr size_t stack_size = 8192*2;
+    mTaskContext =  ctx::callcc(std::allocator_arg, ctx::fixedsize_stack(stack_size), [this](ctx::continuation && from)
                                  {
                                      mMainContext = from.resume();
 //                                     std::cout << "task begin runnode\n";
