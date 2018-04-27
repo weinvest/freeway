@@ -11,7 +11,7 @@
 #include "Worker.h"
 #include "SharedMutex.h"
 
-const int32_t capacity = 1024 * 1024;
+const int32_t capacity = 1024;
 
 extern std::unordered_map<ThreadType, std::pair<int, int>> ThreadIndex;
 static WorkflowID_t workflowId = 0;
