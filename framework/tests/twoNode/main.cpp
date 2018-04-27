@@ -1,13 +1,14 @@
-#define BOOST_TEST_MODULE TWO_NODE_TEST
+//#define BOOST_TEST_MODULE TWO_NODE_TEST
 #include <thread>
 #include <random>
-#include <boost/test/included/unit_test.hpp>
+#include <iostream>
 #include "framework/freeway/Context.h"
 #include "clock/Clock.h"
 #include "../multiNode/MultiNode.h"
 
 
-BOOST_AUTO_TEST_CASE(first_test)
+//BOOST_AUTO_TEST_CASE(first_test)
+int main()
 {
     auto pDispatcher = Context::Init(2, 1);
 
@@ -59,6 +60,7 @@ BOOST_AUTO_TEST_CASE(first_test)
 
     checker.CheckAll();
     FreeNode(allNodes);
+    return 0;
 //    auto meanTime = MultiNode.GetTotalUsedTime() / MultiNode.GetRunCount();
 //    std::cout << "======================================================\n";
 //    std::cout << "Mean frame used time:" << meanTime.total_nanoseconds() << "\n";

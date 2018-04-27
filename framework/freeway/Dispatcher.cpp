@@ -86,14 +86,10 @@ void Dispatcher::Run(void) {
     std::atomic_signal_fence(std::memory_order_release);
     int32_t workflowId = 0;
 
-#ifdef RUN_UNTIL_NOMORE_TASK
     bool bye = true;
     while (LIKELY(mIsRunning || !bye)) {
-//        LOG_INFO(mLog, "Dispatcher--:XX" << bye);
         bye = true;
-#else
-    while(mIsRunning){
-#endif
+
         static int DispatchIndex = ThreadIndex[ThreadType::DISPATCHER].first;
         //Does dispatcher dispatch the task to itself???
         int32_t nWorkflowDelta = 0;
@@ -101,12 +97,9 @@ void Dispatcher::Run(void) {
         for (WorkerId fromWorker = DispatchIndex; fromWorker < mQueueNum; ++fromWorker) {
             auto &pNodeQueue = mPendingNodes[fromWorker];
             // printf("Dispatcher consumes Queue-%d\n", fromWorker);
-#ifdef RUN_UNTIL_NOMORE_TASK
             pNodeQueue.consume_all([this,&bye,&nWorkflowDelta, workflowId](DEventNode* pNode) {
                 bye = false;
-#else
-            pNodeQueue.consume_all([this,&nWorkflowDelta, workflowId](DEventNode* pNode) {
-#endif
+
                 nWorkflowDelta = 1;
                 VisitNode(pNode, 0, workflowId);
             });
