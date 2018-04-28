@@ -10,7 +10,7 @@
 #include "framework/freeway/TaskList.h"
 const int32_t NoRaiseSuccessor = -1;
 
-using WorkflowID_t = uint64_t;
+using WorkflowID_t = int64_t;
 class Task;
 class TaskList;
 class SharedMutex;

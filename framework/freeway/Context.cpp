@@ -7,9 +7,8 @@
 #include "Context.h"
 #include "Worker.h"
 #include "Dispatcher.h"
-#include <stdio.h>
 #include <boost/filesystem.hpp>
-
+#include "utils/DCallStack.h"
 static constexpr int32_t MAX_WORKERS = 64;
 /*
 thread_local SmallObjectAllocatorImpl* GlobalAllocator = nullptr;
@@ -88,6 +87,19 @@ bool TraverseDirectory(const fs::path& dirPath, std::function<bool (const fs::pa
     return hasOne;
 }
 
+void Context::OutputWaittingTasks( void )
+{
+    for(int32_t workerId = ThreadIndex[ThreadType::WORKER].first; workerId < ThreadIndex[ThreadType::WORKER].second; ++workerId)
+    {
+        AllWorkers[workerId]->OutputWaitingTasks();
+    }
+}
+
+void SigUsr1Handler(int32_t)
+{
+    Context::OutputWaittingTasks();
+}
+#include <signal.h>
 Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
 {
     TraverseDirectory("../conf"
@@ -100,6 +112,7 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
                                  }
                                  return false;
                              });
+    Signal(SIGUSR1, SigUsr1Handler);
 
     int32_t maxWorkerCount = std::min(std::thread::hardware_concurrency(), static_cast<unsigned int>(AllWorkers.size()));
     if(workerCount > maxWorkerCount)
@@ -219,6 +232,7 @@ void Context::Stop( void )
     }
 
     GlobalDispatcher = nullptr;
+    ThreadIndex.clear();
 }
 
 void Context::InitMiscThread(const std::string& name)

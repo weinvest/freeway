@@ -62,6 +62,9 @@ public:
     //当前节点DoProcess结束就可以调用Unlock(即使Unlock后，Task[Nextflow] 依然会被mReaders阻止)
     void Unlock(Task* task);
 
+    Task* WhoBlockLock( void );
+    WorkflowID_t WhoBlockShared( void );
+    int32_t GetReaderCount( void ) { return mReaders.load(std::memory_order_relaxed); }
 private:
     //如果后继节点没有调用前驱的GetValue, 则不用唤醒 NextTask?
     void Wake(Task* pTask);

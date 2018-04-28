@@ -34,6 +34,8 @@ public:
 
     static Dispatcher *Init(int32_t workerCount, int32_t miscThreadsNum);
 
+    static void OutputWaittingTasks( void );
+
     static Dispatcher *GetDispatcher(void);
 
     static Worker *GetWorker(void);

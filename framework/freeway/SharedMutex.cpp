@@ -77,6 +77,27 @@ bool SharedMutex::TryLock4(Task* pTask)
     return goted;
 }
 
+Task* SharedMutex::WhoBlockLock( void )
+{
+    auto readers = mReaders.load(std::memory_order_acquire);
+    WaiterType* realFirst = nullptr;
+    if(readers < 0)
+    {
+        realFirst = &mWaiters.First(-readers);
+    }
+    else
+    {
+        realFirst = &mWaiters.First();
+    }
+    return realFirst->pTask;
+}
+
+WorkflowID_t SharedMutex::WhoBlockShared( void )
+{
+    auto firstWriterWkflow = mWaitingWriterWorkflowIds.First();
+    return mWaitingWriterWorkflowIds.Empty() ? -1 : firstWriterWkflow;
+}
+
 void SharedMutex::WaitSharedLock4(Task* pTask)
 {
     std::atomic_thread_fence(std::memory_order_acquire);
