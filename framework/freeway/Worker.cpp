@@ -223,17 +223,27 @@ void Worker::DoOutputWaitingTasks()
         auto pNode = mWaittingNodes[iNode];
         out << "[" << pNode->GetName() << ":" << pNode->GetLastWorkflowId() << "]\n";
         auto& waittingList = pNode->GetWaittingList(mId);
+        bool firstWriter = true;
         for(auto pTask = waittingList.Front(); !waittingList.TraseEnd(pTask); pTask = pTask->Next())
         {
             out << pTask << ":" << pTask->GetName() << ":" << pTask->GetWorkflowId() << "|";
             if(pTask->IsWaittingLock())
             {
-                auto pSeeTask = pNode->GetMutex().WhoBlockLock();
-                out << pSeeTask << ":" << pSeeTask->GetName() << ":" << pSeeTask->GetWorkflowId() << "|" << pNode->GetMutex().GetReaderCount();
+                if(firstWriter)
+                {
+                    firstWriter = false;
+                    int32_t readerCount = pNode->GetMutex().GetReaderCount();
+                    for(int32_t iTask = 0; iTask < -readerCount; ++iTask)
+                    {
+                        auto pSeeTask = pNode->GetMutex().GetWaiters().First(iTask).pTask;
+                        out << pSeeTask << ":" << pSeeTask->GetName() << ":" << pSeeTask->GetWorkflowId() << "|";
+                    }
+                    out << readerCount;
+                }
             }
             else
             {
-                out << pNode->GetMutex().WhoBlockShared();
+                out << pNode->GetMutex().GetFirstWaittingWriter();
             }
 
             out << "\n";
