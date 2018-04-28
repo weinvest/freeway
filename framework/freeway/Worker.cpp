@@ -233,7 +233,7 @@ void Worker::DoOutputWaitingTasks()
                 {
                     firstWriter = false;
                     int32_t readerCount = pNode->GetMutex().GetReaderCount();
-                    for(int32_t iTask = 0; iTask < -readerCount; ++iTask)
+                    for(int32_t iTask = 0; iTask <= -readerCount; ++iTask)
                     {
                         auto pSeeTask = pNode->GetMutex().GetWaiters().First(iTask).pTask;
                         out << pSeeTask << ":" << pSeeTask->GetName() << ":" << pSeeTask->GetWorkflowId() << "|";
