@@ -1,12 +1,12 @@
 //
 // Created by shgli on 17-9-27.
 //
-
+#include <iostream>
+#include <fstream>
 #include "Worker.h"
 #include "Context.h"
 #include <exception>
 #include <boost/exception/all.hpp>
-#include <iostream>
 #include <framework/freeway/Task.h>
 #include <clock/Clock.h>
 #include "Dispatcher.h"
@@ -206,6 +206,51 @@ void Worker::CheckLostLamb( void )  {
     }
 
     mWaittingNodeCount = newCount;
+
+    if(UNLIKELY(mOutputWaitingTasks))
+    {
+        DoOutputWaitingTasks();
+    }
+}
+
+#include "SharedMutex.h"
+void Worker::DoOutputWaitingTasks()
+{
+    mOutputWaitingTasks = false;
+    std::fstream out("Worker" + std::to_string(mId) + ".waiting", std::ios_base::binary|std::ios_base::out);
+    for(auto iNode = 0; iNode < mWaittingNodeCount; ++iNode)
+    {
+        auto pNode = mWaittingNodes[iNode];
+        out << "[" << pNode->GetName() << ":" << pNode->GetLastWorkflowId() << "]\n";
+        auto& waittingList = pNode->GetWaittingList(mId);
+        bool firstWriter = true;
+        for(auto pTask = waittingList.Front(); !waittingList.TraseEnd(pTask); pTask = pTask->Next())
+        {
+            out << pTask << ":" << pTask->GetName() << ":" << pTask->GetWorkflowId() << "|";
+            if(pTask->IsWaittingLock())
+            {
+                if(firstWriter)
+                {
+                    firstWriter = false;
+                    int32_t readerCount = pNode->GetMutex().GetReaderCount();
+                    for(int32_t iTask = 0; iTask < -readerCount; ++iTask)
+                    {
+                        auto pSeeTask = pNode->GetMutex().GetWaiters().First(iTask).pTask;
+                        out << pSeeTask << ":" << pSeeTask->GetName() << ":" << pSeeTask->GetWorkflowId() << "|";
+                    }
+                    out << readerCount;
+                }
+            }
+            else
+            {
+                out << pNode->GetMutex().GetFirstWaittingWriter();
+            }
+
+            out << "\n";
+        }
+        out << "\n";
+    }
+    out.close();
 }
 #else
 void Worker::CheckLostLamb( void )  {
@@ -235,6 +280,7 @@ void Worker::CheckLostLamb( void )  {
     }
 }
 #endif
+
 
 void Worker::Stop( void )
 {

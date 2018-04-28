@@ -77,6 +77,12 @@ bool SharedMutex::TryLock4(Task* pTask)
     return goted;
 }
 
+WorkflowID_t SharedMutex::GetFirstWaittingWriter( void )
+{
+    auto firstWriterWkflow = mWaitingWriterWorkflowIds.First();
+    return mWaitingWriterWorkflowIds.Empty() ? -1 : firstWriterWkflow;
+}
+
 void SharedMutex::WaitSharedLock4(Task* pTask)
 {
     std::atomic_thread_fence(std::memory_order_acquire);

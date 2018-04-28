@@ -33,12 +33,12 @@ int32_t Task::GetWorkerId() const {return mWorker->GetId();}
 
 void Task::Update(WorkflowID_t flow, DEventNode* pNode)
 {
+    assert(mDeferred.empty());  //说明Worker的Task Pool太小啦
     mWorkflowId = flow;
     mNodePtr = pNode;
     mWaitingLockCount = pNode->GetPrecursors().size();
     mLevel = 0;
     mNext = mPrev = this;
-    assert(mDeferred.empty());  //说明Worker的Task Pool太小啦
 }
 
 const std::string& Task::GetName( void )
@@ -51,7 +51,7 @@ void Task::Suspend4Lock(void)
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     auto& taskList = mWaited->mWaitingTasks[GetWorkerId()];
     auto pCurrTask = taskList.Back();
-        if(taskList.TraseEnd(pCurrTask))
+    if(taskList.TraseEnd(pCurrTask))
     {
         mWorker->Push2WaittingList(mWaited);
         taskList.PushBack(this);

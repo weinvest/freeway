@@ -54,10 +54,12 @@ public:
     };
 
     void FinishATask( void ) { ++mFinishedTasks; }
+
+    void OutputWaitingTasks( void ) { mOutputWaitingTasks = true; }
 private:
     void CheckLostLamb(void);
     void CheckLostLamb(TaskList& waittings);
-
+    void DoOutputWaitingTasks( void );
 
     const WorkerID_t mId;
     const int32_t mWorkerCount;
@@ -84,6 +86,7 @@ private:
     std::condition_variable mRuningCond;
     bool mIsRuning{false};
     bool mInitialized{false};
+    bool mOutputWaitingTasks{false};
     Dispatcher* mDispatcher{nullptr};
     int32_t mFinishedTasks{0};
 

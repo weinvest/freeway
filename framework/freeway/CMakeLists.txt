@@ -29,7 +29,7 @@ ADD_LIBRARY(${TARGET} SHARED ${${TARGET}_SRCLISTS} LockPtr.cpp DEventNodeSpecial
 set_target_properties(${TARGET} PROPERTIES VERSION $ENV{BUILD_VERSION} SOVERSION $ENV{BUILD_VERSION})
 #set_target_properties(${TARGET} PROPERTIES COTIRE_PREFIX_HEADER_IGNORE_PATH "boost/preprocessor")
 #cotire(${TARGET})
-TARGET_LINK_LIBRARIES(${TARGET} clock log4cplus tbb boost_context boost_thread boost_filesystem boost_system profiler)
+TARGET_LINK_LIBRARIES(${TARGET} clock utils log4cplus tbb boost_context boost_thread boost_filesystem boost_system profiler)
 if (CMAKE_BUILD_TYPE MATCHES "debug")
     TARGET_LINK_LIBRARIES(${TARGET} tcmalloc_debug)
 else()
