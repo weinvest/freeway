@@ -55,12 +55,8 @@ void WorkflowChecker::Initialize(NodeFamilyTree* pFamilyTree)
     mObservedValues = new int32_t[mMaxValueCount];
     mRunNodes = new int32_t[mNodeCount];
 
-    for(int32_t iValue = 0; iValue < mMaxValueCount; ++iValue)
-    {
-        mObservedValues[iValue] = -1;
-    }
-
-    memset(mRunNodes, 0, sizeof(int32_t)*mNodeCount);
+    std::fill(mObservedValues, mObservedValues+mMaxValueCount, -1);
+    std::fill(mRunNodes, mRunNodes+mNodeCount, -1);
 }
 
 bool WorkflowChecker::CanRunBefore(int32_t prev, int32_t succ)
@@ -90,7 +86,7 @@ void WorkflowChecker::Check(int32_t workflow)
     for(auto idxRun = 0; idxRun < runNodeCnt; ++idxRun)
     {
         auto runNodeId = mRunNodes[idxRun];
-        auto runNodeName = mFamilyTree->GetNode(idxRun)->GetName();
+        auto runNodeName = mFamilyTree->GetNode(runNodeId)->GetName();
         auto thisNode = &mObservedValues[runNodeId*mNodeCount];
         auto observedValue = thisNode[runNodeId];
         BOOST_CHECK_GE(observedValue, 1);
@@ -99,13 +95,14 @@ void WorkflowChecker::Check(int32_t workflow)
             if(-1 != thisNode[sub])
             {
                 if(observedValue != thisNode[sub]) {
-                    std::cout << "ERROR:workflow:" << workflow << ",node:" << mFamilyTree->GetNode(sub)->GetName()
-                              << " see node: " << runNodeName << " failed:" << thisNode[sub] << "!=" << observedValue
-                              << "\n";
+                    auto subNodeName = mFamilyTree->GetNode(sub)->GetName();
+                    std::cout << "ERROR:workflow:" << workflow << ",node:" << subNodeName
+                              << " see node: " << runNodeName << " failed:" << subNodeName << "[" << thisNode[sub]
+                              << "]!=" << runNodeName << "[" << observedValue << "]\n";
 
                     BOOST_CHECK_EQUAL(observedValue, thisNode[sub]);
                 }
-                mObservedValues[sub] = -1;
+                thisNode[sub] = -1;
             }
         }
     }

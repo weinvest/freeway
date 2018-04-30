@@ -31,6 +31,8 @@ public:
     void AddPrecessor(MultiNode* pParent, bool ignore);
 
     int32_t GetValue( void ) const { return mValue; }
+
+    void OutputParent( void );
 protected:
     int32_t DoProcess(WorkflowID_t workflowId) override;
 

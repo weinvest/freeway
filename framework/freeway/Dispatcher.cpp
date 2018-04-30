@@ -112,9 +112,11 @@ void Dispatcher::Run(void) {
             auto &precessor = pNode->GetPrecursors();
             for (auto pPrecessor : precessor) {
                 pPrecessor->GetMutex().LockShared(pTask);
+                //LOG_INFO(mLog, "workflow:" << workflowId << " push " << pTask->GetName() << " to lock queue:" << pPrecessor->GetName());
             }
             pNode->GetMutex().Lock(pTask);
             pTask->Enqueue(DispatchIndex, nullptr);
+            //LOG_INFO(mLog, "workflow:" << workflowId << " push " << pTask->GetName() << " to lock queue:" << pTask->GetName());
             LOG_INFO(mLog, "push node:" << pNode->GetName() << " to Worker-" << pTask->GetWorkerId()
                                                    << " @workflow:" << workflowId << " task:" << pTask);
         }

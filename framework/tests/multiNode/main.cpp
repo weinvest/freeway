@@ -61,6 +61,11 @@ int main( void )
     AddEdge(pS, pP);
     AddEdge(pT, pN);
 
+//    for(auto pNode : allNodes)
+//    {
+//        pNode->OutputParent();
+//    }
+
     nodeFamilyTree.Build();
     std::thread t ([&allNodes]
                   {

@@ -1,4 +1,4 @@
-log4cplus.logger.Dispatcher =WARN,DispatcherLogFile
+log4cplus.logger.Dispatcher =INFO,DispatcherLogFile
 log4cplus.appender.DispatcherLogFile = log4cplus::FileAppender
 log4cplus.appender.DispatcherLogFile.File = Dispatcher.log
 log4cplus.appender.DispatcherLogFile.Append = true

@@ -161,9 +161,11 @@ void Task::RunNode( void )
     {
         auto pPrecursor = *(mDeferred.begin());
         auto& mutex = pPrecursor->GetMutex();
+        int32_t cnt = mDeferred.erase(pPrecursor);
+        assert(1 == cnt);
+
         mutex.WaitSharedLock4(this);
         mutex.UnlockShared(this);
-        mDeferred.erase(pPrecursor);
     }
 
     mWorker->FinishATask();

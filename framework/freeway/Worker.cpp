@@ -243,7 +243,7 @@ void Worker::DoOutputWaitingTasks()
             }
             else
             {
-                out << pNode->GetMutex().GetFirstWaittingWriter();
+                out << pTask->GetWaited()->GetMutex().GetFirstWaittingWriter();
             }
 
             out << "\n";

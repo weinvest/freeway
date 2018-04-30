@@ -69,6 +69,7 @@ bool SharedMutex::TryLock4(Task* pTask)
     }
 
     bool goted = realFirst->pTask == pTask;
+    //bool goted = realFirst->pTask->GetWorkflowId() >= pTask->GetWorkflowId();
 
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                            << ") try lock for node:" << mOwner->GetName() << (goted ? " success" : " failed")
@@ -134,7 +135,7 @@ void SharedMutex::Unlock(Task* pTask)
         ++finished;
     }
 
-    mReaders.store(0);
+    mReaders.fetch_add(finished, std::memory_order_relaxed);
     mWaiters.Skip(finished + 1);
     mWaitingWriterWorkflowIds.Pop();
     Wake(pTask);
@@ -176,10 +177,5 @@ void SharedMutex::Wake(Task* pWaker)
     }
 
     mReaders.fetch_sub(skipCount, std::memory_order_relaxed);
-
-//    if(curReaders < 0) {
-//        assert(curReaders < mReaders.load());
-//    }
-//    mSkipCount = skipCount;
 }
 

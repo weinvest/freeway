@@ -27,6 +27,7 @@ int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
         auto parentId = pParent.get()->GetId();
         if(!mIgnoredParent[parentId])
         {
+            //assert(pParent.get()->GetLastWorkflowId() == workflowId);
             checker->SetObservedValue(mId, parentId, pParent->GetValue());
         }
     }
@@ -36,7 +37,7 @@ int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
 }
 
 void MultiNode::AddPrecessor(MultiNode* pParent, bool ignore)
-{
+{//ignore=false;
     mParents.emplace_back(pParent->Connect(this));
     mIgnoredParent[pParent->GetId()] = ignore;
     if(!ignore) {
@@ -44,6 +45,14 @@ void MultiNode::AddPrecessor(MultiNode* pParent, bool ignore)
     }
 }
 
+void MultiNode::OutputParent( void )
+{
+    std::cout << GetName() << ":";
+    for(auto pParent : mParents) {
+        std::cout << pParent.get()->GetName() << "-";
+    }
+    std::cout << std::endl;
+}
 
 MultiNode* CreateNode(std::vector<MultiNode*>& allNodes, WorkflowCheckerPool& pool, const std::string& nodeName)
 {
