@@ -9,7 +9,7 @@
 #include <memory>
 #include <condition_variable>
 
-#include "common/DSpscQueue.hpp"
+#include "common/DSpscArray.h"
 #include "framework/freeway/Task.h"
 #include "framework/freeway/TaskList.h"
 #include "utils/DLog.h"
@@ -65,7 +65,7 @@ private:
     const int32_t mWorkerCount;
     const int32_t mQueueCount;
 
-    using PendingTaskQueue = DSpscQueue<TaskPair>;
+    using PendingTaskQueue = DSpscArray<TaskPair>;
     PendingTaskQueue* mPendingTasks;
 
     std::priority_queue<Task*, std::vector<Task*>, TaskCompare> mReadyTasks;

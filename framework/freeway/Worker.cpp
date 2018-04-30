@@ -127,7 +127,15 @@ void Worker::Run( void )
     int32_t nLoop = 0;
     while (LIKELY(mIsRuning || mDispatcher->IsRunning() || mFinishedTasks < mNextTaskPos))
     {
-        for(WorkerId fromWorker = 0; fromWorker < mQueueCount; ++fromWorker)
+        auto& dispatcherQueue = mPendingTasks[0];
+        dispatcherQueue.consume_all([this](const TaskPair& taskPair)
+                                   {
+                                       auto pTask = taskPair.task;
+                                       pTask->SetWaited(pTask->GetNode());
+                                       pTask->Suspend4Lock();
+                                   });
+
+        for(WorkerId fromWorker = 1; fromWorker < mQueueCount; ++fromWorker)
         {
             auto& pTaskQueue = mPendingTasks[fromWorker];
             pTaskQueue.consume_all(push2ReadyQueue);

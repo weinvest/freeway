@@ -138,6 +138,8 @@ void SharedMutex::Unlock(Task* pTask)
     mReaders.fetch_add(finished, std::memory_order_relaxed);
     mWaiters.Skip(finished + 1);
     mWaitingWriterWorkflowIds.Pop();
+    std::atomic_thread_fence(std::memory_order_release);
+
     Wake(pTask);
 
     mIsInWaking.clear(std::memory_order_release);

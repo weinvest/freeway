@@ -67,7 +67,7 @@ void Task::Suspend4Lock(void)
 #else
     mWorker->Push2WaittingList(this);
 #endif
-    mMainContext = mMainContext.resume();
+    //mMainContext = mMainContext.resume();
 }
 
 void Task::Suspend4Shared( void )
@@ -140,7 +140,7 @@ void Task::RunNode( void )
 //        char name[32];
 //        pthread_getname_np(pthread_self(), name, sizeof(name));
 //        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
-    mNodePtr->GetMutex().WaitLock4(this);
+    //mNodePtr->GetMutex().WaitLock4(this);
 
     mNodePtr->Process(this, mWorkflowId);
 

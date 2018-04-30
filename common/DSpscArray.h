@@ -97,6 +97,20 @@ public:
     {
         return 0 == Size();
     }
+
+    template<typename CallBack_t>
+    void consume_all(CallBack_t cb)
+    {
+        auto writePos = mWritePos;
+        auto readPos = mReadPos;
+        while(readPos < writePos)
+        {
+            cb(mData[readPos%mCapacity]);
+            ++readPos;
+        }
+
+        mReadPos = readPos;
+    }
 private:
     T* mData{nullptr};
     int32_t mCapacity;

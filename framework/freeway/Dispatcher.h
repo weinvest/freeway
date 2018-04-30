@@ -6,7 +6,7 @@
 #define ARAGOPROJECT_DISPATCHER_H
 
 #include <array>
-#include "common/DSpscQueue.hpp"
+#include "common/DSpscArray.h"
 #include "utils/DLog.h"
 class DEventNode;
 class Task;
@@ -31,7 +31,7 @@ private:
     const int32_t mMiscThreadCount;
     const int32_t mQueueNum;
 
-    using PendingNodeQueue = DSpscQueue<DEventNode*>;
+    using PendingNodeQueue = DSpscArray<DEventNode*>;
     PendingNodeQueue* mPendingNodes;
 
     std::vector<Task*> mPendingTask;
