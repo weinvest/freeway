@@ -4,9 +4,9 @@ import sys
 
 waittingList = {}
 
-node = None
-nodeList = []
 for worker in range(1, 128):
+    node = None
+    nodeList = []
     workerFileName = 'Worker%d.waiting' % worker
     if not os.path.exists(workerFileName):
         break
@@ -24,16 +24,20 @@ for worker in range(1, 128):
                 else:
                     waittingList[node] = nodeList
             node = l[1:-1].replace(':', '_')
+            #print 'new node:' + node
             nodeList = []
         else:
             waitNode = l[l.index(':')+1 : l.index('|')]
             nodeList.append(waitNode.split(':'))
+            #print nodeList
 
     if node is not None:
         if waittingList.has_key(node):
             waittingList[node].extend(nodeList)
+            #print  waittingList[node]
         else:
             waittingList[node] = nodeList
+            #print  waittingList[node]
 
 node = ''
 def node2Key(s):
@@ -45,7 +49,6 @@ sortedWaitting = {}
 for k, v in waittingList.items():
     node = k
     sortedWaitting[k] = sorted(v, key=node2Key)
-
 
 w = open('waiting.dot', 'w')
 w.write('''digraph g{
