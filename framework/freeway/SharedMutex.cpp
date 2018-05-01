@@ -127,7 +127,7 @@ void SharedMutex::Unlock(Task* pTask)
                            << ") unlocked node:" << mOwner->GetName()
                            << " in Worker-"<< Context::GetWorkerId());
 
-    while(mIsInWaking.test_and_set(std::memory_order_acquire));
+    //while(mIsInWaking.test_and_set(std::memory_order_acquire));
 
     int32_t finished = 0;
     while(mWaiters.First(finished).pTask != pTask)
@@ -142,7 +142,7 @@ void SharedMutex::Unlock(Task* pTask)
 
     Wake(pTask);
 
-    mIsInWaking.clear(std::memory_order_release);
+    //mIsInWaking.clear(std::memory_order_release);
 }
 
 void SharedMutex::Wake(Task* pWaker)
