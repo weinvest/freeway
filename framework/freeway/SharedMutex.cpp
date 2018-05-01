@@ -138,7 +138,7 @@ void SharedMutex::Unlock(Task* pTask)
 
     mWaiters.Skip(finished + 1);
     mWaitingWriterWorkflowIds.Pop();
-    std::atomic_thread_fence(std::memory_order_release);
+    //std::atomic_thread_fence(std::memory_order_release);
 
     Wake(pTask);
 
