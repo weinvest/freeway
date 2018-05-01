@@ -17,19 +17,19 @@ SharedMutex::SharedMutex(DEventNode *pOwner)
 void SharedMutex::LockShared(Task* pTask)
 {
     mWaiters.Push(WaiterType(pTask, false));
-    std::atomic_thread_fence(std::memory_order_release);
+//    std::atomic_thread_fence(std::memory_order_release);
 }
 
 void SharedMutex::Lock(Task* pTask)
 {
     mWaiters.Push(WaiterType(pTask, true));
     mWaitingWriterWorkflowIds.Push(pTask->GetWorkflowId());
-    std::atomic_thread_fence(std::memory_order_release);
+//    std::atomic_thread_fence(std::memory_order_release);
 }
 
 void SharedMutex::WaitLock4(Task* pTask)
 {
-    auto readers = mReaders.load(std::memory_order_acquire);
+    auto readers = mReaders.load(std::memory_order_relaxed);
     WaiterType* realFirst = nullptr;
     if(readers < 0)
     {
@@ -57,7 +57,7 @@ void SharedMutex::WaitLock4(Task* pTask)
 bool SharedMutex::TryLock4(Task* pTask)
 {
 //    std::atomic_thread_fence(std::memory_order_acquire);
-    auto readers = mReaders.load(std::memory_order_acquire);
+    auto readers = mReaders.load(std::memory_order_relaxed);
     WaiterType* realFirst = nullptr;
     if(readers < 0)
     {
@@ -86,7 +86,7 @@ WorkflowID_t SharedMutex::GetFirstWaittingWriter( void )
 
 void SharedMutex::WaitSharedLock4(Task* pTask)
 {
-    std::atomic_thread_fence(std::memory_order_acquire);
+//    std::atomic_thread_fence(std::memory_order_acquire);
     auto firstWriterWkflow = mWaitingWriterWorkflowIds.First();
     auto hasLock = mWaitingWriterWorkflowIds.Empty() || firstWriterWkflow > pTask->GetWorkflowId();
     if(!hasLock)
@@ -103,7 +103,7 @@ void SharedMutex::WaitSharedLock4(Task* pTask)
 
 bool SharedMutex::TrySharedLock4(Task* pTask)
 {
-    std::atomic_thread_fence(std::memory_order_acquire);
+//    std::atomic_thread_fence(std::memory_order_acquire);
     auto firstWriterWkflow = mWaitingWriterWorkflowIds.First();
     auto hasLock = mWaitingWriterWorkflowIds.Empty() || firstWriterWkflow > pTask->GetWorkflowId();
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
