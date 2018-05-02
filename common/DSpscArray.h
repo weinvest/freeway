@@ -63,6 +63,13 @@ public:
         mWritePos++;
     }
 
+    int32_t Push(typename CallTraits<T>::PushParamType data, int32_t delta)
+    {
+        mData[mWritePos%mCapacity] = data;
+        mWritePos += delta;
+        return delta;
+    }
+
     typename CallTraits<T>::FirstReturnType First( void )
     {
         return mData[mReadPos%mCapacity];
