@@ -33,7 +33,7 @@ public:
 
         if(GetLastWorkflowId() >= workflowId)
         {
-//            std::cout << "ERROR: LastWorkflowId:" << GetLastWorkflowId() << ",WorkflowId:" << workflowId << "\n";
+            std::cout << "ERROR: LastWorkflowId:" << GetLastWorkflowId() << ",WorkflowId:" << workflowId << "\n";
         }
         mUsedTime += (Clock::Instance().Now() - mRaiseTime);
      	int32_t i = 0, sum = 0;

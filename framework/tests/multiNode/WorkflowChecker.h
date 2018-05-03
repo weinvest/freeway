@@ -43,6 +43,26 @@ private:
 class WorkflowChecker
 {
 public:
+    struct ObservedValue
+    {
+        int32_t workflow{-1};
+        int32_t value{-1};
+        friend bool operator == (const ObservedValue& l, const ObservedValue& r)
+        {
+            return l.workflow == r.workflow && l.value == r.value;
+        }
+
+        friend bool operator != (const ObservedValue& l, const ObservedValue& r)
+        {
+            return !(l == r);
+        }
+    };
+
+    struct RunNode
+    {
+        int32_t workflow{-1};
+        int32_t id{-1};
+    };
     WorkflowChecker() = default;
     ~WorkflowChecker();
 
@@ -50,14 +70,16 @@ public:
 
     NodeFamilyTree& GetFamilyTree() { return *mFamilyTree; }
 
-    void SetObservedValue(int32_t who, int32_t prev, int32_t value)
+    void SetObservedValue(int32_t who, int32_t prev, int32_t workflowId, int32_t value)
     {
-        mObservedValues[prev * mNodeCount + who] = value;
+        auto& observed = mObservedValues[prev * mNodeCount + who];
+        observed.workflow = workflowId-1;
+        observed.value = value;
     }
 
-    void iRun(int32_t who)
+    void iRun(int32_t workflow, int32_t who)
     {
-        mRunNodes[mIdxRunNode.fetch_add(1)] = who;
+        mRunNodes[mIdxRunNode.fetch_add(1)] = {workflow-1, who};
     }
 
     void Check(int32_t workflow);
@@ -69,8 +91,8 @@ private:
     NodeFamilyTree* mFamilyTree{nullptr};
     int32_t mNodeCount{0};
     int32_t mMaxValueCount{0};
-    int32_t *mObservedValues{nullptr};
-    int32_t *mRunNodes{nullptr};
+    ObservedValue *mObservedValues{nullptr};
+    RunNode *mRunNodes{nullptr};
     std::atomic_int mIdxRunNode{0};
 };;
 

@@ -43,7 +43,7 @@ public:
 
 
 //后继节点调用(有可能比前驱节点先运行, 或者前驱节点运行结束之后才运行)
-    int32_t LockShared(Task* pTask);
+    void LockShared(Task* pTask);
 
     void WaitSharedLock4(Task* pTask);
 
@@ -53,7 +53,7 @@ public:
     void UnlockShared(Task* pTask);
 
 //每个节点DoProcess前都调用Lock
-    int32_t Lock(Task* task);
+    void Lock(Task* task);
 
     void WaitLock4(Task* pTask);
 
@@ -72,8 +72,7 @@ private:
 
     DEventNode* mOwner{nullptr};
 
-    std::atomic<int> mReaders{0};
-    std::atomic<int> mTotalLocks{0};
+    alignas(64) std::atomic<int> mReaders{0};
     WaiterBufferType mWaiters;
     WaitingWriterType mWaitingWriterWorkflowIds;
 };

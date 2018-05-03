@@ -3,12 +3,14 @@
 //
 #include <random>
 #include <iostream>
+#include <utils/DLog.h>
 #include "MultiNode.h"
+#include "framework/freeway/Context.h"
 int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
 {
     if(workflowId <= GetLastWorkflowId())
     {
-        std::cout << GetName() <<  " workflow error:" << workflowId <<"<=" << GetLastWorkflowId() << std::endl;
+        std::cerr << "ERROR:" << GetName() <<  " workflow:" << workflowId <<"<=" << GetLastWorkflowId() << std::endl;
     }
     BOOST_CHECK_GT(workflowId, GetLastWorkflowId());
     auto checker = mCheckPool.GetChecker(workflowId-1);
@@ -21,23 +23,25 @@ int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
     }
 
     mValue += (sum * 2) / ((1 + mLoopCnt) * mLoopCnt);
-    checker->SetObservedValue(mId, mId, mValue);
+    checker->SetObservedValue(mId, mId, workflowId, mValue);
     for(auto pParent : mParents)
     {
         auto parentId = pParent.get()->GetId();
         if(!mIgnoredParent[parentId])
         {
             //assert(pParent.get()->GetLastWorkflowId() == workflowId);
-            checker->SetObservedValue(mId, parentId, pParent->GetValue());
+            auto pValue = pParent->GetValue();
+            checker->SetObservedValue(mId, parentId, pParent.get()->GetLastWorkflowId(), pValue);
         }
     }
-    checker->iRun(mId);
+//    LOG_INFO(Context::GetLog(), "node:" << char(mId + 'A') << "," << workflowId << " run");
+    checker->iRun(workflowId, mId);
 
     return 0;
 }
 
 void MultiNode::AddPrecessor(MultiNode* pParent, bool ignore)
-{//ignore=false;
+{ignore=false;
     mParents.emplace_back(pParent->Connect(this));
     mIgnoredParent[pParent->GetId()] = ignore;
     if(!ignore) {

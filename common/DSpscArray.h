@@ -6,7 +6,7 @@
 #define FREEWAY_DSPSCARRAY_H
 
 #include <stddef.h>
-
+#include <atomic>
 template <typename T>
 struct CallTraits
 {
@@ -39,7 +39,8 @@ DEFINE_BUILDIN_CALLTRAITS(uint64_t)
 DEFINE_BUILDIN_CALLTRAITS(float)
 DEFINE_BUILDIN_CALLTRAITS(double)
 
-template <typename T>
+//template <typename T, typename WT=std::atomic_int, typename RT=std::atomic_int>
+template <typename T, typename WT=int32_t, typename RT=int32_t>
 class DSpscArray
 {
 public:
@@ -61,13 +62,6 @@ public:
     {
         mData[mWritePos%mCapacity] = data;
         mWritePos++;
-    }
-
-    int32_t Push(typename CallTraits<T>::PushParamType data, int32_t delta)
-    {
-        mData[mWritePos%mCapacity] = data;
-        mWritePos += delta;
-        return delta;
     }
 
     typename CallTraits<T>::FirstReturnType First( void )
@@ -108,8 +102,8 @@ public:
     template<typename CallBack_t>
     void consume_all(CallBack_t cb)
     {
-        auto writePos = mWritePos;
-        auto readPos = mReadPos;
+        int32_t writePos = mWritePos;
+        int32_t readPos = mReadPos;
         while(readPos < writePos)
         {
             cb(mData[readPos%mCapacity]);
@@ -122,8 +116,8 @@ private:
     T* mData{nullptr};
     int32_t mCapacity;
     char __pading[64-sizeof(int32_t)];
-    int32_t mWritePos{0};
-    char __pading1[64-sizeof(int32_t)];
-    int32_t mReadPos{0};
+    WT mWritePos{0};
+    char __pading1[64-sizeof(WT)];
+    RT mReadPos{0};
 };
 #endif //FREEWAY_DSPSCARRAY_H

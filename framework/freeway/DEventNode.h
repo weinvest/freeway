@@ -62,7 +62,7 @@ private:
     WorkflowID_t mLastWorkflowId{0};
     SharedMutex* mMutex;
     std::string mName;
-    bool mIsAcceptTrigger{false};
+    bool mIsAcceptTrigger{true};
     std::unordered_map<DEventNode*, DEventNodeSpecial*> mPrecursorSpecials;
 
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST

@@ -127,6 +127,7 @@ void Worker::Run( void )
     int32_t nLoop = 0;
     while (LIKELY(mIsRuning || mDispatcher->IsRunning() || mFinishedTasks < mNextTaskPos))
     {
+#ifdef PRELOCK_WHEN_RUN
         auto& dispatcherQueue = mPendingTasks[0];
         dispatcherQueue.consume_all([this](const TaskPair& taskPair)
                                    {
@@ -136,6 +137,9 @@ void Worker::Run( void )
                                    });
 
         for(WorkerId fromWorker = 1; fromWorker < mQueueCount; ++fromWorker)
+#else
+        for(WorkerId fromWorker = 0; fromWorker < mQueueCount; ++fromWorker)
+#endif
         {
             auto& pTaskQueue = mPendingTasks[fromWorker];
             pTaskQueue.consume_all(push2ReadyQueue);
