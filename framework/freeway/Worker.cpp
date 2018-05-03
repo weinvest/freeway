@@ -236,7 +236,7 @@ void Worker::DoOutputWaitingTasks()
         out << "[" << pNode->GetName() << ":" << pNode->GetLastWorkflowId() << "]\n";
         auto& waittingList = pNode->GetWaittingList(mId);
         bool firstWriter = true;
-        for(auto pTask = waittingList.Front(); !waittingList.TraseEnd(pTask); pTask = pTask->Next())
+        for(auto pTask = waittingList.Front(); !waittingList.TraverseEnd(pTask); pTask = pTask->Next())
         {
             out << pTask << ":" << pTask->GetName() << ":" << pTask->GetWorkflowId() << "|";
             if(pTask->IsWaittingLock())
