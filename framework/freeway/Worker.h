@@ -65,7 +65,7 @@ private:
     const int32_t mWorkerCount;
     const int32_t mQueueCount;
 
-    using PendingTaskQueue = DSpscArray<TaskPair>;
+    using PendingTaskQueue = DSpscArray<TaskPair, std::atomic_int>;
     PendingTaskQueue* mPendingTasks;
 
     std::priority_queue<Task*, std::vector<Task*>, TaskCompare> mReadyTasks;

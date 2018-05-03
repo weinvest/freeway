@@ -41,7 +41,10 @@ DEFINE_BUILDIN_CALLTRAITS(double)
 
 //template <typename T, typename WT=std::atomic_int, typename RT=std::atomic_int>
 template <typename T, typename WT=int32_t, typename RT=int32_t>
-class DSpscArray
+class DSpscArray;
+
+template <typename T>
+class DSpscArray<T, int32_t, int32_t>
 {
 public:
     DSpscArray()
@@ -116,8 +119,170 @@ private:
     T* mData{nullptr};
     int32_t mCapacity;
     char __pading[64-sizeof(int32_t)];
-    WT mWritePos{0};
-    char __pading1[64-sizeof(WT)];
-    RT mReadPos{0};
+    int32_t mWritePos{0};
+    char __pading1[64-sizeof(int32_t)];
+    int32_t mReadPos{0};
+};
+
+template <typename T>
+class DSpscArray<T, std::atomic_int, int32_t>
+{
+public:
+    DSpscArray()
+            :mData(nullptr)
+            ,mCapacity(0)
+    {
+    }
+
+    void Init(int32_t capacity)
+    {
+        mData = new T[capacity];
+        mCapacity = capacity;
+    }
+
+    ~DSpscArray() { delete [] mData; }
+
+    void Push(typename CallTraits<T>::PushParamType data)
+    {
+        mData[mWritePos.load(std::memory_order_relaxed)%mCapacity] = data;
+        mWritePos.fetch_add(1, std::memory_order_release);
+    }
+
+    typename CallTraits<T>::FirstReturnType First( void )
+    {
+        return mData[mReadPos%mCapacity];
+    }
+
+    typename CallTraits<T>::FirstReturnType First(int32_t k)
+    {
+        return mData[(mReadPos+k)%mCapacity];
+    }
+
+    bool Valid(int32_t k)
+    {
+        return mWritePos.load(std::memory_order_acquire) - mReadPos - k > 0;
+    }
+
+    void Pop( void )
+    {
+        mReadPos++;
+    }
+
+    void Skip(int32_t k)
+    {
+        mReadPos += k;
+    }
+
+    int32_t Size( void )
+    {
+        return mWritePos.load(std::memory_order_acquire) - mReadPos;
+    }
+
+    bool Empty( void )
+    {
+        return 0 == Size();
+    }
+
+    template<typename CallBack_t>
+    void consume_all(CallBack_t cb)
+    {
+        int32_t writePos = mWritePos.load(std::memory_order_acquire);
+        int32_t readPos = mReadPos;
+        while(readPos < writePos)
+        {
+            cb(mData[readPos%mCapacity]);
+            ++readPos;
+        }
+
+        mReadPos = readPos;
+    }
+private:
+    T* mData{nullptr};
+    int32_t mCapacity;
+    char __pading[64-sizeof(int32_t)];
+    std::atomic_int mWritePos{0};
+    char __pading1[64-sizeof(std::atomic_int)];
+    int32_t mReadPos{0};
+};
+
+template <typename T>
+class DSpscArray<T, int32_t, std::atomic_int>
+{
+public:
+    DSpscArray()
+            :mData(nullptr)
+            ,mCapacity(0)
+    {
+    }
+
+    void Init(int32_t capacity)
+    {
+        mData = new T[capacity];
+        mCapacity = capacity;
+    }
+
+    ~DSpscArray() { delete [] mData; }
+
+    void Push(typename CallTraits<T>::PushParamType data)
+    {
+        mData[mWritePos%mCapacity] = data;
+        ++mWritePos;
+    }
+
+    typename CallTraits<T>::FirstReturnType First( void )
+    {
+        return mData[mReadPos.load(std::memory_order_acquire)%mCapacity];
+    }
+
+    typename CallTraits<T>::FirstReturnType First(int32_t k)
+    {
+        return mData[(mReadPos.load(std::memory_order_acquire)+k)%mCapacity];
+    }
+
+    bool Valid(int32_t k)
+    {
+        return mWritePos - mReadPos.load(std::memory_order_acquire) - k > 0;
+    }
+
+    void Pop( void )
+    {
+        mReadPos.fetch_add(1, std::memory_order_release);
+    }
+
+    void Skip(int32_t k)
+    {
+        mReadPos.fetch_add(k, std::memory_order_release);
+    }
+
+    int32_t Size( void )
+    {
+        return mWritePos - mReadPos.load(std::memory_order_acquire);
+    }
+
+    bool Empty( void )
+    {
+        return 0 == Size();
+    }
+
+    template<typename CallBack_t>
+    void consume_all(CallBack_t cb)
+    {
+        int32_t writePos = mWritePos;
+        int32_t readPos = mReadPos.load(std::memory_order_acquire);
+        while(readPos < writePos)
+        {
+            cb(mData[readPos%mCapacity]);
+            ++readPos;
+        }
+
+        mReadPos = readPos;
+    }
+private:
+    T* mData{nullptr};
+    int32_t mCapacity;
+    char __pading[64-sizeof(int32_t)];
+    int32_t mWritePos{0};
+    char __pading1[64-sizeof(std::atomic_int)];
+    std::atomic_int mReadPos{0};
 };
 #endif //FREEWAY_DSPSCARRAY_H

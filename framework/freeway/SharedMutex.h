@@ -28,7 +28,7 @@ class SharedMutex
 public:
 
     using WaiterBufferType = DSpscArray<WaiterType>;
-    using WaitingWriterType = DSpscArray<WorkflowID_t >;
+    using WaitingWriterType = DSpscArray<WorkflowID_t ,int32_t, std::atomic_int>;
 
     SharedMutex(DEventNode* pOwner);
     SharedMutex(const SharedMutex&) = delete;
