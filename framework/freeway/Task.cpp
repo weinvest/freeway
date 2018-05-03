@@ -51,14 +51,14 @@ void Task::Suspend4Lock(void)
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     auto& taskList = mWaited->mWaitingTasks[GetWorkerId()];
     auto pCurrTask = taskList.Back();
-    if(taskList.TraseEnd(pCurrTask))
+    if(taskList.TraverseEnd(pCurrTask))
     {
         mWorker->Push2WaittingList(mWaited);
         taskList.PushBack(this);
     }
     else
     {
-        while(!taskList.TraseEnd(pCurrTask) && pCurrTask->GetWorkflowId() >= GetWorkflowId())
+        while(!taskList.TraverseEnd(pCurrTask) && pCurrTask->GetWorkflowId() >= GetWorkflowId())
         {
             pCurrTask = pCurrTask->mPrev;
         }
@@ -78,14 +78,14 @@ void Task::Suspend4Shared( void )
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     auto& taskList = mWaited->mWaitingTasks[GetWorkerId()];
     auto pCurrTask = taskList.Back();
-    if(taskList.TraseEnd(pCurrTask))
+    if(taskList.TraverseEnd(pCurrTask))
     {
         mWorker->Push2WaittingList(mWaited);
         taskList.PushBack(this);
     }
     else
     {
-        while(!taskList.TraseEnd(pCurrTask) && pCurrTask->GetWorkflowId() > GetWorkflowId())
+        while(!taskList.TraverseEnd(pCurrTask) && pCurrTask->GetWorkflowId() > GetWorkflowId())
         {
             pCurrTask = pCurrTask->mPrev;
         }
@@ -97,29 +97,29 @@ void Task::Suspend4Shared( void )
 #endif
     mMainContext = mMainContext.resume();
 }
-#ifdef DEBUG
-#include "clock/Clock.h"
-
-void Task::Suspend4Lock( void )
-{
-    mLastSuspendWkflowId = mWorkflowId;
-    mLastSuspendWaitLock = true;
-    pthread_getname_np(pthread_self(), mLastSuspendThreadName, sizeof(mLastSuspendThreadName));
-    mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
-    Suspend();
-}
-
-#endif
+//#ifdef DEBUG
+//#include "clock/Clock.h"
+//
+//void Task::Suspend4Lock( void )
+//{
+//    mLastSuspendWkflowId = mWorkflowId;
+//    mLastSuspendWaitLock = true;
+//    pthread_getname_np(pthread_self(), mLastSuspendThreadName, sizeof(mLastSuspendThreadName));
+//    mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
+//    Suspend();
+//}
+//
+//#endif
 
 void Task::Resume( void )
 {
 //Entry for Worker's ReadyTask(After Enqueued by Dispatcher or Wakeup by other worker)
 //    std::cout << "Task resume:" << this << "\n";
-#ifdef DEBUG
-    mLastResumeWkflowId = mWorkflowId;
-    pthread_getname_np(pthread_self(), mLastResumeThreadName, sizeof(mLastResumeThreadName));
-    mLastResumeTime = Clock::Instance().TimeOfDay().total_microseconds();
-#endif
+//#ifdef DEBUG
+//    mLastResumeWkflowId = mWorkflowId;
+//    pthread_getname_np(pthread_self(), mLastResumeThreadName, sizeof(mLastResumeThreadName));
+//    mLastResumeTime = Clock::Instance().TimeOfDay().total_microseconds();
+//#endif
     if(LIKELY(mTaskContext)) {
         mTaskContext = mTaskContext.resume();
     }
@@ -174,11 +174,11 @@ void Task::RunNode( void )
     }
 
     mWorker->FinishATask();
-#ifdef DEBUG
-    mLastSuspendWaitLock = false;
-    mLastSuspendWkflowId = mWorkflowId;
-    mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
-#endif
+//#ifdef DEBUG
+//    mLastSuspendWaitLock = false;
+//    mLastSuspendWkflowId = mWorkflowId;
+//    mLastSuspendTime = Clock::Instance().TimeOfDay().total_microseconds();
+//#endif
     mMainContext = mMainContext.resume();
 }
 

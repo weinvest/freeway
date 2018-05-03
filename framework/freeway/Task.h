@@ -63,9 +63,9 @@ public:
     bool TrySharedLock( void );
     void WaitSharedLock(DEventNode *pWaited);
     void SetId(int32_t id) { mId = id; }
-#ifdef DEBUG
-    void Suspend4Lock( void );
-#endif
+//#ifdef DEBUG
+//    void Suspend4Lock( void );
+//#endif
 
     void Enqueue(int32_t from, DEventNode *pWhy);
 
@@ -95,15 +95,15 @@ private:
     ctx::continuation mMainContext;
     ctx::continuation mTaskContext;
 
-#ifdef DEBUG
-    int32_t mLastResumeWkflowId{-1};
-    char mLastResumeThreadName[32];
-    int64_t mLastResumeTime{0};
-    int32_t mLastSuspendWkflowId{-1};
-    bool mLastSuspendWaitLock{false};
-    int64_t mLastSuspendTime{0};
-    char mLastSuspendThreadName[32];
-#endif
+//#ifdef DEBUG
+//    int32_t mLastResumeWkflowId{-1};
+//    char mLastResumeThreadName[32];
+//    int64_t mLastResumeTime{0};
+//    int32_t mLastSuspendWkflowId{-1};
+//    bool mLastSuspendWaitLock{false};
+//    int64_t mLastSuspendTime{0};
+//    char mLastSuspendThreadName[32];
+//#endif
 };
 
 struct TaskCompare

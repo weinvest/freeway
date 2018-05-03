@@ -32,7 +32,7 @@ public:
     Task* Front( void ) const;
     Task* Back( void );
 
-    bool TraseEnd(Task* pTask) const { return mHead == pTask; }
+    bool TraverseEnd(Task *pTask) const { return mHead == pTask; }
 
 private:
     Task* mHead{nullptr};
