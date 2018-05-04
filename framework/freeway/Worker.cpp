@@ -141,7 +141,7 @@ void Worker::Run( void )
                                        pTask->Suspend4Lock();
                                    });
 #else
-        mDispatchedTasks->consume_all([this](Task* pTask)
+        mDispatchedTasks.consume_all([this](Task* pTask)
 		{
 		    mReadyTasks.push(pTask);
 		});
