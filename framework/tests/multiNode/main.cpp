@@ -2,15 +2,23 @@
 #include <thread>
 #include <random>
 #include <iostream>
+#include "utils/DCallStack.h"
 //#include <boost/test/included/unit_test.hpp>
 #include "framework/freeway/Context.h"
 #include "clock/Clock.h"
 #include "MultiNode.h"
 
+WorkflowCheckerPool* CHECKER = nullptr;
+
+void Usr2Handler(int signo)
+{
+    CHECKER->CheckAll();
+}
 
 //BOOST_AUTO_TEST_CASE(first_test)
 int main( void )
 {
+    Signal(12, Usr2Handler);
     auto pDispatcher = Context::Init(std::thread::hardware_concurrency()-1, 1);
 
     const int32_t MAX_NODE_COUNT = 32;
@@ -18,6 +26,7 @@ int main( void )
 
     NodeFamilyTree nodeFamilyTree(MAX_NODE_COUNT);
     WorkflowCheckerPool checker(nodeFamilyTree, 20*MAX_WORKFLOW_COUNT);
+    CHECKER = &checker;
 
     std::vector<MultiNode*> allNodes;
     auto pA = CreateNode(allNodes, checker, "A");
