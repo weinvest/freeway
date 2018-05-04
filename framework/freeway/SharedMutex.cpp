@@ -29,15 +29,16 @@ void SharedMutex::Lock(Task* pTask)
 
 void SharedMutex::WaitLock4(Task* pTask)
 {
+    auto readPos = mWaiters.ReadPos();
     auto readers = mReaders.load(std::memory_order_relaxed);
     WaiterType* realFirst = nullptr;
     if(readers < 0)
     {
-        realFirst = &mWaiters.First(-readers);
+        realFirst = &mWaiters.At(readPos-readers);
     }
     else
     {
-        realFirst = &mWaiters.First();
+        realFirst = &mWaiters.At(readPos);
     }
 
     if(realFirst->pTask != pTask)
@@ -46,7 +47,7 @@ void SharedMutex::WaitLock4(Task* pTask)
                                << ") wait lock for node:" << mOwner->GetName() << " in Worker-"<< Context::GetWorkerId()
                                << " current first task:" << realFirst->pTask << "(node:" << realFirst->pTask->GetName()
                                << ",workflow:" << realFirst->pTask->GetWorkflowId()
-        );
+                               << ") readers:" << readers);
         pTask->SetWaited(mOwner);
         pTask->Suspend4Lock();
     }
@@ -57,15 +58,16 @@ void SharedMutex::WaitLock4(Task* pTask)
 bool SharedMutex::TryLock4(Task* pTask)
 {
 //    std::atomic_thread_fence(std::memory_order_acquire);
+    auto readPos = mWaiters.ReadPos();
     auto readers = mReaders.load(std::memory_order_relaxed);
     WaiterType* realFirst = nullptr;
     if(readers < 0)
     {
-        realFirst = &mWaiters.First(-readers);
+        realFirst = &mWaiters.At(readPos-readers);
     }
     else
     {
-        realFirst = &mWaiters.First();
+        realFirst = &mWaiters.At(readPos);
     }
 
     bool goted = realFirst->pTask == pTask;
@@ -74,7 +76,8 @@ bool SharedMutex::TryLock4(Task* pTask)
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                            << ") try lock for node:" << mOwner->GetName() << (goted ? " success" : " failed")
                            << " in Worker-"<< Context::GetWorkerId() << " current first task:"
-                           << realFirst->pTask << "(node:" << realFirst->pTask->GetName() << ",workflow:" << realFirst->pTask->GetWorkflowId());
+                           << realFirst->pTask << "(node:" << realFirst->pTask->GetName() << ",workflow:" << realFirst->pTask->GetWorkflowId()
+                           << ") readers:" << readers);
     return goted;
 }
 

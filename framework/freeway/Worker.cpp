@@ -115,7 +115,7 @@ void Worker::Run( void )
         {
             LOG_DEBUG(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << " been wake success");
             mReadyTasks.push(pTask);
-            TaskList::Erase(pTask);
+            TaskList::Erase(pTask); //这有可能导致mWaittingNodes中某一Node出现多次，但是是没有问题的
             pTask->SetWaited(nullptr);
         }
         else

@@ -115,6 +115,11 @@ public:
 
         mReadPos = readPos;
     }
+
+    int32_t ReadPos( void ) const { return mReadPos; }
+    int32_t WritePos( void ) const { return mWritePos; }
+
+    typename CallTraits<T>::FirstReturnType At(int32_t pos) { return mData[pos % mCapacity]; }
 private:
     T* mData{nullptr};
     int32_t mCapacity;
@@ -196,6 +201,11 @@ public:
 
         mReadPos = readPos;
     }
+
+    int32_t ReadPos( void ) const { return mReadPos; }
+    int32_t WritePos( void ) const { return mWritePos.load(std::memory_order_acquire); }
+
+    typename CallTraits<T>::FirstReturnType At(int32_t pos) { return mData[pos % mCapacity]; }
 private:
     T* mData{nullptr};
     int32_t mCapacity;
@@ -277,6 +287,11 @@ public:
 
         mReadPos = readPos;
     }
+
+    int32_t ReadPos( void ) const { return mReadPos.load(std::memory_order_acquire); }
+    int32_t WritePos( void ) const { return mWritePos; }
+
+    typename CallTraits<T>::FirstReturnType At(int32_t pos) { return mData[pos % mCapacity]; }
 private:
     T* mData{nullptr};
     int32_t mCapacity;
