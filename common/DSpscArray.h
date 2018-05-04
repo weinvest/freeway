@@ -7,6 +7,7 @@
 
 #include <stddef.h>
 #include <atomic>
+#include <cassert>
 template <typename T>
 struct CallTraits
 {
@@ -63,6 +64,7 @@ public:
 
     void Push(typename CallTraits<T>::PushParamType data)
     {
+        assert(mWritePos - mReadPos < mCapacity);
         mData[mWritePos%mCapacity] = data;
         mWritePos++;
     }
@@ -149,7 +151,9 @@ public:
 
     void Push(typename CallTraits<T>::PushParamType data)
     {
-        mData[mWritePos.load(std::memory_order_relaxed)%mCapacity] = data;
+        auto writePos = mWritePos.load(std::memory_order_relaxed);
+        assert(writePos - mReadPos < mCapacity);
+        mData[writePos%mCapacity] = data;
         mWritePos.fetch_add(1, std::memory_order_release);
     }
 
@@ -235,6 +239,7 @@ public:
 
     void Push(typename CallTraits<T>::PushParamType data)
     {
+        assert(mWritePos - mReadPos < mCapacity);
         mData[mWritePos%mCapacity] = data;
         ++mWritePos;
     }

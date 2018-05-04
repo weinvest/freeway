@@ -11,7 +11,7 @@ SharedMutex::SharedMutex(DEventNode *pOwner)
 :mOwner(pOwner)
 {
     mWaiters.Init(8192);
-    mWaitingWriterWorkflowIds.Init(1024);
+    mWaitingWriterWorkflowIds.Init(4096);
 }
 
 void SharedMutex::LockShared(Task* pTask)
