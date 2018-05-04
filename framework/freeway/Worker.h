@@ -22,6 +22,7 @@ public:
     bool Initialize( void );
 
     void Enqueue(WorkerID_t fromWorker, DEventNode* pWho, Task* pTask);
+    void Dispatch(Task* pTask);
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     void Push2WaittingList(DEventNode* pNode);
 #else
@@ -65,7 +66,9 @@ private:
     const int32_t mWorkerCount;
     const int32_t mQueueCount;
 
-    using PendingTaskQueue = DSpscArray<TaskPair, std::atomic_int>;
+    using DispatchedTaskQueue = DSpscArray<Task*, std::atomic_int>;
+    using PendingTaskQueue = DSpscArray<TaskPair>;
+    DispatchedTaskQueue mDispatchedTasks;
     PendingTaskQueue* mPendingTasks;
 
     std::priority_queue<Task*, std::vector<Task*>, TaskCompare> mReadyTasks;

@@ -1,5 +1,5 @@
 #!/bin/bash
-export LD_LIBRARY_PATH=$(pwd):/usr/local/lib:$BOOST_LIB_PATH:lib:$PATH
+export LD_LIBRARY_PATH=/usr/local/lib:$BOOST_LIB_PATH:lib:$PATH
 #export TCMALLOC_PAGE_FENCE=1
 count=1
 while [ $count -le 1000 ]; do

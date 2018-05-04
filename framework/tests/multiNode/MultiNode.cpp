@@ -41,7 +41,7 @@ int32_t MultiNode::DoProcess(WorkflowID_t workflowId)
 }
 
 void MultiNode::AddPrecessor(MultiNode* pParent, bool ignore)
-{ignore=false;
+{//ignore=false;
     mParents.emplace_back(pParent->Connect(this));
     mIgnoredParent[pParent->GetId()] = ignore;
     if(!ignore) {

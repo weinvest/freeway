@@ -24,11 +24,13 @@ bool operator != (const Worker::TaskPair& lhs, const Worker::TaskPair& rhs)
 Worker::Worker(Dispatcher* pDispatcher, WorkerId id, int32_t workerCount)
         :mId(id)
         ,mWorkerCount(workerCount)
-        ,mQueueCount(workerCount+1)
+        ,mQueueCount(workerCount)
         ,mIsRuning(false)
         ,mDispatcher(pDispatcher)
         ,mLog(Logger::getInstance("Worker" + std::to_string(id)))
 {
+    mDispatchedTasks.Init(8192);
+
     mPendingTasks = new PendingTaskQueue[mQueueCount];
     for(int i=0; i<mQueueCount; i++) {
         mPendingTasks[i].Init(8192);
@@ -89,8 +91,13 @@ void Worker::Start( void )
 //Called by other threads
 void Worker::Enqueue(WorkerID_t fromWorker, DEventNode* pWho, Task* pTask)
 {
-    auto& pTaskQueue = mPendingTasks[fromWorker];
+    auto& pTaskQueue = mPendingTasks[fromWorker-1U];
     pTaskQueue.Push({pWho, pTask});
+}
+
+void Worker::Dispatch(Task* pTask)
+{
+    mDispatchedTasks.Push(pTask);
 }
 
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
@@ -113,7 +120,6 @@ void Worker::Run( void )
         auto pTask = taskPair.task;
         if(pTask->GetWaited() == taskPair.waited)
         {
-            LOG_DEBUG(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId() << " been wake success");
             mReadyTasks.push(pTask);
             TaskList::Erase(pTask); //这有可能导致mWaittingNodes中某一Node出现多次，但是是没有问题的
             pTask->SetWaited(nullptr);
@@ -128,18 +134,19 @@ void Worker::Run( void )
     while (LIKELY(mIsRuning || mDispatcher->IsRunning() || mFinishedTasks < mNextTaskPos))
     {
 #ifdef PRELOCK_WHEN_RUN
-        auto& dispatcherQueue = mPendingTasks[0];
-        dispatcherQueue.consume_all([this](const TaskPair& taskPair)
+        mDispatchedTasks.consume_all([this](const TaskPair& taskPair)
                                    {
                                        auto pTask = taskPair.task;
                                        pTask->SetWaited(pTask->GetNode());
                                        pTask->Suspend4Lock();
                                    });
-
-        for(WorkerId fromWorker = 1; fromWorker < mQueueCount; ++fromWorker)
 #else
-        for(WorkerId fromWorker = 0; fromWorker < mQueueCount; ++fromWorker)
+        mDispatchedTasks->consume_all([this](Task* pTask)
+		{
+		    mReadyTasks.push(pTask);
+		});
 #endif
+        for(WorkerId fromWorker = 0; fromWorker < mQueueCount; ++fromWorker)
         {
             auto& pTaskQueue = mPendingTasks[fromWorker];
             pTaskQueue.consume_all(push2ReadyQueue);
