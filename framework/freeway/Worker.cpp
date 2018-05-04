@@ -130,22 +130,20 @@ void Worker::Run( void )
         }
     };
 
+    auto push2DispatchedQueue = [this](Task* pTask)
+    {
+#ifdef PRELOCK_WHEN_RUN
+        pTask->SetWaited(pTask->GetNode());
+        pTask->Suspend4Lock();
+#else
+	mReadyTasks.push(pTask);
+#endif
+    };
+
     int32_t nLoop = 0;
     while (LIKELY(mIsRuning || mDispatcher->IsRunning() || mFinishedTasks < mNextTaskPos))
     {
-#ifdef PRELOCK_WHEN_RUN
-        mDispatchedTasks.consume_all([this](const TaskPair& taskPair)
-                                   {
-                                       auto pTask = taskPair.task;
-                                       pTask->SetWaited(pTask->GetNode());
-                                       pTask->Suspend4Lock();
-                                   });
-#else
-        mDispatchedTasks.consume_all([this](Task* pTask)
-		{
-		    mReadyTasks.push(pTask);
-		});
-#endif
+        mDispatchedTasks.consume_all(push2DispatchedQueue);
         for(WorkerId fromWorker = 0; fromWorker < mQueueCount; ++fromWorker)
         {
             auto& pTaskQueue = mPendingTasks[fromWorker];
