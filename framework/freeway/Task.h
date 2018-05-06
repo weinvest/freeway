@@ -48,7 +48,7 @@ public:
     bool IsWaitting( void ) const { return nullptr != mWaited; }
     bool IsWaittingLock( void ) const { return mWaited == mNodePtr; }
 
-    void DecreaseWaitingLockCount( void ) { mWaitingLockCount.fetch_sub(1, std::memory_order_relaxed); }
+    void DecreaseWaitingLockCount( void ) { mWaitingLockCount.fetch_sub(1, std::memory_order_release); }
     void IncreaseWaitingLockCount( void ) { mWaitingLockCount.fetch_add(1, std::memory_order_relaxed); }
 
     void SetAcceptTrigger(bool accept) { mIsAcceptTrigger = accept; }

@@ -144,6 +144,7 @@ void Task::RunNode( void )
 //        char name[32];
 //        pthread_getname_np(pthread_self(), name, sizeof(name));
 //        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
+    mWaitingLockCount.load(std::memory_order_acquire);
     if(mIsAcceptTrigger)
     {
 #ifndef PRELOCK_WHEN_RUN
@@ -207,11 +208,11 @@ void Task::Enqueue(int32_t from, Task* pWho)
     auto pPrecessor = pWho->GetNode();
     if(pPrecessor->GetLastWorkflowId() == mWorkflowId)
     {
-        DecreaseWaitingLockCount();
         if (!mIsAcceptTrigger && mNodePtr->Raise(pPrecessor, pWho->GetResult()))
         {
             mIsAcceptTrigger = true;
         }
+        DecreaseWaitingLockCount();
     }
 
     mWorker->Enqueue(from, pPrecessor, this);
