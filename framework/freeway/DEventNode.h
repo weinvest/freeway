@@ -26,6 +26,9 @@ public:
 
     SharedMutex& GetMutex();
 
+    void SetAlwaysAccept(bool accept) { mAlwaysAccept = accept; }
+    bool IsAlwaysAccept( void ) const { return mAlwaysAccept; }
+
     const std::string& GetName() {return mName;}
     void SetName(const std::string& name) {mName = name;}
 
@@ -33,8 +36,9 @@ public:
 
     int32_t Process(Task* pTask, WorkflowID_t workflowId) noexcept ;
 
-    void SetDispatchedID(WorkflowID_t workflowId) {mLastDispatchedflowId = workflowId;}
-    bool HasScheduled(WorkflowID_t workflowId);
+    void SetDispatchedTask(Task* pTask) { mLastDispatchedTask = pTask;}
+    Task* GetDispatchedTask( void ) { return mLastDispatchedTask;}
+    bool HasDispatched(WorkflowID_t workflowId);
 
     WorkflowID_t GetLastWorkflowId() const { return mLastWorkflowId; }
 
@@ -51,18 +55,19 @@ protected:
 
     dvector<DEventNode*> mSuccessors;
     dvector<DEventNode*> mPrecursors;
-    void Raise(DEventNode* precursor, int32_t reason);
+
+    bool Raise(DEventNode* precursor, int32_t reason);
 private:
     virtual int32_t DoProcess(WorkflowID_t workflowId) = 0;
     virtual bool OnRaised(DEventNode* precursor, int32_t reason);
     DEventNodeSpecial* EnsureSpecial(DEventNode* pPrecessor);
 
     friend class LockPtrBase;
-    WorkflowID_t mLastDispatchedflowId{0};
+    Task* mLastDispatchedTask{nullptr};
     WorkflowID_t mLastWorkflowId{0};
     SharedMutex* mMutex;
     std::string mName;
-    bool mIsAcceptTrigger{true};
+    bool mAlwaysAccept{false};
     std::unordered_map<DEventNode*, DEventNodeSpecial*> mPrecursorSpecials;
 
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST

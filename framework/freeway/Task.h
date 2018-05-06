@@ -40,17 +40,19 @@ public:
 
     int32_t GetWaitingLockCount( void ) const { return mWaitingLockCount; }
 
-
+    int32_t GetResult( void ) const { return mResult; }
     DEventNode* GetWaited() { return mWaited; }
 
     void SetWaited(DEventNode* pWaited) { mWaited = pWaited; }
 
     bool IsWaitting( void ) const { return nullptr != mWaited; }
     bool IsWaittingLock( void ) const { return mWaited == mNodePtr; }
-    bool IsFirstWaiter( void ) const;
 
-    void DecreaseWaitingLockCount( void ) { --mWaitingLockCount; }
+    void DecreaseWaitingLockCount( void ) { mWaitingLockCount.fetch_sub(1, std::memory_order_relaxed); }
+    void IncreaseWaitingLockCount( void ) { mWaitingLockCount.fetch_add(1, std::memory_order_relaxed); }
 
+    void SetAcceptTrigger(bool accept) { mIsAcceptTrigger = accept; }
+    bool IsSchedulable( void ) const { return mIsAcceptTrigger || 0 == mWaitingLockCount.load(std::memory_order_relaxed); }
 
     const std::string& GetName( void );
 
@@ -63,16 +65,14 @@ public:
     bool TrySharedLock( void );
     void WaitSharedLock(DEventNode *pWaited);
     void SetId(int32_t id) { mId = id; }
-//#ifdef DEBUG
-//    void Suspend4Lock( void );
-//#endif
 
-    void Enqueue(int32_t from, DEventNode *pWhy);
+    void Enqueue(int32_t from, Task *pWho);
 
     void CompleteDeffered(DEventNode* pNode);
 
     Task* Next( void ) { return mNext; }
     Task* Prev( void ) { return mPrev; }
+
 private:
     Task& operator =(const Task&) = delete;
     void RunNode( void );
@@ -80,7 +80,6 @@ private:
 
     DEventNode* mNodePtr {nullptr};
     WorkflowID_t mWorkflowId{0};
-    int32_t mWaitingLockCount{0};
     int32_t mLevel{0};
     int32_t mId{-1};
 
@@ -95,6 +94,10 @@ private:
     ctx::continuation mMainContext;
     ctx::continuation mTaskContext;
 
+    int32_t mResult{-1};
+
+    std::atomic_int mWaitingLockCount{0};
+    bool mIsAcceptTrigger{false};
 //#ifdef DEBUG
 //    int32_t mLastResumeWkflowId{-1};
 //    char mLastResumeThreadName[32];

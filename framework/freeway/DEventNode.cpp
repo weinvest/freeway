@@ -11,6 +11,7 @@
 #include "Dispatcher.h"
 #include "DEventNodeSpecial.h"
 #include "TaskList.h"
+#include "Task.h"
 #define mLog Context::GetLog()
 DEventNode::DEventNode()
      :mMutex(new SharedMutex(this))
@@ -43,38 +44,33 @@ SharedMutex& DEventNode::GetMutex()
 int32_t DEventNode::Process(Task* pTask, WorkflowID_t workflowId) noexcept
 {
     int32_t result = NoRaiseSuccessor;
-    if(mIsAcceptTrigger) {
-        try {
-            result = DoProcess(workflowId);
-        }
-        catch (const boost::exception &ex) {
-            LOG_ERROR(mLog, GetName() << " exception at DoProcess:" << boost::diagnostic_information(ex));
-        }
-        catch (const std::exception &ex) {
-            LOG_ERROR(mLog, GetName() << " exception at DoProcess:" << ex.what());
-        }
-        catch (...) {
-            LOG_ERROR(mLog, GetName() << " exception at DoProcess.");
-        }
-
-        mLastWorkflowId = workflowId;
+    try
+    {
+        result = DoProcess(workflowId);
+    }
+    catch (const boost::exception &ex)
+    {
+        LOG_ERROR(mLog, GetName() << " exception at DoProcess:" << boost::diagnostic_information(ex));
+    }
+    catch (const std::exception &ex)
+    {
+        LOG_ERROR(mLog, GetName() << " exception at DoProcess:" << ex.what());
+    }
+    catch (...)
+    {
+        LOG_ERROR(mLog, GetName() << " exception at DoProcess.");
     }
 
-    for(auto successor : GetSuccessors()){
-        successor->Raise(this, result);
-    }
+    mLastWorkflowId = workflowId;
 
     return result;
 }
 
-void DEventNode::Raise(DEventNode* pPrecessor, int32_t reason)
+bool DEventNode::Raise(DEventNode* pPrecessor, int32_t reason)
 {
     try
     {
-        if((this == pPrecessor) || (NoRaiseSuccessor != reason && OnRaised(pPrecessor, reason)))
-        {
-            mIsAcceptTrigger = true;
-        }
+        return OnRaised(pPrecessor, reason);
     }
     catch(const boost::exception& ex)
     {
@@ -88,6 +84,8 @@ void DEventNode::Raise(DEventNode* pPrecessor, int32_t reason)
     {
         LOG_ERROR(mLog, GetName() << " exception at OnRaised.");
     }
+
+    return false;
 }
 
 bool DEventNode::OnRaised(DEventNode* precursor, int32_t reason)
@@ -103,13 +101,11 @@ void DEventNode::RaiseSelf( void )
 void DEventNode::RaiseSelf(int32_t fromThread)
 {
     assert(-1 != fromThread);
-    mIsAcceptTrigger = true;
     Context::GetDispatcher()->Enqueue(fromThread, this);
 }
 
-/*too late!!!*/
-bool DEventNode::HasScheduled(WorkflowID_t flow)
+bool DEventNode::HasDispatched(WorkflowID_t flow)
 {
-    return flow <= mLastDispatchedflowId;
+    return nullptr != mLastDispatchedTask && flow <= mLastDispatchedTask->GetWorkflowId();
 }
 

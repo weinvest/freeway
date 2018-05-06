@@ -49,24 +49,42 @@ WorkerID_t Dispatcher::SelectWorker(DEventNode *pNode) {
     return ++Loop;
 }
 
-void Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId) {
+void Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId, bool isSelfRaise)
+{
     //一个节点有多个前驱节点时，只能通过一个前驱节点被Dispatch。
-    if (!pNode->HasScheduled(workflowId)) {
-        pNode->SetDispatchedID(workflowId);
+    Task* pTask = nullptr;
+    if (!pNode->HasDispatched(workflowId))
+    {
         //1. select worker
         //2. create task
         //3. acquire locks (Before Worker::Enqueue)
         //4. visit children
-
-        auto &successors = pNode->GetSuccessors();
-        for (auto pSuccessor : successors) {
-            VisitNode(pSuccessor, level + 1, workflowId);
-        }
-
         auto idxWorker = SelectWorker(pNode);
         auto pTargetWorker = Context::GetWorker(idxWorker);
-        Task *pTask = pTargetWorker->AllocateTaskFromPool(workflowId, pNode);
+        pTask = pTargetWorker->AllocateTaskFromPool(workflowId, pNode);
+        pTask->SetAcceptTrigger(pNode->IsAlwaysAccept());
+        pNode->SetDispatchedTask(pTask);
+
+        auto &successors = pNode->GetSuccessors();
+        for (auto pSuccessor : successors)
+        {
+            VisitNode(pSuccessor, level + 1, workflowId, false);
+        }
+
         mPendingTask.push_back(pTask);
+    }
+    else
+    {
+        pTask = pNode->GetDispatchedTask();
+    }
+
+    if(isSelfRaise)
+    {
+        pTask->SetAcceptTrigger(true);
+    }
+    else
+    {
+        pTask->IncreaseWaitingLockCount();
     }
     //LOG_ERROR("Node-%s has been scheduled!!!!\n", pNode->GetName().c_str());
 };
@@ -80,28 +98,31 @@ void Dispatcher::WaitStart()
     }
 }
 
-void Dispatcher::Run(void) {
+void Dispatcher::Run(void)
+{
     mIsRunning = true;
 
     std::atomic_signal_fence(std::memory_order_release);
     int32_t workflowId = 0;
 
     bool bye = true;
-    while (LIKELY(mIsRunning || !bye)) {
+    while (LIKELY(mIsRunning || !bye))
+    {
         bye = true;
 
         static int DispatchIndex = ThreadIndex[ThreadType::DISPATCHER].first;
         //Does dispatcher dispatch the task to itself???
         int32_t nWorkflowDelta = 0;
         mPendingTask.clear();
-        for (WorkerId fromWorker = DispatchIndex; fromWorker < mQueueNum; ++fromWorker) {
+        for (WorkerId fromWorker = DispatchIndex; fromWorker < mQueueNum; ++fromWorker)
+        {
             auto &pNodeQueue = mPendingNodes[fromWorker];
             // printf("Dispatcher consumes Queue-%d\n", fromWorker);
             pNodeQueue.consume_all([this,&bye,&nWorkflowDelta, workflowId](DEventNode* pNode) {
                 bye = false;
 
                 nWorkflowDelta = 1;
-                VisitNode(pNode, 0, workflowId);
+                VisitNode(pNode, 0, workflowId, true);
             });
         }
 

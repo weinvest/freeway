@@ -13,7 +13,6 @@ void LockPtrBase::WaitSharedLock( void )
     if(mNode != pThisTask->GetNode() && pThisTask != mSpecial->pTask) //同一节点必须保证上一个Workflow与下一个Workflow使用的Task不同
     {
         pThisTask->WaitSharedLock(mNode);
-        pThisTask->DecreaseWaitingLockCount();
 
         mSpecial->pTask = pThisTask;
     }

@@ -36,9 +36,10 @@ void Task::Update(WorkflowID_t flow, DEventNode* pNode)
     assert(mDeferred.empty());  //说明Worker的Task Pool太小啦
     mWorkflowId = flow;
     mNodePtr = pNode;
-    mWaitingLockCount = pNode->GetPrecursors().size();
+    mWaitingLockCount = 0;
     mLevel = 0;
     mNext = mPrev = this;
+    mIsAcceptTrigger = false;
 }
 
 const std::string& Task::GetName( void )
@@ -143,13 +144,17 @@ void Task::RunNode( void )
 //        char name[32];
 //        pthread_getname_np(pthread_self(), name, sizeof(name));
 //        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
+    if(mIsAcceptTrigger)
+    {
 #ifndef PRELOCK_WHEN_RUN
-    mNodePtr->GetMutex().WaitLock4(this);
+        mNodePtr->GetMutex().WaitLock4(this);
 #endif
 
-    mNodePtr->Process(this, mWorkflowId);
+        mResult = mNodePtr->Process(this, mWorkflowId);
+    }
 
-    for (auto precursor : mNodePtr->GetPrecursors()) {
+    for (auto precursor : mNodePtr->GetPrecursors())
+    {
         auto& mutex = precursor->GetMutex();
         if(mutex.TrySharedLock4(this))
         {
@@ -197,9 +202,19 @@ void Task::WaitSharedLock(DEventNode *pWaited)
     return pWaited->GetMutex().WaitSharedLock4(this);
 }
 
-void Task::Enqueue(int32_t from, DEventNode *pWhy)
+void Task::Enqueue(int32_t from, Task* pWho)
 {
-    mWorker->Enqueue(from, pWhy, this);
+    auto pPrecessor = pWho->GetNode();
+    if(pPrecessor->GetLastWorkflowId() == mWorkflowId)
+    {
+        DecreaseWaitingLockCount();
+        if (!mIsAcceptTrigger && mNodePtr->Raise(pPrecessor, pWho->GetResult()))
+        {
+            mIsAcceptTrigger = true;
+        }
+    }
+
+    mWorker->Enqueue(from, pPrecessor, this);
 }
 
 void Task::CompleteDeffered(DEventNode* pNode)

@@ -166,7 +166,7 @@ void SharedMutex::Wake(Task* pWaker)
                                        << ") wake up writer:"
                                        << pTask  << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                                        << ") in Worker-"<< Context::GetWorkerId());
-                pTask->Enqueue(Context::GetWorkerId(), mOwner);
+                pTask->Enqueue(Context::GetWorkerId(), pWaker);
             }
 
             break;
@@ -179,7 +179,7 @@ void SharedMutex::Wake(Task* pWaker)
                                    << ") wake up reader:"
                                    << pTask  << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                                    << ") in Worker-"<< Context::GetWorkerId());
-            pTask->Enqueue(Context::GetWorkerId(), mOwner);
+            pTask->Enqueue(Context::GetWorkerId(), pWaker);
         }
     }
 
