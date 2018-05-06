@@ -37,7 +37,6 @@ void Task::Update(WorkflowID_t flow, DEventNode* pNode)
     mWorkflowId = flow;
     mNodePtr = pNode;
     mWaitingLockCount = 0;
-    mLevel = 0;
     mNext = mPrev = this;
     mIsAcceptTrigger = false;
 }

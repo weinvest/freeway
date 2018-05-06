@@ -49,7 +49,7 @@ WorkerID_t Dispatcher::SelectWorker(DEventNode *pNode) {
     return ++Loop;
 }
 
-void Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId, bool isSelfRaise)
+void Dispatcher::VisitNode(DEventNode *pNode, int32_t workflowId, bool isSelfRaise)
 {
     //一个节点有多个前驱节点时，只能通过一个前驱节点被Dispatch。
     Task* pTask = nullptr;
@@ -68,7 +68,7 @@ void Dispatcher::VisitNode(DEventNode *pNode, int32_t level, int32_t workflowId,
         auto &successors = pNode->GetSuccessors();
         for (auto pSuccessor : successors)
         {
-            VisitNode(pSuccessor, level + 1, workflowId, false);
+            VisitNode(pSuccessor, workflowId, false);
         }
 
         mPendingTask.push_back(pTask);
@@ -122,7 +122,7 @@ void Dispatcher::Run(void)
                 bye = false;
 
                 nWorkflowDelta = 1;
-                VisitNode(pNode, 0, workflowId, true);
+                VisitNode(pNode, workflowId, true);
             });
         }
 

@@ -32,10 +32,6 @@ public:
     void SetWorker(Worker* pWorkder) { mWorker = pWorkder; }
     DEventNode* GetNode() { return mNodePtr; }
 
-    int32_t GetLevel() const { return mLevel; }
-
-    void SetLevel(int32_t level) { mLevel = level; }
-
     void Update(WorkflowID_t flow, DEventNode* pNode);
 
     int32_t GetWaitingLockCount( void ) const { return mWaitingLockCount; }
@@ -80,7 +76,6 @@ private:
 
     DEventNode* mNodePtr {nullptr};
     WorkflowID_t mWorkflowId{0};
-    int32_t mLevel{0};
     int32_t mId{-1};
 
     friend class TaskList;
@@ -113,10 +108,7 @@ struct TaskCompare
 {
     bool operator() (Task* pTask1, Task* pTask2)
     {
-//        return pTask1->GetWorkflowId() < pTask2->GetWorkflowId() || pTask1->GetLevel() < pTask2->GetLevel()
-//               || pTask1->GetWaitingLockCount() < pTask2->GetWaitingLockCount();
-                return pTask1->GetWorkflowId() > pTask2->GetWorkflowId() || pTask1->GetLevel() > pTask2->GetLevel()
-               || pTask1->GetWaitingLockCount() > pTask2->GetWaitingLockCount();
+        return pTask1->GetWorkflowId() > pTask2->GetWorkflowId() || pTask1->GetWaitingLockCount() > pTask2->GetWaitingLockCount();
     }
 };
 

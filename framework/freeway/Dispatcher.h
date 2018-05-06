@@ -24,7 +24,7 @@ public:
     void WaitStart();
 private:
     int32_t SelectWorker(DEventNode* );
-    void VisitNode (DEventNode* pNode, int32_t level, int32_t workflowId, bool isSelfRaise);
+    void VisitNode (DEventNode* pNode, int32_t workflowId, bool isSelfRaise);
 
     static constexpr int32_t MAX_PENDING_NODES = 128;
     const int32_t mWorkerCount;
