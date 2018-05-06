@@ -132,12 +132,20 @@ void Worker::Run( void )
 
     auto push2DispatchedQueue = [this](Task* pTask)
     {
+
+        if(pTask->IsSchedulable())
+        {
 #ifdef PRELOCK_WHEN_RUN
-        pTask->SetWaited(pTask->GetNode());
-        pTask->Suspend4Lock();
+            pTask->SetWaited(pTask->GetNode());
+            pTask->Suspend4Lock();
 #else
-	mReadyTasks.push(pTask);
+            mReadyTasks.push(pTask);
 #endif
+        }
+        else
+        {
+            pTask->Suspend4Lock();
+        }
     };
 
     int32_t nLoop = 0;
@@ -198,20 +206,23 @@ void Worker::CheckLostLamb( void )  {
         {
             auto pTask = waittingList.Front();
             bool gotLock = false;
-            if(pTask->IsWaittingLock())
+            if(pTask->IsSchedulable())
             {
-                gotLock = pTask->TryLock();
-            }
-            else
-            {
-                gotLock = pTask->TrySharedLock();
-            }
+                if(pTask->IsWaittingLock())
+                {
+                    gotLock = pTask->TryLock();
+                }
+                else
+                {
+                    gotLock = pTask->TrySharedLock();
+                }
 
-            if(gotLock)
-            {
-                pTask->SetWaited(nullptr);
-                mReadyTasks.push(pTask);
-                waittingList.PopFront();
+                if(gotLock)
+                {
+                    pTask->SetWaited(nullptr);
+                    mReadyTasks.push(pTask);
+                    waittingList.PopFront();
+                }
             }
         }
 
@@ -275,13 +286,16 @@ void Worker::CheckLostLamb( void )  {
     {
         auto pTask = mWaittingTasks.PopFront();
         bool gotLock = false;
-        if(pTask->IsWaittingLock())
+        if(pTask->IsSchedulable())
         {
-            gotLock = pTask->TryLock();
-        }
-        else
-        {
-            gotLock = pTask->TrySharedLock();
+            if(pTask->IsWaittingLock())
+            {
+                gotLock = pTask->TryLock();
+            }
+            else
+            {
+                gotLock = pTask->TrySharedLock();
+            }
         }
 
         if(gotLock)
