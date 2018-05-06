@@ -53,7 +53,7 @@ void Dispatcher::VisitNode(DEventNode *pNode, int32_t workflowId, bool isSelfRai
 {
     //一个节点有多个前驱节点时，只能通过一个前驱节点被Dispatch。
     Task* pTask = nullptr;
-    if (!pNode->HasDispatched(workflowId))
+    if (!pNode->IsDispatched(workflowId))
     {
         //1. select worker
         //2. create task

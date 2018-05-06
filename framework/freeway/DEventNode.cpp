@@ -104,7 +104,7 @@ void DEventNode::RaiseSelf(int32_t fromThread)
     Context::GetDispatcher()->Enqueue(fromThread, this);
 }
 
-bool DEventNode::HasDispatched(WorkflowID_t flow)
+bool DEventNode::IsDispatched(WorkflowID_t flow)
 {
     return nullptr != mLastDispatchedTask && flow <= mLastDispatchedTask->GetWorkflowId();
 }

@@ -38,7 +38,7 @@ public:
 
     void SetDispatchedTask(Task* pTask) { mLastDispatchedTask = pTask;}
     Task* GetDispatchedTask( void ) { return mLastDispatchedTask;}
-    bool HasDispatched(WorkflowID_t workflowId);
+    bool IsDispatched(WorkflowID_t workflowId);
 
     WorkflowID_t GetLastWorkflowId() const { return mLastWorkflowId; }
 
