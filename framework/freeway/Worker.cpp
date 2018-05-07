@@ -120,9 +120,12 @@ void Worker::Run( void )
         auto pTask = taskPair.task;
         if(pTask->GetWaited() == taskPair.waited)
         {
-            mReadyTasks.push(pTask);
-            TaskList::Erase(pTask); //这有可能导致mWaittingNodes中某一Node出现多次，但是是没有问题的
-            pTask->SetWaited(nullptr);
+            if(pTask->IsSchedulable())
+            {
+                mReadyTasks.push(pTask);
+                TaskList::Erase(pTask); //这有可能导致mWaittingNodes中某一Node出现多次，但是是没有问题的
+                pTask->SetWaited(nullptr);
+            }
         }
         else
         {
@@ -203,9 +206,9 @@ void Worker::CheckLostLamb( void )  {
         if(!waittingList.Empty())
         {
             auto pTask = waittingList.Front();
-            bool gotLock = false;
             if(pTask->IsSchedulable())
             {
+                bool gotLock = false;
                 if(pTask->IsWaittingLock())
                 {
                     gotLock = pTask->TryLock();
@@ -252,7 +255,8 @@ void Worker::DoOutputWaitingTasks()
         bool firstWriter = true;
         for(auto pTask = waittingList.Front(); !waittingList.TraverseEnd(pTask); pTask = pTask->Next())
         {
-            out << pTask << ":" << pTask->GetName() << ":" << pTask->GetWorkflowId() << "|";
+            out << pTask << ":" << pTask->GetName() << ":" << pTask->GetWorkflowId()
+                <<":" << pTask->IsAccepted()  << ":" << pTask->GetWaitingLockCount() << "|";
             if(pTask->IsWaittingLock())
             {
                 if(firstWriter)
@@ -262,7 +266,8 @@ void Worker::DoOutputWaitingTasks()
                     for(int32_t iTask = 0; iTask <= -readerCount; ++iTask)
                     {
                         auto pSeeTask = pNode->GetMutex().GetWaiters().First(iTask).pTask;
-                        out << pSeeTask << ":" << pSeeTask->GetName() << ":" << pSeeTask->GetWorkflowId() << "|";
+                        out << pSeeTask << ":" << pSeeTask->GetName() << ":" << pSeeTask->GetWorkflowId()
+                            << ":" << pSeeTask->IsAccepted()  << ":" << pSeeTask->GetWaitingLockCount() << "|";
                     }
                     out << readerCount;
                 }

@@ -48,7 +48,8 @@ public:
     void IncreaseWaitingLockCount( void ) { mWaitingLockCount.fetch_add(1, std::memory_order_relaxed); }
 
     void SetAcceptTrigger(bool accept) { mIsAcceptTrigger = accept; }
-    bool IsSchedulable( void ) const { return mIsAcceptTrigger || 0 == mWaitingLockCount.load(std::memory_order_relaxed); }
+    bool IsSchedulable( void ) const { return mIsAcceptTrigger || (0 == mWaitingLockCount.load(std::memory_order_relaxed)); }
+    bool IsAccepted( void ) const { return mIsAcceptTrigger; }
 
     const std::string& GetName( void );
 

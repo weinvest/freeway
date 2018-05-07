@@ -17,14 +17,12 @@ SharedMutex::SharedMutex(DEventNode *pOwner)
 void SharedMutex::LockShared(Task* pTask)
 {
     mWaiters.Push(WaiterType(pTask, false));
-//    std::atomic_thread_fence(std::memory_order_release);
 }
 
 void SharedMutex::Lock(Task* pTask)
 {
     mWaitingWriterWorkflowIds.Push(pTask->GetWorkflowId());
     mWaiters.Push(WaiterType(pTask, true));
-//    std::atomic_thread_fence(std::memory_order_release);
 }
 
 void SharedMutex::WaitLock4(Task* pTask)
@@ -57,7 +55,6 @@ void SharedMutex::WaitLock4(Task* pTask)
 
 bool SharedMutex::TryLock4(Task* pTask)
 {
-//    std::atomic_thread_fence(std::memory_order_acquire);
     auto readPos = mWaiters.ReadPos();
     auto readers = mReaders.load(std::memory_order_relaxed);
     WaiterType* realFirst = nullptr;
@@ -71,7 +68,6 @@ bool SharedMutex::TryLock4(Task* pTask)
     }
 
     bool goted = realFirst->pTask == pTask;
-    //bool goted = realFirst->pTask->GetWorkflowId() >= pTask->GetWorkflowId();
 
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
                            << ") try lock for node:" << mOwner->GetName() << (goted ? " success" : " failed")
@@ -89,8 +85,6 @@ WorkflowID_t SharedMutex::GetFirstWaittingWriter( void )
 
 void SharedMutex::WaitSharedLock4(Task* pTask)
 {
-//    std::atomic_thread_fence(std::memory_order_acquire);
-//    mTotalLocks.load(std::memory_order_acquire);
     auto firstWriterWkflow = mWaitingWriterWorkflowIds.First();
     auto hasLock = mWaitingWriterWorkflowIds.Empty() || firstWriterWkflow > pTask->GetWorkflowId();
     if(!hasLock)
@@ -107,8 +101,6 @@ void SharedMutex::WaitSharedLock4(Task* pTask)
 
 bool SharedMutex::TrySharedLock4(Task* pTask)
 {
-//    std::atomic_thread_fence(std::memory_order_acquire);
-//    mTotalLocks.load(std::memory_order_acquire);
     auto firstWriterWkflow = mWaitingWriterWorkflowIds.First();
     auto hasLock = mWaitingWriterWorkflowIds.Empty() || firstWriterWkflow > pTask->GetWorkflowId();
     LOG_INFO(mLog, "task:" << pTask << "(node:" << pTask->GetName() << ",workflow:" << pTask->GetWorkflowId()
@@ -132,8 +124,6 @@ void SharedMutex::Unlock(Task* pTask)
                            << ") unlocked node:" << mOwner->GetName()
                            << " in Worker-"<< Context::GetWorkerId());
 
-    //while(mIsInWaking.test_and_set(std::memory_order_acquire));
-//    mReaders.fetch_add(1, std::memory_order_relaxed);
     int32_t finished = 0;
     while(mWaiters.First(finished).pTask != pTask)
     {
@@ -143,11 +133,8 @@ void SharedMutex::Unlock(Task* pTask)
 
     mWaitingWriterWorkflowIds.Pop();
     mWaiters.Skip(finished + 1);
-    //std::atomic_thread_fence(std::memory_order_release);
-//    mReaders.fetch_sub(1, std::memory_order_relaxed);
     Wake(pTask);
 
-    //mIsInWaking.clear(std::memory_order_release);
 }
 
 void SharedMutex::Wake(Task* pWaker)

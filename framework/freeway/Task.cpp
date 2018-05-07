@@ -207,7 +207,7 @@ void Task::WaitSharedLock(DEventNode *pWaited)
 void Task::Enqueue(int32_t from, Task* pWho)
 {
     auto pPrecessor = pWho->GetNode();
-    if(pPrecessor->GetLastWorkflowId() == mWorkflowId)
+    if(pWho->GetWorkflowId() == mWorkflowId)
     {
         if (!mIsAcceptTrigger && mNodePtr->Raise(pPrecessor, pWho->GetResult()))
         {
