@@ -34,7 +34,7 @@ public:
 
     void Update(WorkflowID_t flow, DEventNode* pNode);
 
-    int32_t GetWaitingLockCount( void ) const { return mWaitingLockCount; }
+    int32_t GetWaitingLockCount( void ) const { return mWaitingLockCount.load(std::memory_order_relaxed); }
 
     int32_t GetResult( void ) const { return mResult; }
     DEventNode* GetWaited() { return mWaited; }
@@ -109,7 +109,8 @@ struct TaskCompare
 {
     bool operator() (Task* pTask1, Task* pTask2)
     {
-        return pTask1->GetWorkflowId() > pTask2->GetWorkflowId() || pTask1->GetWaitingLockCount() > pTask2->GetWaitingLockCount();
+        return (pTask1->GetWorkflowId() > pTask2->GetWorkflowId())
+               || (pTask1->GetWaitingLockCount() > pTask2->GetWaitingLockCount());
     }
 };
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-using WorkflowID_t = int64_t;
+using WorkflowID_t = int32_t;
 using WorkerID_t = int32_t;
 
 // \033[显示方式;前景色;背景色m

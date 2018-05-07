@@ -46,9 +46,6 @@ public:
         DEventNode* waited{nullptr};
         Task* task{nullptr};
 
-        inline bool IsNull( void ) const { return nullptr == task; }
-        static inline TaskPair Null( void ) { return TaskPair(); }
-
         friend bool operator == (const TaskPair& lhs, const TaskPair& rhs);
         friend bool operator != (const TaskPair& lhs, const TaskPair& rhs);
 

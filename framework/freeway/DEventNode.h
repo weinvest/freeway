@@ -10,7 +10,7 @@
 #include "framework/freeway/TaskList.h"
 const int32_t NoRaiseSuccessor = -1;
 
-using WorkflowID_t = int64_t;
+using WorkflowID_t = int32_t;
 class Task;
 class TaskList;
 class SharedMutex;
@@ -64,7 +64,7 @@ private:
 
     friend class LockPtrBase;
     Task* mLastDispatchedTask{nullptr};
-    WorkflowID_t mLastWorkflowId{-1};
+    WorkflowID_t mLastWorkflowId{0};
     SharedMutex* mMutex;
     std::string mName;
     bool mAlwaysAccept{false};
