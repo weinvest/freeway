@@ -132,23 +132,22 @@ void Worker::Run( void )
 
     auto push2DispatchedQueue = [this](Task* pTask)
     {
-
+#ifdef PRELOCK_WHEN_RUN
+        pTask->SetWaited(pTask->GetNode());
+        pTask->Suspend4Lock();
+#else
         if(pTask->IsSchedulable())
         {
-#ifdef PRELOCK_WHEN_RUN
-            pTask->SetWaited(pTask->GetNode());
-            pTask->Suspend4Lock();
-#else
             mReadyTasks.push(pTask);
-#endif
         }
         else
         {
-            pTask->Suspend4Lock();
+            pTask->SetWaited(pTask->GetNode());
+            pTask->Pending4Lock();
         }
+#endif
     };
 
-    int32_t nLoop = 0;
     while (LIKELY(mIsRuning || mDispatcher->IsRunning() || mFinishedTasks < mNextTaskPos))
     {
         mDispatchedTasks.consume_all(push2DispatchedQueue);
@@ -158,7 +157,6 @@ void Worker::Run( void )
             pTaskQueue.consume_all(push2ReadyQueue);
         }
 
-        ++nLoop;
         //if(UNLIKELY((nLoop % 100) == 0))
         if(mReadyTasks.empty())
         {

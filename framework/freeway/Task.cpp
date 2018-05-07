@@ -46,14 +46,14 @@ const std::string& Task::GetName( void )
     return mNodePtr->GetName();
 }
 
-void Task::Suspend4Lock(void)
+void Task::Pending4Lock( void )
 {
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
-    auto& taskList = mWaited->mWaitingTasks[GetWorkerId()];
+    auto& taskList = mNodePtr->mWaitingTasks[GetWorkerId()];
     auto pCurrTask = taskList.Back();
     if(taskList.TraverseEnd(pCurrTask))
     {
-        mWorker->Push2WaittingList(mWaited);
+        mWorker->Push2WaittingList(mNodePtr);
         taskList.PushBack(this);
     }
     else
@@ -67,10 +67,12 @@ void Task::Suspend4Lock(void)
 #else
     mWorker->Push2WaittingList(this);
 #endif
+}
 
-#ifndef PRELOCK_WHEN_RUN
+void Task::Suspend4Lock(void)
+{
+    Pending4Lock();
     mMainContext = mMainContext.resume();
-#endif
 }
 
 void Task::Suspend4Shared( void )

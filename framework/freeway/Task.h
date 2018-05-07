@@ -69,6 +69,7 @@ public:
     Task* Next( void ) { return mNext; }
     Task* Prev( void ) { return mPrev; }
 
+    void Pending4Lock( void );
 private:
     Task& operator =(const Task&) = delete;
     void RunNode( void );

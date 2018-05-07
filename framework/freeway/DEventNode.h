@@ -64,7 +64,7 @@ private:
 
     friend class LockPtrBase;
     Task* mLastDispatchedTask{nullptr};
-    WorkflowID_t mLastWorkflowId{0};
+    WorkflowID_t mLastWorkflowId{-1};
     SharedMutex* mMutex;
     std::string mName;
     bool mAlwaysAccept{false};

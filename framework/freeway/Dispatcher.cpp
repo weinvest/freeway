@@ -103,7 +103,7 @@ void Dispatcher::Run(void)
     mIsRunning = true;
 
     std::atomic_signal_fence(std::memory_order_release);
-    int32_t workflowId = 0;
+    int32_t workflowId = 1;
 
     bool bye = true;
     while (LIKELY(mIsRunning || !bye))
