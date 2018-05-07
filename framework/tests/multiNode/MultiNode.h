@@ -35,6 +35,7 @@ public:
     void OutputParent( void );
 protected:
     int32_t DoProcess(WorkflowID_t workflowId) override;
+    bool OnRaised(DEventNode* precursor, int32_t reason) override ;
 
     WorkflowCheckerPool& mCheckPool;
 

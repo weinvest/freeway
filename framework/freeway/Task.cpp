@@ -209,7 +209,8 @@ void Task::Enqueue(int32_t from, Task* pWho)
     auto pPrecessor = pWho->GetNode();
     if(pWho->GetWorkflowId() == mWorkflowId)
     {
-        if (!mIsAcceptTrigger && mNodePtr->Raise(pPrecessor, pWho->GetResult()))
+        auto preResult = pWho->GetResult();
+        if (!mIsAcceptTrigger && NoRaiseSuccessor != preResult && mNodePtr->Raise(pPrecessor, preResult))
         {
             mIsAcceptTrigger = true;
         }

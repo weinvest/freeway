@@ -58,6 +58,13 @@ void MultiNode::OutputParent( void )
     std::cout << std::endl;
 }
 
+bool MultiNode::OnRaised(DEventNode* precursor, int32_t reason)
+{
+    static std::default_random_engine generator;
+    static std::uniform_int_distribution<int> ignoreDist(0, 1);
+    return 1 == ignoreDist(generator);
+}
+
 MultiNode* CreateNode(std::vector<MultiNode*>& allNodes, WorkflowCheckerPool& pool, const std::string& nodeName)
 {
     static int32_t id = 0;
