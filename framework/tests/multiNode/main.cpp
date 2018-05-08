@@ -1,4 +1,5 @@
 //#define BOOST_TEST_MODULE MULTI_NODE_TEST
+#include <ctime>
 #include <thread>
 #include <random>
 #include <iostream>
@@ -83,7 +84,7 @@ int main( void )
                           Context::WaitStart();
                           std::cout << "==================Started=============================\n";
 
-                          std::default_random_engine generator;
+                          std::default_random_engine generator(time(0));
                           std::normal_distribution<double> norm(0, 1);
                           int32_t runCnt = 0;
                           while (runCnt < MAX_WORKFLOW_COUNT) {

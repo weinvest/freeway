@@ -1,6 +1,7 @@
 //
 // Created by 李书淦 on 2018/3/25.
 //
+#include <ctime>
 #include <random>
 #include <iostream>
 #include <utils/DLog.h>
@@ -60,7 +61,7 @@ void MultiNode::OutputParent( void )
 
 bool MultiNode::OnRaised(DEventNode* precursor, int32_t reason)
 {
-    static std::default_random_engine generator;
+    static std::default_random_engine generator(time(0));
     static std::uniform_int_distribution<int> ignoreDist(0, 1);
     return 1 == ignoreDist(generator);
 }
@@ -68,7 +69,7 @@ bool MultiNode::OnRaised(DEventNode* precursor, int32_t reason)
 MultiNode* CreateNode(std::vector<MultiNode*>& allNodes, WorkflowCheckerPool& pool, const std::string& nodeName)
 {
     static int32_t id = 0;
-    static std::default_random_engine generator;
+    static std::default_random_engine generator(time(0));
     static std::uniform_int_distribution<int> runCntDist(100, 100000);
 
     auto pNode = new MultiNode(pool, id++, runCntDist(generator));
@@ -89,7 +90,7 @@ void FreeNode(std::vector<MultiNode*>& allNodes)
 
 void AddEdge(MultiNode* pChild, MultiNode* pParent)
 {
-    static std::default_random_engine generator;
+    static std::default_random_engine generator(time(0));
     static std::uniform_int_distribution<int> ignoreDist(0, 1);
     pChild->AddPrecessor(pParent, 1 == ignoreDist(generator));
 }
