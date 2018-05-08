@@ -145,10 +145,10 @@ void Task::RunNode( void )
 //        char name[32];
 //        pthread_getname_np(pthread_self(), name, sizeof(name));
 //        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
+    mNodePtr->GetMutex().WaitLock4(this);
     mWaitingLockCount.load(std::memory_order_acquire);
     if(mIsAcceptTrigger)
     {
-        mNodePtr->GetMutex().WaitLock4(this);
         mResult = mNodePtr->Process(this, mWorkflowId);
     }
 
