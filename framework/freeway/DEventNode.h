@@ -47,6 +47,8 @@ public:
 
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     auto& GetWaittingList(int32_t workerId) { return mWaitingTasks[workerId]; }
+#endif
+#ifdef _USING_MULTI_LEVEL_UNSCHEDULABLE
     auto& GetUnschedulableList(int32_t workerId) { return mUnschedulableTasks[workerId]; }
 #endif
 
@@ -71,10 +73,12 @@ private:
     bool mAlwaysAccept{false};
     std::unordered_map<DEventNode*, DEventNodeSpecial*> mPrecursorSpecials;
 
-#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     friend class Task;
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     typedef TaskList TaskQueue;
     TaskQueue* mWaitingTasks{nullptr};
+#endif
+#ifdef _USING_MULTI_LEVEL_UNSCHEDULABLE
     TaskQueue* mUnschedulableTasks{nullptr};
 #endif
 };

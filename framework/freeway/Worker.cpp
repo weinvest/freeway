@@ -141,7 +141,7 @@ void Worker::Run( void )
         }
         else
         {
-#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+#ifdef _USING_MULTI_LEVEL_UNSCHEDULABLE
             auto pNode = pTask->GetNode();
             auto& unschedulableList = pNode->GetUnschedulableList(mId);
             if(unschedulableList.Empty())
@@ -152,7 +152,8 @@ void Worker::Run( void )
 
             unschedulableList.PushBack(pTask);
 #else
-            mUnschedulableTasks.PushBack(pTask);
+            pTask->SetWaited(pTask->GetNode());
+            pTask->Pending4Lock();
 #endif
         }
     };
@@ -204,6 +205,7 @@ void Worker::Run( void )
 void Worker::CheckLostLamb( void )  {
 
     int32_t newCount = 0;
+#ifdef _USING_MULTI_LEVEL_UNSCHEDULABLE
     for(auto iNode = 0; iNode < mUnschedulableNodeCount; ++iNode)
     {
         auto pNode = mUnschedulableNodes[iNode];
@@ -226,8 +228,9 @@ void Worker::CheckLostLamb( void )  {
     }
 
     mUnschedulableNodeCount = newCount;
-
     newCount = 0;
+#endif
+
     for(auto iNode = 0; iNode < mWaittingNodeCount; ++iNode)
     {
         auto pNode = mWaittingNodes[iNode];
@@ -236,6 +239,9 @@ void Worker::CheckLostLamb( void )  {
         {
             auto pTask = waittingList.Front();
             bool gotLock = false;
+#ifndef _USING_MULTI_LEVEL_UNSCHEDULABLE
+            if(pTask->IsSchedulable())
+#endif
             if(pTask->IsWaittingLock())
             {
                 gotLock = pTask->TryLock();
@@ -334,22 +340,11 @@ void Worker::DoOutputWaitingTasks()
 void Worker::CheckLostLamb( void )  {
     while(!mWaittingTasks.Empty())
     {
-        auto pFirstUnschedulable = mUnschedulableTasks.PopFront();
-        if(pFirstUnschedulable->IsSchedulable())
-        {
-            mReadyTasks.push(pFirstUnschedulable);
-        }
-        else
-        {
-            mUnschedulableTasks.PushBack(pFirstUnschedulable);
-            break;
-        }
-    }
-
-    while(!mWaittingTasks.Empty())
-    {
         auto pTask = mWaittingTasks.PopFront();
         bool gotLock = false;
+#ifndef _USING_MULTI_LEVEL_UNSCHEDULABLE
+        if(pTask->IsSchedulable())
+#endif
         if(pTask->IsWaittingLock())
         {
             gotLock = pTask->TryLock();

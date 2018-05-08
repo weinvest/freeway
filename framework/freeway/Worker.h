@@ -76,14 +76,14 @@ private:
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     std::array<DEventNode*, 1024> mWaittingNodes;
     int32_t mWaittingNodeCount{0};
-
-    std::array<DEventNode*, 1024> mUnschedulableNodes;
-    int32_t mUnschedulableNodeCount{0};
 #else
     TaskList mWaittingTasks;
-    TaskList mUnschedulableTasks;
 #endif
-//    std::set<DEventNode*> mWaittingNode;
+
+#ifdef _USING_MULTI_LEVEL_UNSCHEDULABLE
+    std::array<DEventNode*, 1024> mUnschedulableNodes;
+    int32_t mUnschedulableNodeCount{0};
+#endif
 
     std::mutex  mRuningMutex;
     std::condition_variable mRuningCond;

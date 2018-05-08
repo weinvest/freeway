@@ -17,7 +17,9 @@ DEventNode::DEventNode()
      :mMutex(new SharedMutex(this))
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
      ,mWaitingTasks(new TaskQueue[8])
-     ,mUnschedulableTasks(new TaskQueue[8])
+#endif
+#ifdef _USING_MULTI_LEVEL_UNSCHEDULABLE
+        ,mUnschedulableTasks(new TaskQueue[8])
 #endif
 {
 }
