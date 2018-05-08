@@ -47,6 +47,7 @@ public:
 
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     auto& GetWaittingList(int32_t workerId) { return mWaitingTasks[workerId]; }
+    auto& GetUnschedulableList(int32_t workerId) { return mUnschedulableTasks[workerId]; }
 #endif
 
 protected:
@@ -74,6 +75,7 @@ private:
     friend class Task;
     typedef TaskList TaskQueue;
     TaskQueue* mWaitingTasks{nullptr};
+    TaskQueue* mUnschedulableTasks{nullptr};
 #endif
 };
 

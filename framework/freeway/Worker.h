@@ -56,7 +56,6 @@ public:
     void OutputWaitingTasks( void ) { mOutputWaitingTasks = true; }
 private:
     void CheckLostLamb(void);
-    void CheckLostLamb(TaskList& waittings);
     void DoOutputWaitingTasks( void );
 
     const WorkerID_t mId;
@@ -77,8 +76,12 @@ private:
 #ifdef _USING_MULTI_LEVEL_WAITTING_LIST
     std::array<DEventNode*, 1024> mWaittingNodes;
     int32_t mWaittingNodeCount{0};
+
+    std::array<DEventNode*, 1024> mUnschedulableNodes;
+    int32_t mUnschedulableNodeCount{0};
 #else
     TaskList mWaittingTasks;
+    TaskList mUnschedulableTasks;
 #endif
 //    std::set<DEventNode*> mWaittingNode;
 

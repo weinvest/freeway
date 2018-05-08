@@ -135,20 +135,26 @@ void Worker::Run( void )
 
     auto push2DispatchedQueue = [this](Task* pTask)
     {
-#ifdef PRELOCK_WHEN_RUN
-        pTask->SetWaited(pTask->GetNode());
-        pTask->Suspend4Lock();
-#else
         if(pTask->IsSchedulable())
         {
             mReadyTasks.push(pTask);
         }
         else
         {
-            pTask->SetWaited(pTask->GetNode());
-            pTask->Pending4Lock();
-        }
+#ifdef _USING_MULTI_LEVEL_WAITTING_LIST
+            auto pNode = pTask->GetNode();
+            auto& unschedulableList = pNode->GetUnschedulableList(mId);
+            if(unschedulableList.Empty())
+            {
+                mUnschedulableNodes[mUnschedulableNodeCount] = pNode;
+                ++mUnschedulableNodeCount;
+            }
+
+            unschedulableList.PushBack(pTask);
+#else
+            mUnschedulableTasks.PushBack(pTask);
 #endif
+        }
     };
 
     while (LIKELY(mIsRuning || mDispatcher->IsRunning() || mFinishedTasks < mNextTaskPos))
@@ -160,7 +166,6 @@ void Worker::Run( void )
             pTaskQueue.consume_all(push2ReadyQueue);
         }
 
-        //if(UNLIKELY((nLoop % 100) == 0))
         if(mReadyTasks.empty())
         {
             CheckLostLamb();
@@ -199,6 +204,30 @@ void Worker::Run( void )
 void Worker::CheckLostLamb( void )  {
 
     int32_t newCount = 0;
+    for(auto iNode = 0; iNode < mUnschedulableNodeCount; ++iNode)
+    {
+        auto pNode = mUnschedulableNodes[iNode];
+        auto& unschedulableList = pNode->GetUnschedulableList(mId);
+        if(!unschedulableList.Empty())
+        {
+            auto pTask = unschedulableList.Front();
+            if(pTask->IsSchedulable())
+            {
+                mReadyTasks.push(pTask);
+                unschedulableList.PopFront();
+            }
+        }
+
+        if(!unschedulableList.Empty())
+        {
+            mUnschedulableNodes[newCount] = pNode;
+            ++newCount;
+        }
+    }
+
+    mUnschedulableNodeCount = newCount;
+
+    newCount = 0;
     for(auto iNode = 0; iNode < mWaittingNodeCount; ++iNode)
     {
         auto pNode = mWaittingNodes[iNode];
@@ -206,31 +235,28 @@ void Worker::CheckLostLamb( void )  {
         if(!waittingList.Empty())
         {
             auto pTask = waittingList.Front();
-            if(pTask->IsSchedulable())
+            bool gotLock = false;
+            if(pTask->IsWaittingLock())
             {
-                bool gotLock = false;
-                if(pTask->IsWaittingLock())
-                {
-                    gotLock = pTask->TryLock();
-                }
-                else
-                {
-                    gotLock = pTask->TrySharedLock();
-                }
+                gotLock = pTask->TryLock();
+            }
+            else
+            {
+                gotLock = pTask->TrySharedLock();
+            }
 
-                if(gotLock)
-                {
-                    pTask->SetWaited(nullptr);
-                    mReadyTasks.push(pTask);
-                    waittingList.PopFront();
-                }
+            if(gotLock)
+            {
+                pTask->SetWaited(nullptr);
+                mReadyTasks.push(pTask);
+                waittingList.PopFront();
             }
         }
 
         if(!waittingList.Empty())
         {
             mWaittingNodes[newCount] = pNode;
-            newCount++;
+            ++newCount;
         }
     }
 
@@ -282,23 +308,55 @@ void Worker::DoOutputWaitingTasks()
         out << "\n";
     }
     out.close();
+
+    std::fstream outQueue("Worker" + std::to_string(mId) + ".queue", std::ios_base::binary|std::ios_base::out);
+    for(auto iNode = 0; iNode < mWaittingNodeCount; ++iNode)
+    {
+        auto pNode = mWaittingNodes[iNode];
+        auto& mutex = pNode->GetMutex();
+        auto readers = mutex.GetReaderCount();
+        outQueue << "[" << pNode->GetName() << ":" << pNode->GetLastWorkflowId() << (readers>=0?":":":m") << std::abs(readers) << "]\n";
+
+        auto& waiters = mutex.GetWaiters();
+        for(int32_t iTask = 0; iTask <= 5 && waiters.Valid(iTask); ++iTask)
+        {
+            auto pSeeTask = waiters.First(iTask).pTask;
+            outQueue << pSeeTask << ":" << pSeeTask->GetName() << ":" << pSeeTask->GetWorkflowId() << ":" << pNode->GetName()
+                << ":" << pSeeTask->IsAccepted()  << ":" << pSeeTask->GetWaitingLockCount() << "|\n";
+        }
+
+        outQueue << "\n";
+    }
+
+    outQueue.close();
 }
 #else
 void Worker::CheckLostLamb( void )  {
     while(!mWaittingTasks.Empty())
     {
+        auto pFirstUnschedulable = mUnschedulableTasks.PopFront();
+        if(pFirstUnschedulable->IsSchedulable())
+        {
+            mReadyTasks.push(pFirstUnschedulable);
+        }
+        else
+        {
+            mUnschedulableTasks.PushBack(pFirstUnschedulable);
+            break;
+        }
+    }
+
+    while(!mWaittingTasks.Empty())
+    {
         auto pTask = mWaittingTasks.PopFront();
         bool gotLock = false;
-        if(pTask->IsSchedulable())
+        if(pTask->IsWaittingLock())
         {
-            if(pTask->IsWaittingLock())
-            {
-                gotLock = pTask->TryLock();
-            }
-            else
-            {
-                gotLock = pTask->TrySharedLock();
-            }
+            gotLock = pTask->TryLock();
+        }
+        else
+        {
+            gotLock = pTask->TrySharedLock();
         }
 
         if(gotLock)

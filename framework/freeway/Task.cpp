@@ -148,10 +148,7 @@ void Task::RunNode( void )
     mWaitingLockCount.load(std::memory_order_acquire);
     if(mIsAcceptTrigger)
     {
-#ifndef PRELOCK_WHEN_RUN
         mNodePtr->GetMutex().WaitLock4(this);
-#endif
-
         mResult = mNodePtr->Process(this, mWorkflowId);
     }
 
