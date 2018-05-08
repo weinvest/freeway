@@ -147,6 +147,7 @@ void Task::RunNode( void )
 //        std::cout << this << " run in thread:" << name << "@" << Clock::Instance().TimeOfDay().total_microseconds() << "\n";
     mNodePtr->GetMutex().WaitLock4(this);
     mWaitingLockCount.load(std::memory_order_acquire);
+    mResult = NoRaiseSuccessor;
     if(mIsAcceptTrigger)
     {
         mResult = mNodePtr->Process(this, mWorkflowId);
