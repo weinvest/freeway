@@ -241,6 +241,7 @@ void Worker::CheckLostLamb( void )  {
             bool gotLock = false;
 #ifndef _USING_MULTI_LEVEL_UNSCHEDULABLE
             if(pTask->IsSchedulable())
+            {
 #endif
             if(pTask->IsWaittingLock())
             {
@@ -250,6 +251,9 @@ void Worker::CheckLostLamb( void )  {
             {
                 gotLock = pTask->TrySharedLock();
             }
+#ifndef _USING_MULTI_LEVEL_UNSCHEDULABLE
+            }
+#endif
 
             if(gotLock)
             {
@@ -344,6 +348,7 @@ void Worker::CheckLostLamb( void )  {
         bool gotLock = false;
 #ifndef _USING_MULTI_LEVEL_UNSCHEDULABLE
         if(pTask->IsSchedulable())
+        {
 #endif
         if(pTask->IsWaittingLock())
         {
@@ -353,6 +358,9 @@ void Worker::CheckLostLamb( void )  {
         {
             gotLock = pTask->TrySharedLock();
         }
+#ifndef _USING_MULTI_LEVEL_UNSCHEDULABLE
+        }
+#endif
 
         if(gotLock)
         {
