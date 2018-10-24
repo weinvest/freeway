@@ -69,3 +69,4 @@ public:
 
 
 #endif //ARAGOPROJECT_LOCKPTR_H
+

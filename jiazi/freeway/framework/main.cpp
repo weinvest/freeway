@@ -43,7 +43,7 @@ public:
         }
 
         ++mRunCount;
-        //std::cout << "workflowId:" << workflowId << ":, sum:" << sum << ",run:" << mRunCount << ":" << GetWorkerId() << "\n";
+        //std::cout << "workflowId:" << workflowId << ": sum:" << sum << ",run:" << mRunCount << ":" << GetWorkerId() << "\n";
 #if 0
         char name[16];
         pthread_getname_np(pthread_self(), name, sizeof(name));

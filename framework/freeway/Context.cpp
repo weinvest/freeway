@@ -100,6 +100,8 @@ void SigUsr1Handler(int32_t)
     Context::OutputWaittingTasks();
 }
 #include <signal.h>
+#include <sys/resource.h>
+#include <sys/mman.h>
 Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
 {
     TraverseDirectory("../conf"
@@ -118,6 +120,17 @@ Dispatcher* Context::Init(int32_t workerCount, int32_t miscThreadsNum)
     if(workerCount > maxWorkerCount)
     {
         throw std::logic_error("max worker count is " + std::to_string(maxWorkerCount));
+    }
+
+    {
+        struct rlimit rlim = {RLIM_INFINITY, RLIM_INFINITY};
+        setrlimit(RLIMIT_MEMLOCK, &rlim);
+    }
+
+    if(-1 == mlockall(MCL_CURRENT | MCL_FUTURE))
+    {
+        std::cout << "count not local memory\n";
+        //LOG_WARN(mLog, "count not local memory");
     }
 
     ThreadIndex.emplace(ThreadType::DISPATCHER, std::make_pair(0,1));
